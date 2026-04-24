@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dungeongrid"
+version = "0.1.0a0"
+description = "DungeonGrid: text-first cooperative dungeon-crawl environment for multi-agent benchmarks"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  {name = "Josh Purtell"},
+]
+keywords = ["multi-agent", "benchmark", "dungeon", "reinforcement-learning", "llm-agents"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+server = [
+  "fastapi>=0.110",
+  "uvicorn>=0.27",
+]
+dev = [
+  "build>=1.2",
+  "twine>=5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/JoshuaPurtell/DungeonGrid"
+Repository = "https://github.com/JoshuaPurtell/DungeonGrid"
+Issues = "https://github.com/JoshuaPurtell/DungeonGrid/issues"
+
+[project.scripts]
+dungeongrid-server = "dungeongrid.server.app:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+dungeongrid = ["quests/*.json"]

@@ -1,0 +1,59 @@
+{
+  "quest_id": "cinder_exit",
+  "title": "The Cinder Exit",
+  "difficulty": "starter",
+  "max_heroes": 4,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "elf",
+    "dwarf"
+  ],
+  "map": {
+    "ascii": "###################\n#.......#.......E.#\n#.#####.#.#######.#\n#.#...#.#.....#...#\n#.#.G.D.###D###.###\n#.#...#.....#.....#\n#.###.#####.#..C..#\n#.....#...#.#.....#\n###D###.T.#.#######\n#.....#...#.......#\n#..B..D...###D###.#\n#.....#.......#...#\n#####.#######.#.I.#\n#.............#R..#\n###################",
+    "width": 19,
+    "height": 15
+  },
+  "objective": {
+    "type": "escort_relic_to_exit",
+    "item_id": "cinder_relic",
+    "escape_tile": [
+      16,
+      1
+    ],
+    "fragile": true
+  },
+  "hero_starts": [
+    [
+      15,
+      13
+    ],
+    [
+      14,
+      13
+    ],
+    [
+      13,
+      13
+    ],
+    [
+      15,
+      12
+    ]
+  ],
+  "chest_contents": {
+    "chest_1": "healing_draught"
+  },
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The relic pulses; the exit flame glows brighter.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 2
+        }
+      ]
+    }
+  },
+  "torch": 18
+}
