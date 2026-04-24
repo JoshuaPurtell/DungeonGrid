@@ -10,7 +10,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from dungeongrid.env import DungeonGridEnvironment
-from dungeongrid.models import DungeonGridAction, DungeonGridObservation, DungeonGridStep
+from dungeongrid.contracts import dungeongrid_rules
+from dungeongrid.models import DungeonGridAction, DungeonGridObservation, DungeonGridPlanResult, DungeonGridStep
 
 app = FastAPI(title="DungeonGrid OpenEnv", version="0.1.0")
 _env = DungeonGridEnvironment()
@@ -21,6 +22,12 @@ class ResetRequest(BaseModel):
     num_heroes: int = 4
     seed: int | None = None
     observation_mode: str = "mixed"
+
+
+class PlanRequest(BaseModel):
+    intent: str | None = None
+    actions: list[dict[str, Any]]
+    agent_id: str | None = None
 
 
 @app.get("/health")
@@ -43,14 +50,19 @@ def observe(agent_id: str) -> DungeonGridObservation:
     return _env.observe(agent_id)
 
 
-@app.get("/legal_actions/{agent_id}")
-def legal_actions(agent_id: str) -> dict[str, Any]:
-    return {"agent_id": agent_id, "legal_actions": _env.legal_actions(agent_id)}
-
-
 @app.post("/step", response_model=DungeonGridStep)
 def step(action: DungeonGridAction) -> DungeonGridStep:
     return _env.step(action)
+
+
+@app.post("/act_plan", response_model=DungeonGridPlanResult)
+def act_plan(request: PlanRequest) -> DungeonGridPlanResult:
+    return _env.act_plan(request.actions, intent=request.intent, agent_id=request.agent_id)
+
+
+@app.get("/rules/{topic}")
+def rules(topic: str) -> dict[str, Any]:
+    return {"topic": topic, "text": dungeongrid_rules(topic)}
 
 
 @app.get("/state")

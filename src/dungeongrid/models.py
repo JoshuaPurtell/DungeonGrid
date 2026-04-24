@@ -45,7 +45,6 @@ class DungeonGridObservation(BaseModel):
     text: str
     visible_map: str
     symbolic: dict[str, Any]
-    legal_actions: list[dict[str, Any]]
 
 
 class DungeonGridState(BaseModel):
@@ -61,3 +60,18 @@ class DungeonGridStep(BaseModel):
     reward: float
     done: bool
     info: dict[str, Any] = Field(default_factory=dict)
+
+
+class DungeonGridPlanResult(BaseModel):
+    """Result of executing one OpenEnv ReAct-style queued action plan."""
+
+    intent: Optional[str] = None
+    submitted_actions: list[dict[str, Any]]
+    executed_actions: list[dict[str, Any]] = Field(default_factory=list)
+    skipped_actions: list[dict[str, Any]] = Field(default_factory=list)
+    unused_actions: list[dict[str, Any]] = Field(default_factory=list)
+    reveal_stopped: bool = False
+    reveal_reason: Optional[str] = None
+    reward: float = 0.0
+    done: bool = False
+    observation: DungeonGridObservation

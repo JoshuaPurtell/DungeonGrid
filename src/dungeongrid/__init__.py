@@ -1,9 +1,10 @@
 """DungeonGrid OpenEnv package."""
 
+from .contracts import dungeongrid_act_schema, dungeongrid_rules, dungeongrid_rules_schema
 from .env import DungeonGridEnvironment, DungeonGridEnv
-from .models import DungeonGridAction, DungeonGridObservation, DungeonGridState, DungeonGridStep
+from .models import DungeonGridAction, DungeonGridObservation, DungeonGridPlanResult, DungeonGridState, DungeonGridStep
 
-__version__ = "0.1.0a0"
+__version__ = "0.1.0a1"
 
 # Compatibility aliases for early NanoCoop integration code that used the old
 # prototype name before the standalone package was split out.
@@ -11,6 +12,7 @@ TorchGridEnvironment = DungeonGridEnvironment
 TorchGridEnv = DungeonGridEnv
 TorchGridAction = DungeonGridAction
 TorchGridObservation = DungeonGridObservation
+TorchGridPlanResult = DungeonGridPlanResult
 TorchGridState = DungeonGridState
 TorchGridStep = DungeonGridStep
 
@@ -20,12 +22,17 @@ __all__ = [
     "DungeonGridEnv",
     "DungeonGridAction",
     "DungeonGridObservation",
+    "DungeonGridPlanResult",
     "DungeonGridState",
     "DungeonGridStep",
+    "dungeongrid_act_schema",
+    "dungeongrid_rules",
+    "dungeongrid_rules_schema",
     "TorchGridEnvironment",
     "TorchGridEnv",
     "TorchGridAction",
     "TorchGridObservation",
+    "TorchGridPlanResult",
     "TorchGridState",
     "TorchGridStep",
 ]

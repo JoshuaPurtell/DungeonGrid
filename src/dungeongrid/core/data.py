@@ -220,6 +220,7 @@ class GameState:
     trace: list[dict[str, Any]] = field(default_factory=list)
     event_log: list[str] = field(default_factory=list)
     party_messages: list[dict[str, Any]] = field(default_factory=list)
+    invalid_feedback: list[dict[str, Any]] = field(default_factory=list)
 
     def active_agent(self) -> str:
         if self.phase == "done":
@@ -288,6 +289,7 @@ class GameState:
             "chests": {k: v.to_dict() for k, v in self.chests.items()},
             "event_log_tail": self.event_log[-20:],
             "party_messages_tail": self.party_messages[-20:],
+            "invalid_feedback_tail": self.invalid_feedback[-20:],
             "trace_len": len(self.trace),
             "visibility": visibility,
         }

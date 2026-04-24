@@ -9,7 +9,7 @@ It is designed around:
 - an always-AI Warden / dungeon-controller side;
 - compact text board-state observations;
 - structured JSON action plans instead of string actions;
-- batched plan execution with future reveal-boundary replanning;
+- batched OpenEnv ReAct-style plan execution with reveal-boundary replanning;
 - fixed quest difficulty across solo, duo, trio, and squad slices.
 
 This package is currently an alpha extraction of the DungeonGrid engine that is
@@ -24,8 +24,48 @@ env = DungeonGridEnvironment()
 obs = env.reset(quest_id="lantern_crypt", num_heroes=2, seed=1)
 print(obs.text)
 
-step = env.step({"type": "message", "target": "party", "payload": {"text": "I'll scout east."}})
-print(step.info)
+result = env.act_plan(
+    intent="Scout east, then report back to the party.",
+    actions=[
+        {"type": "move", "direction": "east"},
+        {"type": "message", "target": "party", "payload": {"text": "I am checking the east passage."}},
+    ],
+)
+print(result.skipped_actions)
+print(result.observation.text)
+```
+
+## OpenEnv ReAct Contract
+
+Agents receive compact text observations and submit one structured tool call per
+decision point:
+
+```json
+{
+  "name": "dungeongrid_act",
+  "arguments": {
+    "intent": "Open the east door and stop if a room is revealed.",
+    "actions": [
+      {"type": "open_door", "target": "door_1"},
+      {"type": "move", "direction": "east"}
+    ]
+  }
+}
+```
+
+Agents can query compact rule details with `dungeongrid_rules({"topic":
+"actions"})`. Public observations do not expose legal action lists; the
+environment validates proposed JSON actions, skips illegal queued actions, and
+renders concrete feedback in later observations.
+
+Reveal boundaries stop queued execution so the agent can replan after new board
+state appears, such as opened doors, revealed traps, opened chests, objective
+changes, turn end, or episode end.
+
+```python
+from dungeongrid import dungeongrid_rules
+
+print(dungeongrid_rules("movement"))
 ```
 
 ## Quests

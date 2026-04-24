@@ -6,7 +6,7 @@ from typing import Any
 
 from .baselines import GreedyHeroPolicy, ScriptedWardenPolicy
 from .env import DungeonGridEnvironment
-from .models import DungeonGridAction
+from .models import DungeonGridAction, model_to_dict
 
 
 def run_episode(
@@ -22,7 +22,8 @@ def run_episode(
     while not env.state.done and steps < max_steps:  # type: ignore[union-attr]
         active = env.state.active_agent()  # type: ignore[union-attr]
         obs = env.observe(active)
-        obs_dict = obs.model_dump() if hasattr(obs, "model_dump") else obs.dict()
+        obs_dict = model_to_dict(obs)
+        obs_dict["legal_actions"] = env._legal_actions(active)
         action = warden_policy.act(obs_dict) if active == "warden" else hero_policy.act(obs_dict)
         env.step(DungeonGridAction(agent_id=active, **action))
         steps += 1

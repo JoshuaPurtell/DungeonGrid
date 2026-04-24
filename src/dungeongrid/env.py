@@ -9,7 +9,7 @@ from .core.agent_engine import AgentEngine
 from .core.grid_engine import GridEngine
 from .core.rules_engine import RulesEngine
 from .core.trace import trace_record
-from .models import DungeonGridAction, DungeonGridObservation, DungeonGridStep, model_to_dict
+from .models import DungeonGridAction, DungeonGridObservation, DungeonGridPlanResult, DungeonGridStep, model_to_dict
 
 
 class _OpenEnvEnvironment:
@@ -21,8 +21,8 @@ class _OpenEnvEnvironment:
 class DungeonGridEnvironment(_OpenEnvEnvironment):
     """Text dungeon-crawl environment with an OpenEnv/Gym-like API.
 
-    The public methods intentionally mirror the user's requested interface:
-    reset, observe, legal_actions, step, render_text, render_ascii, state_json, export_trace.
+    The public methods intentionally mirror the benchmark interface:
+    reset, observe, step, act_plan, render_text, render_ascii, state_json, export_trace.
     """
 
     def __init__(self, quest_dir: str | None = None) -> None:
@@ -49,9 +49,8 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
     def observe(self, agent_id: str | None = None) -> DungeonGridObservation:
         state = self._require_state()
         agent_id = agent_id or state.active_agent()
-        legal = self.legal_actions(agent_id)
         visible_map = self.grid.render_ascii(state, agent_id=agent_id)
-        symbolic = self._symbolic_observation(agent_id, legal, visible_map)
+        symbolic = self._symbolic_observation(agent_id, visible_map)
         text = self.render_text(agent_id)
         return DungeonGridObservation(
             agent_id=agent_id,
@@ -61,10 +60,10 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             text=text,
             visible_map=visible_map,
             symbolic=symbolic,
-            legal_actions=legal,
         )
 
-    def legal_actions(self, agent_id: str) -> list[dict[str, Any]]:
+    def _legal_actions(self, agent_id: str) -> list[dict[str, Any]]:
+        """Internal/programmatic legality helper for baselines and adapters."""
         state = self._require_state()
         return self.rules.legal_actions(state, agent_id)
 
@@ -96,6 +95,87 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             )
         )
         return DungeonGridStep(observation=obs_after, reward=reward, done=state.done, info=info)
+
+    def act_plan(
+        self,
+        actions: list[dict[str, Any]],
+        intent: str | None = None,
+        agent_id: str | None = None,
+    ) -> DungeonGridPlanResult:
+        state = self._require_state()
+        resolved_agent = agent_id or state.active_agent()
+        submitted_actions = [dict(action) for action in actions]
+        executed_actions: list[dict[str, Any]] = []
+        skipped_actions: list[dict[str, Any]] = []
+        unused_actions: list[dict[str, Any]] = []
+        total_reward = 0.0
+        reveal_stopped = False
+        reveal_reason: str | None = None
+
+        for index, action in enumerate(submitted_actions):
+            if state.done:
+                unused_actions.extend(submitted_actions[index:])
+                reveal_stopped = True
+                reveal_reason = "episode_done"
+                break
+            if state.active_agent() != resolved_agent:
+                unused_actions.extend(submitted_actions[index:])
+                reveal_stopped = True
+                reveal_reason = "turn_ended"
+                break
+
+            before = self._reveal_snapshot()
+            step = self.step(action, agent_id=resolved_agent)
+            total_reward += step.reward
+            if step.info.get("invalid"):
+                skipped_actions.append(
+                    {
+                        "action": dict(action),
+                        "reason": step.info.get("invalid_reason", "illegal_action"),
+                        "message": (step.info.get("invalid_feedback") or {}).get(
+                            "message", step.info.get("narration", "Invalid action.")
+                        ),
+                    }
+                )
+                continue
+
+            executed_actions.append(dict(action))
+            after = self._reveal_snapshot()
+            reveal_reason = self._reveal_reason(action, before, after)
+            if reveal_reason:
+                unused_actions.extend(submitted_actions[index + 1 :])
+                reveal_stopped = True
+                break
+
+        observation = self.observe(state.active_agent() if not state.done else resolved_agent)
+        result = DungeonGridPlanResult(
+            intent=intent,
+            submitted_actions=submitted_actions,
+            executed_actions=executed_actions,
+            skipped_actions=skipped_actions,
+            unused_actions=unused_actions,
+            reveal_stopped=reveal_stopped,
+            reveal_reason=reveal_reason,
+            reward=total_reward,
+            done=state.done,
+            observation=observation,
+        )
+        state.trace.append(
+            {
+                "kind": "plan",
+                "round": state.round,
+                "agent_id": resolved_agent,
+                "intent": intent,
+                "submitted_actions": submitted_actions,
+                "executed_actions": executed_actions,
+                "skipped_actions": skipped_actions,
+                "unused_actions": unused_actions,
+                "reveal_stopped": reveal_stopped,
+                "reveal_reason": reveal_reason,
+                "reward": round(total_reward, 4),
+            }
+        )
+        return result
 
     def render_text(self, agent_id: str | None = None) -> str:
         state = self._require_state()
@@ -144,6 +224,12 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 lines.append(
                     f"- {message.get('from')} -> {message.get('to')}: {message.get('text')}"
                 )
+        if state.invalid_feedback:
+            lines.append("\nRecent invalid action feedback:")
+            for feedback in state.invalid_feedback[-3:]:
+                lines.append(
+                    f"- {feedback.get('agent_id')}: {feedback.get('reason')} - {feedback.get('message')}"
+                )
         lines.append(
             "\nSubmit structured JSON actions with dungeongrid_act. "
             "Use dungeongrid_rules for action schemas and rule details."
@@ -171,7 +257,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         state = self._require_state()
         return {"quest_id": state.quest_id, "title": state.title, "trace": list(state.trace), "metrics": self.agent_engine.metrics(state)}
 
-    def _symbolic_observation(self, agent_id: str, legal: list[dict[str, Any]], visible_map: str) -> dict[str, Any]:
+    def _symbolic_observation(self, agent_id: str, visible_map: str) -> dict[str, Any]:
         state = self._require_state()
         visible_tiles = self.grid.visible_tiles(state, agent_id)
         visible_entities = self.grid.visible_entities(state, agent_id)
@@ -192,11 +278,57 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "visible_map": visible_map,
             "objective": state.objective.to_dict(),
             "known_objective": f"recover_{state.objective.id}_and_escape",
-            "legal_actions": legal,
             "party_messages": list(state.party_messages[-10:]),
+            "invalid_feedback": list(state.invalid_feedback[-5:]),
             "alert": state.alert if agent_id == "warden" else None,
             "torch": state.torch,
         }
+
+    def _reveal_snapshot(self) -> dict[str, Any]:
+        state = self._require_state()
+        return {
+            "active_agent": state.active_agent(),
+            "phase": state.phase,
+            "done": state.done,
+            "doors": {
+                door_id: {"state": door.state, "discovered": door.discovered}
+                for door_id, door in state.doors.items()
+            },
+            "traps": {
+                trap_id: {"revealed": trap.revealed, "armed": trap.armed}
+                for trap_id, trap in state.traps.items()
+            },
+            "chests": {chest_id: {"opened": chest.opened} for chest_id, chest in state.chests.items()},
+            "objective": state.objective.to_dict(),
+        }
+
+    def _reveal_reason(
+        self,
+        action: dict[str, Any],
+        before: dict[str, Any],
+        after: dict[str, Any],
+    ) -> str | None:
+        if after["done"] and not before["done"]:
+            return "episode_done"
+        for door_id, before_door in before["doors"].items():
+            after_door = after["doors"].get(door_id, {})
+            if before_door.get("state") == "closed" and after_door.get("state") == "open":
+                return "door_opened"
+            if not before_door.get("discovered") and after_door.get("discovered"):
+                return "secret_revealed"
+        for trap_id, before_trap in before["traps"].items():
+            after_trap = after["traps"].get(trap_id, {})
+            if not before_trap.get("revealed") and after_trap.get("revealed"):
+                return "trap_revealed"
+        for chest_id, before_chest in before["chests"].items():
+            after_chest = after["chests"].get(chest_id, {})
+            if not before_chest.get("opened") and after_chest.get("opened"):
+                return "chest_revealed"
+        if before["objective"] != after["objective"]:
+            return "objective_changed"
+        if before["active_agent"] != after["active_agent"] or before["phase"] != after["phase"]:
+            return "turn_ended"
+        return None
 
     def _require_state(self):
         if self.state is None:

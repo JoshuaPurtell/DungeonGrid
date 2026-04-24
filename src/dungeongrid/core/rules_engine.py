@@ -99,12 +99,21 @@ class RulesEngine:
         active = state.active_agent()
         if agent_id != active:
             state.invalid_actions += 1
-            return -1.0, f"Invalid action: {agent_id} is not active; {active} must act.", {"invalid": True}
+            feedback = self._invalid_feedback(
+                state,
+                agent_id,
+                action,
+                "not_active_agent",
+                f"{agent_id} is not active; {active} must act.",
+            )
+            return -1.0, f"Invalid action: {feedback['message']}", {"invalid": True, **feedback}
         action_type = action.get("type")
         legal = self.legal_actions(state, agent_id)
         if not self._action_is_legal(action, legal):
             state.invalid_actions += 1
-            return -1.0, f"Invalid action for {agent_id}: {action_type}.", {"invalid": True, "legal_actions": legal}
+            reason, message = self._classify_illegal_action(state, agent_id, action, legal)
+            feedback = self._invalid_feedback(state, agent_id, action, reason, message)
+            return -1.0, f"Invalid action for {agent_id}: {message}", {"invalid": True, **feedback}
 
         if agent_id == "warden":
             if action_type == "warden_auto":
@@ -161,7 +170,14 @@ class RulesEngine:
             self._advance_hero_turn(state)
         else:
             state.invalid_actions += 1
-            return -1.0, f"Unknown action type: {action_type}", {"invalid": True}
+            feedback = self._invalid_feedback(
+                state,
+                agent_id,
+                action,
+                "unknown_action_type",
+                f"Unknown action type: {action_type}",
+            )
+            return -1.0, feedback["message"], {"invalid": True, **feedback}
 
         after_damage = sum(h.max_hp - h.hp for h in state.heroes.values())
         if after_damage > before_damage:
@@ -190,6 +206,55 @@ class RulesEngine:
             self._advance_hero_turn(state)
         return reward, narration, {"scout_reward": round(scout_reward, 4), **scout_info}
 
+    def _invalid_feedback(
+        self,
+        state: GameState,
+        agent_id: str,
+        action: dict[str, Any],
+        reason: str,
+        message: str,
+    ) -> dict[str, Any]:
+        feedback = {
+            "round": state.round,
+            "agent_id": agent_id,
+            "action": dict(action),
+            "reason": reason,
+            "message": message,
+        }
+        state.invalid_feedback.append(feedback)
+        return {"invalid_reason": reason, "invalid_feedback": feedback}
+
+    def _classify_illegal_action(
+        self,
+        state: GameState,
+        agent_id: str,
+        action: dict[str, Any],
+        legal: list[dict[str, Any]],
+    ) -> tuple[str, str]:
+        action_type = action.get("type")
+        if not action_type:
+            return "unknown_action_type", "Action is missing a type."
+        known_types = set(ACTION_COSTS)
+        if action_type not in known_types:
+            return "unknown_action_type", f"{action_type} is not a known action type."
+        hero = state.heroes.get(agent_id)
+        if hero and state.ap_remaining.get(agent_id, 0) < ACTION_COSTS.get(str(action_type), 0):
+            return "insufficient_ap", f"{action_type} requires more AP than {agent_id} has remaining."
+        if action_type == "move":
+            direction = action.get("direction")
+            if direction not in DIRECTIONS:
+                return "missing_target", "Move requires a cardinal direction."
+            dx, dy = DIRECTIONS[direction]
+            target = (hero.pos[0] + dx, hero.pos[1] + dy) if hero else (0, 0)
+            if not self.grid.is_walkable(state, target):
+                return "blocked_movement", f"Cannot move {direction}; the target tile is blocked."
+        if action_type in {"open_door", "attack_melee", "attack_ranged", "cast", "disarm", "interact"} and action.get("target") is None:
+            return "missing_target", f"{action_type} requires a target."
+        matching_type = [candidate for candidate in legal if candidate.get("type") == action_type]
+        if matching_type:
+            return "illegal_target", f"{action_type} target or fields are not currently legal."
+        return "illegal_action", f"{action_type} is not currently legal."
+
     def _action_is_legal(self, action: dict[str, Any], legal: list[dict[str, Any]]) -> bool:
         atype = action.get("type")
         for candidate in legal:
@@ -197,6 +262,8 @@ class RulesEngine:
                 continue
             if "direction" in candidate and action.get("direction") != candidate.get("direction"):
                 continue
+            if atype == "move" and action.get("target") is None:
+                return True
             if "target" in candidate and action.get("target") != candidate.get("target"):
                 # Target coordinates may arrive as tuple/list.
                 cand_target = candidate.get("target")
