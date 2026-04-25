@@ -62,4 +62,4 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-dungeongrid = ["quests/*.json", "dungeons/*/quest.json", "dungeons/*/hooks.py"]
+dungeongrid = ["dungeons/*/quest.json", "dungeons/*/hooks.py"]

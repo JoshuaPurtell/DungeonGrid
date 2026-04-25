@@ -16,7 +16,7 @@ from .models import DungeonGridAction, DungeonGridObservation, DungeonGridPlanRe
 
 
 class _OpenEnvEnvironment:
-    """Tiny local fallback so NanoCoop controls the crawler API shape."""
+    """Minimal base class for the local OpenEnv-style API."""
 
     pass
 
@@ -895,7 +895,3 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         if self.state is None:
             self.reset()
         return self.state
-
-
-# Backwards-compatible alias matching the handoff language.
-DungeonGridEnv = DungeonGridEnvironment

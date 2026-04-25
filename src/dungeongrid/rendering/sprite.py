@@ -1,7 +1,9 @@
 """Sprite-style DungeonGrid replay rendering.
 
-The renderer uses procedural pixel-art-like shapes so DungeonGrid can ship a
-good visual replay without carrying binary sprite assets.
+The renderer uses a tiny 16x16 native sprite vocabulary and nearest-neighbor
+scaling. The goal is benchmark-readable pixel art: Craftax-like granularity
+with a warm old-school dungeon-board palette, without shipping binary sprite
+assets or copying any protected board-game artwork.
 """
 
 from __future__ import annotations
@@ -11,18 +13,32 @@ from pathlib import Path
 from typing import Any
 
 
-TILE = 34
+NATIVE_TILE = 16
+TILE = 32
 PAD = 18
 HUD_W = 300
 MSG_H = 54
-BG = (9, 10, 14)
-PANEL = (20, 22, 29)
-TEXT = (235, 230, 215)
-MUTED = (148, 142, 132)
-GOLD = (236, 190, 96)
-RED = (220, 82, 76)
-GREEN = (96, 204, 117)
-BLUE = (92, 166, 222)
+
+# Warm, compact dungeon-board palette. Keep the renderer deliberately low-noise
+# so replays remain legible as benchmark observations.
+BG = (15, 12, 10)
+PANEL = (32, 26, 23)
+TEXT = (239, 226, 199)
+MUTED = (157, 138, 112)
+OUTLINE = (20, 17, 15)
+VOID = (7, 7, 8)
+STONE = (82, 82, 76)
+STONE_LIGHT = (124, 120, 108)
+WOOD_DARK = (72, 43, 24)
+WOOD = (128, 76, 35)
+WOOD_LIGHT = (178, 112, 48)
+BONE = (218, 210, 184)
+GOLD = (226, 174, 62)
+RED = (177, 54, 49)
+GREEN = (84, 145, 64)
+BLUE = (57, 93, 154)
+TORCH = (239, 119, 36)
+BURGUNDY = (101, 40, 48)
 
 
 def render_sprite_frame(
@@ -38,7 +54,7 @@ def render_sprite_frame(
         raise ImportError("Install dungeongrid[render] to render sprite frames.") from exc
 
     events = events or {}
-    tile = max(20, int(tile_px))
+    tile = max(NATIVE_TILE, int(tile_px))
     width = int(state_json.get("width", 0))
     height = int(state_json.get("height", 0))
     board_w = width * tile
@@ -106,18 +122,18 @@ def render_sprite_html(frames: list[dict[str, Any]], path: str | Path, title: st
 <style>
 body {{
   margin: 0;
-  background: #090a0e;
-  color: #ebe6d7;
+  background: #0f0c0a;
+  color: #efe2c7;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }}
-header {{ position: sticky; top: 0; background: #14161d; border-bottom: 1px solid #34313a; padding: 12px 18px; }}
+header {{ position: sticky; top: 0; background: #201a17; border-bottom: 1px solid #4a3c2e; padding: 12px 18px; }}
 h1 {{ font-size: 18px; margin: 0; }}
 main {{ padding: 18px; display: grid; gap: 14px; }}
-.hero {{ border: 1px solid #34313a; background: #101219; border-radius: 8px; padding: 12px; }}
+.hero {{ border: 1px solid #4a3c2e; background: #17120f; border-radius: 8px; padding: 12px; }}
 .hero img {{ max-width: 100%; height: auto; image-rendering: pixelated; border-radius: 6px; }}
-section {{ border: 1px solid #34313a; background: #101219; border-radius: 8px; padding: 12px; }}
-.meta {{ color: #948e84; font-size: 13px; margin-bottom: 8px; }}
-pre {{ white-space: pre-wrap; margin: 0; color: #ebe6d7; font-size: 12px; }}
+section {{ border: 1px solid #4a3c2e; background: #17120f; border-radius: 8px; padding: 12px; }}
+.meta {{ color: #9d8a70; font-size: 13px; margin-bottom: 8px; }}
+pre {{ white-space: pre-wrap; margin: 0; color: #efe2c7; font-size: 12px; }}
 </style>
 </head>
 <body>
@@ -143,7 +159,7 @@ def _font(ImageFont, size: int):
 
 
 def _draw_message_bar(draw, state: dict[str, Any], events: dict[str, Any], x: int, y: int, w: int, h: int, title_font, font) -> None:
-    draw.rounded_rectangle((x, y, x + w, y + h), radius=10, fill=(18, 20, 27), outline=(54, 49, 58))
+    draw.rounded_rectangle((x, y, x + w, y + h), radius=10, fill=PANEL, outline=(74, 60, 46))
     message = _message(state, events)
     draw.text((x + 14, y + 9), message[:96], fill=(244, 229, 182), font=title_font)
     subtitle = f"Round {state.get('round')}   Active {_active_role(state)}   Torch {state.get('torch')}   Alert {state.get('alert')}"
@@ -151,7 +167,282 @@ def _draw_message_bar(draw, state: dict[str, Any], events: dict[str, Any], x: in
 
 
 def _draw_board_backdrop(draw, x: int, y: int, w: int, h: int) -> None:
-    draw.rounded_rectangle((x - 6, y - 6, x + w + 6, y + h + 6), radius=12, fill=(12, 12, 17), outline=(52, 49, 58))
+    draw.rounded_rectangle((x - 6, y - 6, x + w + 6, y + h + 6), radius=12, fill=(19, 16, 14), outline=(91, 72, 49))
+
+
+def _paste_native(draw, box: tuple[int, int, int, int], painter) -> None:
+    """Paint a 16x16 RGBA sprite into *box* using hard nearest scaling."""
+
+    from PIL import Image, ImageDraw
+
+    sprite = Image.new("RGBA", (NATIVE_TILE, NATIVE_TILE), (0, 0, 0, 0))
+    sdraw = ImageDraw.Draw(sprite)
+    painter(sdraw)
+    x1, y1, x2, y2 = box
+    size = (max(1, x2 - x1 + 1), max(1, y2 - y1 + 1))
+    if size != sprite.size:
+        try:
+            resample = Image.Resampling.NEAREST
+        except AttributeError:  # pragma: no cover - Pillow < 9.1
+            resample = Image.NEAREST
+        sprite = sprite.resize(size, resample)
+    draw._image.paste(sprite, (x1, y1), sprite)
+
+
+def _paint_floor(sprite, *, known: bool, alt: bool) -> None:
+    if not known:
+        sprite.rectangle((0, 0, 15, 15), fill=(23, 24, 25), outline=(32, 31, 30))
+        return
+    base = (70, 70, 66) if alt else (64, 64, 61)
+    sprite.rectangle((0, 0, 15, 15), fill=base, outline=(36, 35, 34))
+    sprite.line((0, 15, 15, 15), fill=(31, 31, 30))
+    sprite.line((15, 0, 15, 15), fill=(31, 31, 30))
+    sprite.line((0, 0, 15, 0), fill=(102, 98, 88))
+    sprite.point((3, 4), fill=(95, 92, 84))
+    sprite.point((11, 10), fill=(45, 44, 43))
+    if alt:
+        sprite.line((5, 2, 7, 4), fill=(43, 42, 41))
+        sprite.point((8, 4), fill=(43, 42, 41))
+
+
+def _paint_wall(sprite, *, known: bool) -> None:
+    if not known:
+        sprite.rectangle((0, 0, 15, 15), fill=(25, 27, 29), outline=(15, 15, 16))
+        return
+    sprite.rectangle((0, 0, 15, 15), fill=STONE, outline=OUTLINE)
+    sprite.rectangle((1, 1, 7, 4), fill=STONE_LIGHT)
+    sprite.rectangle((8, 1, 14, 4), fill=(103, 101, 93))
+    sprite.rectangle((1, 5, 4, 9), fill=(70, 70, 66))
+    sprite.rectangle((5, 5, 11, 9), fill=(99, 97, 90))
+    sprite.rectangle((12, 5, 14, 9), fill=(63, 63, 60))
+    sprite.rectangle((1, 10, 7, 14), fill=(56, 56, 54))
+    sprite.rectangle((8, 10, 14, 14), fill=(73, 72, 68))
+    sprite.line((0, 0, 15, 0), fill=(151, 137, 103))
+    sprite.line((0, 15, 15, 15), fill=(30, 28, 26))
+
+
+def _paint_marker(sprite, kind: str) -> None:
+    if kind == "door":
+        sprite.rectangle((5, 2, 11, 14), fill=WOOD_DARK, outline=OUTLINE)
+        sprite.rectangle((6, 3, 10, 13), fill=WOOD)
+        sprite.line((7, 3, 7, 13), fill=WOOD_LIGHT)
+        sprite.point((10, 8), fill=GOLD)
+    elif kind == "open_door":
+        sprite.rectangle((4, 2, 7, 14), fill=WOOD_DARK, outline=OUTLINE)
+        sprite.polygon([(8, 3), (13, 5), (13, 13), (8, 14)], fill=(42, 33, 27), outline=OUTLINE)
+    elif kind == "chest":
+        sprite.rectangle((3, 7, 13, 13), fill=WOOD, outline=OUTLINE)
+        sprite.rectangle((4, 4, 12, 8), fill=WOOD_LIGHT, outline=OUTLINE)
+        sprite.line((3, 8, 13, 8), fill=GOLD)
+        sprite.rectangle((7, 8, 8, 11), fill=GOLD)
+    elif kind == "trap":
+        sprite.rectangle((3, 4, 12, 12), fill=(29, 28, 27), outline=OUTLINE)
+        for x in (5, 8, 11):
+            sprite.polygon([(x, 6), (x - 1, 11), (x + 1, 11)], fill=(185, 181, 163))
+    elif kind == "objective":
+        sprite.polygon([(8, 2), (13, 7), (8, 14), (3, 7)], fill=GOLD, outline=OUTLINE)
+        sprite.rectangle((7, 6, 9, 9), fill=(128, 39, 47))
+    elif kind == "stairs":
+        sprite.rectangle((2, 2, 14, 14), fill=(27, 29, 31), outline=OUTLINE)
+        for y in (4, 7, 10, 13):
+            sprite.line((4, y, 13, y), fill=(119, 116, 106))
+        sprite.rectangle((2, 2, 5, 14), fill=(17, 18, 19))
+    elif kind == "exit":
+        sprite.rectangle((2, 2, 14, 14), fill=(20, 30, 34), outline=BLUE)
+        sprite.polygon([(8, 3), (13, 8), (8, 13), (3, 8)], fill=(30, 73, 88), outline=(141, 209, 218))
+
+
+def _paint_furniture(sprite, category: str, destroyed: bool) -> None:
+    if destroyed:
+        sprite.line((4, 12, 12, 4), fill=WOOD_LIGHT)
+        sprite.line((4, 4, 12, 12), fill=WOOD_DARK)
+        return
+    if category == "altar":
+        sprite.rectangle((3, 7, 13, 12), fill=(87, 84, 80), outline=OUTLINE)
+        sprite.rectangle((4, 5, 12, 7), fill=STONE_LIGHT, outline=OUTLINE)
+        sprite.rectangle((7, 7, 8, 10), fill=GOLD)
+        sprite.point((5, 4), fill=TORCH)
+        sprite.point((11, 4), fill=TORCH)
+    elif category == "signal":
+        sprite.rectangle((7, 6, 8, 14), fill=(61, 47, 31), outline=OUTLINE)
+        sprite.rectangle((5, 5, 10, 7), fill=(60, 46, 34), outline=OUTLINE)
+        sprite.polygon([(8, 1), (5, 5), (8, 6), (11, 5)], fill=TORCH)
+        sprite.point((8, 3), fill=(255, 217, 84))
+    elif category == "lore":
+        sprite.rectangle((3, 3, 13, 13), fill=WOOD_DARK, outline=OUTLINE)
+        for x, color in [(5, BLUE), (7, GOLD), (9, GREEN), (11, BURGUNDY)]:
+            sprite.rectangle((x, 5, x + 1, 11), fill=color)
+    elif category == "supply":
+        sprite.rectangle((4, 4, 12, 13), fill=WOOD, outline=OUTLINE)
+        sprite.line((4, 6, 12, 6), fill=STONE_LIGHT)
+        sprite.line((4, 11, 12, 11), fill=STONE_LIGHT)
+        sprite.line((6, 4, 6, 13), fill=WOOD_LIGHT)
+        sprite.line((10, 4, 10, 13), fill=WOOD_LIGHT)
+    elif category == "treasure":
+        sprite.rectangle((3, 8, 13, 13), fill=GOLD, outline=OUTLINE)
+        sprite.point((6, 7), fill=(70, 132, 188))
+        sprite.point((10, 7), fill=(196, 59, 55))
+        sprite.rectangle((5, 5, 11, 9), fill=WOOD, outline=OUTLINE)
+    elif category == "armory":
+        sprite.rectangle((5, 3, 11, 13), fill=(64, 54, 43), outline=OUTLINE)
+        sprite.line((7, 4, 7, 12), fill=BONE)
+        sprite.line((10, 3, 10, 12), fill=STONE_LIGHT)
+        sprite.point((10, 2), fill=STONE_LIGHT)
+    elif category == "hazard":
+        _paint_marker(sprite, "trap")
+    else:
+        sprite.rectangle((3, 6, 13, 10), fill=WOOD, outline=OUTLINE)
+        sprite.rectangle((4, 10, 5, 13), fill=WOOD_DARK)
+        sprite.rectangle((11, 10, 12, 13), fill=WOOD_DARK)
+        sprite.line((4, 7, 12, 7), fill=WOOD_LIGHT)
+
+
+def _paint_hero(sprite, role: str) -> None:
+    if role == "wizard":
+        sprite.line((12, 3, 12, 14), fill=WOOD_LIGHT)
+        sprite.point((12, 2), fill=(95, 184, 220))
+        sprite.polygon([(8, 1), (4, 6), (12, 6)], fill=BLUE, outline=OUTLINE)
+        sprite.rectangle((5, 6, 11, 13), fill=BLUE, outline=OUTLINE)
+        sprite.rectangle((6, 6, 10, 8), fill=(219, 178, 132))
+        sprite.rectangle((6, 8, 10, 11), fill=BONE)
+        sprite.line((8, 9, 8, 13), fill=GOLD)
+    elif role == "elf":
+        sprite.arc((10, 3, 15, 13), 90, 270, fill=WOOD_LIGHT)
+        sprite.line((13, 4, 13, 12), fill=BONE)
+        sprite.polygon([(8, 2), (3, 7), (13, 7)], fill=(52, 91, 48), outline=OUTLINE)
+        sprite.rectangle((5, 7, 11, 13), fill=(61, 104, 50), outline=OUTLINE)
+        sprite.rectangle((6, 6, 10, 9), fill=(160, 103, 61))
+        sprite.rectangle((4, 9, 6, 12), fill=WOOD_DARK)
+    elif role == "dwarf":
+        sprite.rectangle((5, 6, 11, 13), fill=(219, 210, 178), outline=OUTLINE)
+        sprite.rectangle((6, 3, 10, 7), fill=(226, 220, 201), outline=OUTLINE)
+        sprite.rectangle((4, 8, 7, 12), fill=BLUE, outline=GOLD)
+        sprite.line((12, 4, 12, 12), fill=GOLD)
+        sprite.rectangle((11, 3, 13, 5), fill=GOLD)
+        sprite.line((8, 7, 8, 12), fill=GOLD)
+    elif role == "barbarian":
+        sprite.line((3, 4, 3, 13), fill=BONE)
+        sprite.rectangle((2, 3, 4, 4), fill=BONE)
+        sprite.rectangle((6, 5, 10, 12), fill=(164, 164, 156), outline=OUTLINE)
+        sprite.rectangle((6, 3, 10, 6), fill=(199, 199, 188), outline=OUTLINE)
+        sprite.rectangle((10, 7, 13, 12), fill=BLUE, outline=GOLD)
+        sprite.point((8, 5), fill=OUTLINE)
+    else:
+        sprite.rectangle((5, 6, 11, 13), fill=(88, 108, 132), outline=OUTLINE)
+        sprite.rectangle((6, 3, 10, 7), fill=(206, 154, 107), outline=OUTLINE)
+
+
+def _monster_family(role: str) -> str:
+    if role in {"bone_guard", "hollow_knight"}:
+        return "skeleton"
+    if role in {"gloom_cultist"}:
+        return "cultist"
+    if role in {"crypt_brute"}:
+        return "orc"
+    if role in {"skitterling"}:
+        return "spider"
+    if role in {"rat_pack"}:
+        return "rat_pack"
+    if role in {"iron_sentinel", "hollow_knight"}:
+        return "sentinel"
+    return "goblin"
+
+
+def _paint_monster(sprite, role: str) -> None:
+    if role == "cinder_mage":
+        sprite.polygon([(8, 2), (3, 13), (13, 13)], fill=BURGUNDY, outline=OUTLINE)
+        sprite.rectangle((6, 5, 10, 8), fill=(25, 18, 15))
+        sprite.point((6, 7), fill=TORCH)
+        sprite.point((10, 7), fill=TORCH)
+        sprite.polygon([(12, 2), (10, 6), (13, 7), (14, 3)], fill=TORCH, outline=OUTLINE)
+        sprite.point((12, 4), fill=(255, 219, 85))
+        return
+    if role == "mirror_adept":
+        sprite.polygon([(8, 1), (13, 6), (8, 15), (3, 6)], fill=(150, 194, 202), outline=(31, 75, 83))
+        sprite.polygon([(8, 3), (11, 6), (8, 12), (5, 6)], fill=(202, 232, 232))
+        sprite.line((5, 5, 11, 11), fill=(246, 255, 255))
+        sprite.line((10, 4, 6, 12), fill=(83, 145, 156))
+        return
+    if role == "lantern_wight":
+        sprite.rectangle((6, 5, 10, 12), fill=(75, 153, 181), outline=OUTLINE)
+        sprite.polygon([(8, 1), (4, 6), (12, 6)], fill=(105, 190, 208), outline=OUTLINE)
+        sprite.rectangle((6, 6, 10, 8), fill=(18, 22, 23))
+        sprite.point((6, 7), fill=GOLD)
+        sprite.point((10, 7), fill=GOLD)
+        sprite.rectangle((7, 10, 9, 13), fill=TORCH)
+        return
+    if role == "tusk_mauler":
+        sprite.rectangle((3, 6, 13, 13), fill=(99, 140, 64), outline=OUTLINE)
+        sprite.rectangle((4, 3, 12, 8), fill=(86, 130, 56), outline=OUTLINE)
+        sprite.polygon([(4, 5), (0, 7), (4, 8)], fill=BONE, outline=OUTLINE)
+        sprite.polygon([(12, 5), (15, 7), (12, 8)], fill=BONE, outline=OUTLINE)
+        sprite.rectangle((5, 9, 7, 12), fill=STONE_LIGHT)
+        sprite.line((13, 4, 15, 13), fill=STONE_LIGHT)
+        sprite.point((6, 5), fill=OUTLINE)
+        sprite.point((10, 5), fill=OUTLINE)
+        return
+    if role == "iron_sentinel":
+        sprite.rectangle((4, 4, 12, 13), fill=(126, 132, 130), outline=OUTLINE)
+        sprite.rectangle((5, 6, 11, 8), fill=(39, 47, 50))
+        sprite.line((3, 10, 13, 10), fill=STONE_LIGHT)
+        sprite.rectangle((6, 2, 10, 4), fill=(164, 166, 158), outline=OUTLINE)
+        return
+    if role == "hollow_knight":
+        sprite.rectangle((5, 5, 11, 13), fill=(113, 113, 107), outline=OUTLINE)
+        sprite.rectangle((6, 2, 10, 6), fill=BONE, outline=OUTLINE)
+        sprite.rectangle((6, 7, 10, 10), fill=(54, 57, 58), outline=OUTLINE)
+        sprite.point((7, 4), fill=OUTLINE)
+        sprite.point((9, 4), fill=OUTLINE)
+        sprite.line((12, 3, 12, 13), fill=BONE)
+        return
+    family = _monster_family(role)
+    if family == "skeleton":
+        sprite.rectangle((7, 3, 9, 12), fill=BONE)
+        sprite.rectangle((5, 2, 11, 7), fill=BONE, outline=OUTLINE)
+        sprite.rectangle((5, 9, 11, 10), fill=BONE)
+        sprite.line((4, 6, 2, 12), fill=BONE)
+        sprite.line((12, 6, 14, 12), fill=BONE)
+        sprite.point((7, 5), fill=OUTLINE)
+        sprite.point((9, 5), fill=OUTLINE)
+        sprite.line((12, 3, 12, 13), fill=(185, 181, 163))
+    elif family == "cultist":
+        sprite.polygon([(8, 2), (3, 13), (13, 13)], fill=BURGUNDY, outline=OUTLINE)
+        sprite.rectangle((6, 5, 10, 8), fill=(20, 18, 16))
+        sprite.point((6, 7), fill=GOLD)
+        sprite.point((10, 7), fill=GOLD)
+        sprite.line((8, 9, 8, 12), fill=GOLD)
+    elif family == "orc":
+        sprite.rectangle((4, 6, 12, 13), fill=(82, 124, 56), outline=OUTLINE)
+        sprite.rectangle((5, 3, 11, 8), fill=GREEN, outline=OUTLINE)
+        sprite.rectangle((4, 8, 6, 10), fill=STONE_LIGHT)
+        sprite.rectangle((10, 8, 12, 10), fill=STONE_LIGHT)
+        sprite.line((13, 5, 14, 13), fill=STONE_LIGHT)
+        sprite.point((6, 5), fill=OUTLINE)
+        sprite.point((10, 5), fill=OUTLINE)
+    elif family == "spider":
+        sprite.rectangle((5, 5, 11, 11), fill=(45, 35, 32), outline=OUTLINE)
+        sprite.rectangle((6, 3, 10, 6), fill=(59, 43, 37), outline=OUTLINE)
+        for y in (5, 7, 9):
+            sprite.line((5, y, 1, y - 2), fill=OUTLINE)
+            sprite.line((11, y, 15, y - 2), fill=OUTLINE)
+        sprite.point((7, 7), fill=RED)
+        sprite.point((9, 7), fill=RED)
+    elif family == "rat_pack":
+        for ox, oy in ((4, 7), (8, 5), (11, 9)):
+            sprite.rectangle((ox - 2, oy - 1, ox + 2, oy + 2), fill=(104, 91, 67), outline=OUTLINE)
+            sprite.point((ox + 1, oy), fill=OUTLINE)
+    elif family == "sentinel":
+        sprite.rectangle((4, 4, 12, 13), fill=(136, 138, 132), outline=OUTLINE)
+        sprite.rectangle((5, 6, 11, 8), fill=(49, 55, 60))
+        sprite.line((3, 10, 13, 10), fill=STONE_LIGHT)
+    else:
+        sprite.rectangle((4, 7, 12, 13), fill=GREEN, outline=OUTLINE)
+        sprite.rectangle((5, 4, 11, 9), fill=(102, 159, 67), outline=OUTLINE)
+        sprite.polygon([(5, 5), (2, 6), (5, 7)], fill=GREEN, outline=OUTLINE)
+        sprite.polygon([(11, 5), (14, 6), (11, 7)], fill=GREEN, outline=OUTLINE)
+        sprite.line((12, 6, 14, 13), fill=BONE)
+        sprite.point((6, 6), fill=OUTLINE)
+        sprite.point((10, 6), fill=OUTLINE)
 
 
 def _draw_tiles(draw, state: dict[str, Any], x0: int, y0: int, tile: int) -> None:
@@ -165,35 +456,17 @@ def _draw_tiles(draw, state: dict[str, Any], x0: int, y0: int, tile: int) -> Non
             if char == "#":
                 _draw_wall(draw, box, known_tile)
             elif char == " ":
-                draw.rectangle(box, fill=(5, 6, 8))
+                draw.rectangle(box, fill=VOID)
             else:
                 _draw_floor(draw, box, known_tile, (x + y) % 2 == 0)
 
 
 def _draw_floor(draw, box: tuple[int, int, int, int], known: bool, alt: bool) -> None:
-    color = (47, 42, 44) if alt else (42, 38, 42)
-    if not known:
-        color = (20, 22, 28)
-    draw.rectangle(box, fill=color)
-    x1, y1, x2, y2 = box
-    line = (60, 54, 56) if known else (30, 33, 40)
-    draw.line((x1, y2 - 1, x2, y2 - 1), fill=line)
-    draw.line((x2 - 1, y1, x2 - 1, y2), fill=line)
-    if known:
-        draw.point((x1 + 8, y1 + 9), fill=(73, 65, 62))
-        draw.point((x1 + 22, y1 + 23), fill=(31, 29, 32))
+    _paste_native(draw, box, lambda sprite: _paint_floor(sprite, known=known, alt=alt))
 
 
 def _draw_wall(draw, box: tuple[int, int, int, int], known: bool) -> None:
-    base = (84, 81, 88) if known else (29, 32, 39)
-    hi = (118, 112, 120) if known else (43, 47, 56)
-    lo = (45, 43, 50) if known else (18, 20, 25)
-    x1, y1, x2, y2 = box
-    draw.rectangle(box, fill=base)
-    draw.rectangle((x1 + 2, y1 + 2, x2 - 3, y1 + 10), fill=hi)
-    draw.rectangle((x1 + 2, y1 + 21, x2 - 3, y2 - 3), fill=lo)
-    draw.line((x1, y1, x2, y1), fill=(150, 140, 132) if known else hi)
-    draw.line((x1, y2 - 1, x2, y2 - 1), fill=lo)
+    _paste_native(draw, box, lambda sprite: _paint_wall(sprite, known=known))
 
 
 def _draw_statics(draw, state: dict[str, Any], x0: int, y0: int, tile: int) -> None:
@@ -227,26 +500,8 @@ def _draw_marker(draw, pos: Any, x0: int, y0: int, tile: int, kind: str, visible
     x, y = parsed
     if visible is not None and (x, y) not in visible:
         return
-    x1, y1, x2, y2 = _tile_box(x0, y0, x, y, tile)
-    cx, cy = x1 + tile // 2, y1 + tile // 2
-    if kind == "door":
-        draw.rounded_rectangle((x1 + 9, y1 + 4, x2 - 9, y2 - 3), radius=3, fill=(130, 83, 46), outline=(225, 159, 78))
-        draw.ellipse((cx + 4, cy, cx + 7, cy + 3), fill=GOLD)
-    elif kind == "open_door":
-        draw.polygon([(x1 + 10, y1 + 5), (x1 + 20, y1 + 2), (x1 + 20, y2 - 4), (x1 + 10, y2 - 2)], fill=(106, 70, 42), outline=(180, 129, 73))
-    elif kind == "chest":
-        draw.rounded_rectangle((x1 + 6, y1 + 13, x2 - 6, y2 - 5), radius=4, fill=(142, 89, 44), outline=(232, 177, 82))
-        draw.rectangle((x1 + 8, y1 + 10, x2 - 8, y1 + 18), fill=(179, 111, 48))
-        draw.rectangle((cx - 2, cy + 1, cx + 3, cy + 6), fill=GOLD)
-    elif kind == "trap":
-        draw.polygon([(cx, y1 + 6), (x2 - 7, y2 - 7), (x1 + 7, y2 - 7)], outline=RED, fill=(80, 28, 31))
-        draw.text((cx - 4, y1 + 10), "!", fill=(255, 188, 120))
-    elif kind == "objective":
-        draw.ellipse((cx - 9, cy - 10, cx + 9, cy + 10), fill=(235, 179, 65), outline=(255, 238, 156), width=2)
-        draw.ellipse((cx - 3, cy - 4, cx + 3, cy + 4), fill=(118, 35, 42))
-    elif kind in {"stairs", "exit"}:
-        color = BLUE if kind == "exit" else (117, 201, 142)
-        draw.polygon([(cx, y1 + 7), (x2 - 8, cy), (cx, y2 - 7), (x1 + 8, cy)], fill=(24, 42, 55), outline=color)
+    box = _tile_box(x0, y0, x, y, tile)
+    _paste_native(draw, box, lambda sprite: _paint_marker(sprite, kind))
 
 
 def _draw_furniture(draw, furniture: dict[str, Any], x0: int, y0: int, tile: int, visible: set[tuple[int, int]] | None) -> None:
@@ -255,47 +510,15 @@ def _draw_furniture(draw, furniture: dict[str, Any], x0: int, y0: int, tile: int
         return
     if visible is not None and pos not in visible:
         return
-    x1, y1, x2, y2 = _tile_box(x0, y0, pos[0], pos[1], tile)
-    cx, cy = x1 + tile // 2, y1 + tile // 2
-    if furniture.get("destroyed"):
-        draw.line((x1 + 9, y1 + 23, x2 - 8, y1 + 11), fill=(116, 92, 72), width=3)
-        draw.line((x1 + 10, y1 + 11, x2 - 9, y1 + 24), fill=(88, 68, 56), width=3)
-        return
+    box = _tile_box(x0, y0, pos[0], pos[1], tile)
     category = str(furniture.get("category") or "furniture")
-    colors = {
-        "armory": ((118, 88, 56), (205, 211, 215)),
-        "altar": ((92, 76, 104), (232, 166, 74)),
-        "signal": ((128, 76, 44), (223, 164, 86)),
-        "hazard": ((92, 62, 48), (238, 97, 65)),
-        "lore": ((88, 62, 45), (213, 190, 130)),
-        "supply": ((94, 76, 45), (117, 201, 142)),
-        "treasure": ((120, 76, 39), GOLD),
-    }
-    base, accent = colors.get(category, ((92, 72, 55), (180, 155, 111)))
-    draw.rounded_rectangle((x1 + 6, y1 + 11, x2 - 6, y2 - 5), radius=4, fill=base, outline=accent)
-    if category == "armory":
-        draw.line((cx - 8, y1 + 7, cx + 7, y2 - 6), fill=accent, width=2)
-        draw.polygon([(cx + 6, y1 + 6), (cx + 12, y1 + 9), (cx + 8, y1 + 12)], fill=accent)
-    elif category == "altar":
-        draw.ellipse((cx - 5, y1 + 8, cx + 5, y1 + 18), fill=accent)
-    elif category == "signal":
-        draw.ellipse((cx - 11, y1 + 9, cx + 11, y1 + 24), fill=(84, 44, 31), outline=accent, width=2)
-    elif category == "hazard":
-        draw.arc((cx - 10, y1 + 6, cx + 10, y1 + 25), 200, 340, fill=accent, width=3)
-    elif category == "lore":
-        draw.rectangle((cx - 9, y1 + 8, cx + 9, y1 + 23), fill=(72, 43, 31), outline=accent)
-        draw.line((cx, y1 + 9, cx, y1 + 22), fill=accent)
-    elif category == "supply":
-        draw.rectangle((cx - 10, y1 + 9, cx + 10, y1 + 24), fill=base, outline=accent)
-        draw.line((cx - 7, y1 + 14, cx + 7, y1 + 14), fill=accent)
-    elif category == "treasure":
-        draw.rectangle((cx - 9, y1 + 13, cx + 9, y1 + 24), fill=base, outline=accent)
-        draw.rectangle((cx - 2, y1 + 16, cx + 3, y1 + 21), fill=accent)
+    _paste_native(draw, box, lambda sprite: _paint_furniture(sprite, category, bool(furniture.get("destroyed"))))
     if furniture.get("destructible"):
+        x1, y1, _x2, _y2 = box
         hp = max(0, int(furniture.get("hp", 1)))
         max_hp = max(1, int(furniture.get("max_hp", hp or 1)))
         if hp < max_hp:
-            draw.line((x1 + 7, y1 + 6, x2 - 7, y2 - 6), fill=RED, width=2)
+            _draw_hp_bar(draw, x1 + 4, y1 + 2, tile - 8, 3, hp, max_hp)
 
 
 def _draw_entities(draw, state: dict[str, Any], x0: int, y0: int, tile: int, font) -> None:
@@ -371,164 +594,63 @@ def _draw_footprints(draw, hero: dict[str, Any], pos: tuple[int, int], x0: int, 
 def _draw_hero(draw, hero: dict[str, Any], pos: tuple[int, int], x0: int, y0: int, tile: int, font, active: bool) -> None:
     role = str(hero.get("role") or "hero")
     x, y = pos
-    x1, y1, _x2, _y2 = _tile_box(x0, y0, x, y, tile)
-    cx, cy = x1 + tile // 2, y1 + tile // 2
-    draw.ellipse((cx - 12, cy + 10, cx + 12, cy + 15), fill=(0, 0, 0))
+    box = _tile_box(x0, y0, x, y, tile)
+    x1, y1, x2, y2 = box
     if active:
-        draw.ellipse((cx - 16, cy - 16, cx + 16, cy + 16), outline=(255, 241, 159), width=3)
-        draw.ellipse((cx - 14, cy - 14, cx + 14, cy + 14), outline=(119, 86, 36), width=1)
-    if role == "barbarian":
-        _draw_barbarian(draw, cx, cy)
-    elif role == "wizard":
-        _draw_wizard(draw, cx, cy)
-    elif role == "elf":
-        _draw_elf(draw, cx, cy)
-    elif role == "dwarf":
-        _draw_dwarf(draw, cx, cy)
-    else:
-        _draw_adventurer(draw, cx, cy)
-    _draw_equipment_marks(draw, hero, cx, cy)
-    _draw_hp_bar(draw, x1 + 4, y1 + 2, tile - 8, 4, hero.get("hp", 0), hero.get("max_hp", 1))
+        draw.rectangle((x1 + 1, y1 + 1, x2 - 1, y2 - 1), outline=(255, 221, 116), width=2)
+    _paste_native(draw, box, lambda sprite: _paint_hero(sprite, role))
+    _draw_equipment_marks(draw, hero, box)
+    _draw_hp_bar(draw, x1 + 4, y1 + 2, tile - 8, 3, hero.get("hp", 0), hero.get("max_hp", 1))
 
 
-def _draw_equipment_marks(draw, hero: dict[str, Any], cx: int, cy: int) -> None:
+def _draw_equipment_marks(draw, hero: dict[str, Any], box: tuple[int, int, int, int]) -> None:
+    # Subtle pixel overlays only; base silhouettes should carry the class read.
     equipment = hero.get("equipment") or {}
+    x1, y1, x2, _y2 = box
+    tile = x2 - x1 + 1
+    scale = max(1, tile // NATIVE_TILE)
     if equipment.get("offhand") == "shield":
-        draw.ellipse((cx - 19, cy - 1, cx - 10, cy + 10), fill=(96, 118, 150), outline=(230, 218, 185))
+        draw.rectangle((x1 + 2 * scale, y1 + 8 * scale, x1 + 4 * scale, y1 + 12 * scale), fill=BLUE, outline=GOLD)
     if equipment.get("cloak") == "warding_cloak":
-        draw.arc((cx - 13, cy - 12, cx + 13, cy + 16), 35, 145, fill=(124, 190, 220), width=3)
+        draw.line((x1 + 4 * scale, y1 + 4 * scale, x1 + 12 * scale, y1 + 4 * scale), fill=(96, 174, 190), width=max(1, scale))
     if equipment.get("helm") == "iron_helm":
-        draw.arc((cx - 10, cy - 17, cx + 10, cy - 2), 180, 360, fill=(210, 211, 202), width=3)
+        draw.rectangle((x1 + 6 * scale, y1 + 2 * scale, x1 + 10 * scale, y1 + 4 * scale), fill=STONE_LIGHT)
     if equipment.get("charm") == "holy_charm":
-        draw.ellipse((cx + 10, cy - 12, cx + 16, cy - 6), fill=GOLD, outline=(255, 246, 178))
+        draw.rectangle((x1 + 11 * scale, y1 + 4 * scale, x1 + 12 * scale, y1 + 5 * scale), fill=GOLD)
 
 
 def _draw_barbarian(draw, cx: int, cy: int) -> None:
-    skin = (232, 164, 108)
-    leather = (116, 68, 43)
-    red = (202, 56, 50)
-    steel = (205, 211, 215)
-    draw.line((cx + 9, cy - 14, cx + 15, cy + 5), fill=(76, 52, 42), width=2)
-    draw.polygon([(cx + 11, cy - 15), (cx + 18, cy - 11), (cx + 13, cy - 8)], fill=steel, outline=(80, 82, 88))
-    draw.rectangle((cx - 8, cy - 2, cx + 8, cy + 12), fill=leather)
-    draw.polygon([(cx - 9, cy - 2), (cx, cy + 8), (cx + 9, cy - 2)], fill=red)
-    draw.ellipse((cx - 8, cy - 13, cx + 8, cy + 2), fill=skin, outline=(74, 42, 33))
-    draw.rectangle((cx - 8, cy - 15, cx + 8, cy - 10), fill=(89, 48, 33))
-    draw.line((cx - 12, cy + 1, cx - 5, cy + 7), fill=skin, width=3)
-    draw.line((cx + 7, cy + 1, cx + 13, cy + 8), fill=skin, width=3)
-    _draw_face(draw, cx, cy - 6)
+    # Compatibility shim for third-party code that may call the old private helper.
+    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "barbarian"))
 
 
 def _draw_wizard(draw, cx: int, cy: int) -> None:
-    robe = (98, 72, 184)
-    trim = (222, 199, 92)
-    skin = (222, 188, 151)
-    draw.line((cx + 12, cy - 12, cx + 15, cy + 13), fill=(116, 74, 41), width=2)
-    draw.ellipse((cx + 12, cy - 15, cx + 17, cy - 10), fill=(126, 216, 255))
-    draw.polygon([(cx, cy - 20), (cx - 11, cy - 4), (cx + 11, cy - 4)], fill=robe, outline=(43, 38, 83))
-    draw.arc((cx - 10, cy - 9, cx + 10, cy + 7), 185, 355, fill=trim, width=2)
-    draw.polygon([(cx, cy - 1), (cx - 12, cy + 14), (cx + 12, cy + 14)], fill=robe, outline=(43, 38, 83))
-    draw.ellipse((cx - 7, cy - 10, cx + 7, cy + 4), fill=skin, outline=(69, 46, 55))
-    draw.rectangle((cx - 5, cy + 4, cx + 5, cy + 13), fill=(132, 99, 218))
-    _draw_face(draw, cx, cy - 4)
+    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "wizard"))
 
 
 def _draw_elf(draw, cx: int, cy: int) -> None:
-    green = (54, 143, 86)
-    light = (154, 219, 132)
-    skin = (226, 181, 134)
-    bow = (139, 85, 43)
-    draw.arc((cx + 6, cy - 12, cx + 22, cy + 14), 90, 270, fill=bow, width=2)
-    draw.line((cx + 14, cy - 9, cx + 14, cy + 10), fill=(230, 216, 158), width=1)
-    draw.polygon([(cx, cy - 17), (cx - 12, cy - 4), (cx + 12, cy - 4)], fill=green, outline=(26, 78, 48))
-    draw.ellipse((cx - 8, cy - 11, cx + 8, cy + 4), fill=skin, outline=(70, 48, 35))
-    draw.polygon([(cx - 10, cy - 8), (cx - 16, cy - 5), (cx - 9, cy - 3)], fill=skin, outline=(70, 48, 35))
-    draw.polygon([(cx + 10, cy - 8), (cx + 16, cy - 5), (cx + 9, cy - 3)], fill=skin, outline=(70, 48, 35))
-    draw.polygon([(cx, cy + 1), (cx - 11, cy + 14), (cx + 11, cy + 14)], fill=green)
-    draw.line((cx - 8, cy + 6, cx + 8, cy + 6), fill=light, width=2)
-    _draw_face(draw, cx, cy - 5)
+    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "elf"))
 
 
 def _draw_dwarf(draw, cx: int, cy: int) -> None:
-    armor = (114, 119, 124)
-    beard = (207, 126, 54)
-    helm = (183, 184, 174)
-    skin = (222, 160, 111)
-    hammer = (172, 172, 164)
-    draw.line((cx + 11, cy - 10, cx + 16, cy + 9), fill=(91, 58, 35), width=3)
-    draw.rectangle((cx + 10, cy - 13, cx + 20, cy - 7), fill=hammer, outline=(70, 70, 72))
-    draw.rectangle((cx - 10, cy, cx + 10, cy + 13), fill=armor, outline=(48, 50, 54))
-    draw.ellipse((cx - 9, cy - 12, cx + 9, cy + 4), fill=skin, outline=(77, 45, 34))
-    draw.pieslice((cx - 10, cy - 15, cx + 10, cy - 2), 180, 360, fill=helm, outline=(74, 75, 78))
-    draw.polygon([(cx - 8, cy - 1), (cx, cy + 13), (cx + 8, cy - 1)], fill=beard)
-    draw.line((cx - 10, cy + 6, cx - 15, cy + 11), fill=armor, width=4)
-    _draw_face(draw, cx, cy - 5)
+    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "dwarf"))
 
 
 def _draw_adventurer(draw, cx: int, cy: int) -> None:
-    draw.rectangle((cx - 8, cy - 2, cx + 8, cy + 12), fill=(105, 122, 148))
-    draw.ellipse((cx - 8, cy - 12, cx + 8, cy + 4), fill=(224, 182, 142), outline=(68, 42, 35))
-    _draw_face(draw, cx, cy - 5)
+    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "hero"))
 
 
 def _draw_face(draw, cx: int, cy: int) -> None:
-    eye = (24, 22, 24)
-    draw.rectangle((cx - 4, cy - 1, cx - 2, cy + 1), fill=eye)
-    draw.rectangle((cx + 3, cy - 1, cx + 5, cy + 1), fill=eye)
-    draw.point((cx, cy + 3), fill=(86, 48, 40))
+    draw.rectangle((cx - 1, cy, cx, cy + 1), fill=OUTLINE)
+    draw.rectangle((cx + 3, cy, cx + 4, cy + 1), fill=OUTLINE)
 
 
 def _draw_monster(draw, monster: dict[str, Any], pos: tuple[int, int], x0: int, y0: int, tile: int) -> None:
     role = str(monster.get("role") or "monster")
-    colors = {
-        "skitterling": (105, 178, 83),
-        "bone_guard": (202, 202, 190),
-        "gloom_cultist": (167, 80, 183),
-        "crypt_brute": (192, 76, 58),
-        "lantern_wight": (101, 190, 220),
-        "rat_pack": (126, 156, 98),
-        "iron_sentinel": (158, 169, 176),
-        "tusk_mauler": (190, 96, 62),
-        "cinder_mage": (226, 93, 54),
-        "mirror_adept": (166, 218, 230),
-        "hollow_knight": (188, 184, 169),
-    }
-    color = colors.get(role, (188, 85, 78))
     x, y = pos
-    x1, y1, _x2, _y2 = _tile_box(x0, y0, x, y, tile)
-    cx, cy = x1 + tile // 2, y1 + tile // 2
-    draw.ellipse((cx - 10, cy + 8, cx + 10, cy + 13), fill=(0, 0, 0))
-    if role == "rat_pack":
-        for ox, oy in [(-8, -2), (0, -7), (7, 0)]:
-            draw.ellipse((cx + ox - 5, cy + oy - 4, cx + ox + 5, cy + oy + 5), fill=color, outline=(38, 28, 31))
-            draw.ellipse((cx + ox + 1, cy + oy - 1, cx + ox + 3, cy + oy + 1), fill=(12, 10, 12))
-    elif role == "iron_sentinel":
-        draw.rectangle((cx - 12, cy - 12, cx + 12, cy + 11), fill=color, outline=(38, 28, 31))
-        draw.rectangle((cx - 7, cy - 6, cx + 7, cy - 2), fill=(54, 62, 70))
-        draw.line((cx - 13, cy + 1, cx + 13, cy + 1), fill=(90, 98, 106), width=2)
-    elif role == "tusk_mauler":
-        draw.rounded_rectangle((cx - 13, cy - 11, cx + 13, cy + 12), radius=7, fill=color, outline=(38, 28, 31))
-        draw.polygon([(cx - 13, cy - 2), (cx - 22, cy + 2), (cx - 13, cy + 4)], fill=(230, 218, 185))
-        draw.polygon([(cx + 13, cy - 2), (cx + 22, cy + 2), (cx + 13, cy + 4)], fill=(230, 218, 185))
-        draw.ellipse((cx - 5, cy - 4, cx - 2, cy - 1), fill=(12, 10, 12))
-        draw.ellipse((cx + 2, cy - 4, cx + 5, cy - 1), fill=(12, 10, 12))
-    elif role == "cinder_mage":
-        draw.polygon([(cx, cy - 14), (cx - 13, cy + 12), (cx + 13, cy + 12)], fill=color, outline=(38, 28, 31))
-        draw.ellipse((cx - 7, cy - 11, cx + 7, cy + 3), fill=(70, 33, 40))
-        draw.polygon([(cx + 8, cy - 12), (cx + 15, cy - 22), (cx + 13, cy - 8)], fill=GOLD)
-    elif role == "mirror_adept":
-        draw.polygon([(cx, cy - 14), (cx - 12, cy), (cx, cy + 14), (cx + 12, cy)], fill=color, outline=(38, 80, 90))
-        draw.line((cx - 6, cy - 5, cx + 6, cy + 6), fill=(237, 250, 255), width=2)
-    elif role == "hollow_knight":
-        draw.rounded_rectangle((cx - 10, cy - 10, cx + 10, cy + 12), radius=5, fill=color, outline=(38, 28, 31))
-        draw.rectangle((cx - 8, cy - 3, cx + 8, cy + 9), fill=(102, 104, 102), outline=(38, 28, 31))
-        draw.ellipse((cx - 5, cy - 7, cx - 2, cy - 4), fill=(20, 18, 18))
-        draw.ellipse((cx + 2, cy - 7, cx + 5, cy - 4), fill=(20, 18, 18))
-    else:
-        draw.rounded_rectangle((cx - 11, cy - 10, cx + 11, cy + 11), radius=8, fill=color, outline=(38, 28, 31))
-        draw.ellipse((cx - 6, cy - 4, cx - 3, cy - 1), fill=(12, 10, 12))
-        draw.ellipse((cx + 3, cy - 4, cx + 6, cy - 1), fill=(12, 10, 12))
-        draw.line((cx - 5, cy + 5, cx + 5, cy + 5), fill=(36, 20, 22), width=2)
+    box = _tile_box(x0, y0, x, y, tile)
+    x1, y1, _x2, _y2 = box
+    _paste_native(draw, box, lambda sprite: _paint_monster(sprite, role))
     _draw_hp_bar(draw, x1 + 5, y1 + 2, tile - 10, 3, monster.get("hp", 1), monster.get("max_hp", monster.get("hp", 1)))
 
 
@@ -538,12 +660,15 @@ def _draw_hp_bar(draw, x: int, y: int, w: int, h: int, hp: Any, max_hp: Any) -> 
         max_f = max(1.0, float(max_hp))
     except (TypeError, ValueError):
         hp_f, max_f = 1.0, 1.0
-    draw.rectangle((x, y, x + w, y + h), fill=(34, 20, 24))
-    draw.rectangle((x, y, x + int(w * min(1.0, hp_f / max_f)), y + h), fill=RED if hp_f / max_f < 0.4 else GREEN)
+    draw.rectangle((x, y, x + w, y + h), fill=(30, 20, 18))
+    fill_w = int(w * min(1.0, hp_f / max_f))
+    color = RED if hp_f / max_f < 0.4 else (88, 158, 76)
+    draw.rectangle((x, y, x + fill_w, y + h), fill=color)
+    draw.line((x, y, x + w, y), fill=(82, 63, 45))
 
 
 def _draw_hud(draw, state: dict[str, Any], events: dict[str, Any], x: int, y: int, w: int, h: int, title_font, font, small) -> None:
-    draw.rounded_rectangle((x, y, x + w, y + h), radius=12, fill=PANEL, outline=(54, 49, 58))
+    draw.rounded_rectangle((x, y, x + w, y + h), radius=12, fill=PANEL, outline=(74, 60, 46))
     yy = y + 14
     draw.text((x + 14, yy), str(state.get("title") or state.get("quest_id") or "DungeonGrid")[:26], fill=TEXT, font=title_font)
     yy += 32

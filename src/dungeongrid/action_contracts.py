@@ -158,7 +158,7 @@ ACTION_CONTRACTS: tuple[DungeonGridActionContract, ...] = (
         DungeonGridActionType.INSPECT_ROOM,
         DungeonGridTargetKind.NONE,
         2,
-        "Legacy broad search for visible hidden traps or secrets. Prefer search_traps or search_secrets.",
+        "Broad room search for visible hidden traps or secrets. Prefer search_traps or search_secrets.",
     ),
     DungeonGridActionContract(
         DungeonGridActionType.SEARCH_TRAPS,

@@ -37,36 +37,20 @@ class GridEngine:
 
     def available_quests(self) -> list[str]:
         if self.quest_dir:
-            folder_quests = [p.name for p in self.quest_dir.iterdir() if (p / "quest.json").exists()]
-            flat_quests = [p.stem for p in self.quest_dir.glob("*.json")]
-            return sorted({*folder_quests, *flat_quests})
+            return sorted(p.name for p in self.quest_dir.iterdir() if (p / "quest.json").exists())
         dungeon_pkg = resources.files("dungeongrid.dungeons")
-        folder_quests = [p.name for p in dungeon_pkg.iterdir() if p.is_dir() and p.joinpath("quest.json").is_file()]
-        try:
-            quest_pkg = resources.files("dungeongrid.quests")
-            flat_quests = [p.name[:-5] for p in quest_pkg.iterdir() if p.name.endswith(".json")]
-        except ModuleNotFoundError:
-            flat_quests = []
-        return sorted({*folder_quests, *flat_quests})
+        return sorted(p.name for p in dungeon_pkg.iterdir() if p.is_dir() and p.joinpath("quest.json").is_file())
 
     def load_quest_data(self, quest_id: str) -> dict[str, Any]:
-        filename = f"{quest_id}.json"
         if self.quest_dir:
             path = self.quest_dir / quest_id / "quest.json"
-            if not path.exists():
-                path = self.quest_dir / filename
             if not path.exists():
                 raise FileNotFoundError(f"Quest not found: {quest_id}")
             return json.loads(path.read_text(encoding="utf-8"))
         try:
             text = resources.files("dungeongrid.dungeons").joinpath(quest_id, "quest.json").read_text(encoding="utf-8")
             return json.loads(text)
-        except FileNotFoundError:
-            pass
-        try:
-            text = resources.files("dungeongrid.quests").joinpath(filename).read_text(encoding="utf-8")
-            return json.loads(text)
-        except (FileNotFoundError, ModuleNotFoundError) as exc:
+        except FileNotFoundError as exc:
             raise FileNotFoundError(f"Quest not found: {quest_id}") from exc
 
     def new_state(self, quest_id: str = "lantern_crypt", num_heroes: int = 4, seed: int | None = None) -> GameState:
@@ -178,13 +162,6 @@ class GridEngine:
         roles = list(data.get("recommended_heroes", ["barbarian", "wizard", "elf", "dwarf"]))[
             :num_heroes
         ]
-        legacy_roles = {
-            "vanguard": "barbarian",
-            "adept": "wizard",
-            "scout": "elf",
-            "healer": "dwarf",
-        }
-        roles = [legacy_roles.get(role, role) for role in roles]
         hero_starts_raw = data.get("hero_starts")
         if hero_starts_raw:
             starts = [tuple(p) for p in hero_starts_raw[:num_heroes]]

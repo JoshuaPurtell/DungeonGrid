@@ -823,7 +823,7 @@ class EffectResolver:
 
     def _resolve_search_furniture(self, ctx: ResolverContext, effect: SearchFurniture) -> list[Effect]:
         furniture = ctx.state.furniture[effect.furniture_id]
-        category = "legacy" if effect.legacy else effect.category
+        category = "interact" if effect.via_interact else effect.category
         furniture.searched_categories.add(category)
         furniture.searched = bool(furniture.searched_categories)
         raw = furniture.search_effects.get(effect.category)
@@ -1302,7 +1302,7 @@ class ActionTranslator:
             elif target in state.chests:
                 effects.append(OpenChest(actor_id=hero.id, chest_id=target))
             elif target in state.furniture:
-                effects.append(SearchFurniture(actor_id=hero.id, furniture_id=target, category="furniture", legacy=True))
+                effects.append(SearchFurniture(actor_id=hero.id, furniture_id=target, category="furniture", via_interact=True))
         elif action_type == "use_item":
             effects.append(UseItem(actor_id=hero.id, item_id=str(action.get("target"))))
         elif action_type == "equip_item":

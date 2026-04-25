@@ -69,7 +69,7 @@ class RulesEngine:
                     and self.grid.manhattan(hero.pos, furniture.pos) <= 1
                     and furniture.pos in visible
                 ):
-                    if "legacy" not in furniture.searched_categories:
+                    if "interact" not in furniture.searched_categories:
                         actions.append({"type": "interact", "target": furniture.id})
                     if "treasure" not in furniture.searched_categories:
                         actions.append({"type": "search_treasure", "target": furniture.id})
@@ -1055,9 +1055,9 @@ class RulesEngine:
             chest.opened = True
             return self._open_chest(state, hero, chest.contents)
         furniture = state.furniture.get(target_id)
-        if furniture and not furniture.destroyed and "legacy" not in furniture.searched_categories:
+        if furniture and not furniture.destroyed and "interact" not in furniture.searched_categories:
             if self.grid.manhattan(hero.pos, furniture.pos) <= 1:
-                furniture.searched_categories.add("legacy")
+                furniture.searched_categories.add("interact")
                 return self._search_furniture(state, hero, furniture)
         return f"{hero.role} finds nothing useful to interact with.", -0.05
 

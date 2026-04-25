@@ -252,7 +252,7 @@ class SearchFurniture(Effect):
     actor_id: str = ""
     furniture_id: str = ""
     category: str = "furniture"
-    legacy: bool = False
+    via_interact: bool = False
 
 
 @dataclass(slots=True)
