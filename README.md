@@ -1,6 +1,6 @@
 # DungeonGrid
 
-DungeonGrid is a text-first cooperative dungeon-crawl environment for OpenEnv-style multi-agent benchmarks.
+DungeonGrid is a multi-agent benchmark for LLMs.
 
 ![DungeonGrid solo sprite replay](docs/assets/gpt54_nano_lantern_crypt_solo_sprite.gif)
 
