@@ -1,0 +1,423 @@
+{
+  "quest_id": "hourglass_escape_lite",
+  "title": "Hourglass Escape Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "hourglass_escape",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "IV",
+    "marl_axis": "decentralized scheduling under deadline",
+    "coordination_type": "timed route and objective sequencing",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "scheduling",
+      "time_varying_graph",
+      "deadline"
+    ],
+    "challenge_summary": "The team must schedule exploration, pickup, and extraction before the graph effectively changes.",
+    "dilemmas": [
+      "Pre-clearing costs time but prevents disaster",
+      "The elf can scout fast but may trigger too early",
+      "The sentinel is slow but dangerous in a timed choke"
+    ],
+    "coordination_problems": [
+      "Timed sequencing",
+      "Deadline-aware routing",
+      "Split-regroup timing",
+      "Action budget planning"
+    ],
+    "warden_runbook": [
+      "Use the clock as the main pressure",
+      "Block the greedy side route, not the only escape",
+      "Reward planned extraction",
+      "Make deadline warnings explicit"
+    ],
+    "lite_focus": "A four-room escape clock with a sentinel and a bottom route; the agents must decide when to pick up the sand key.",
+    "monster_profile": [
+      "skitterlings",
+      "iron_sentinels"
+    ],
+    "room_count": 4,
+    "map_width": 13,
+    "map_height": 7,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "sequence objective and exit timing under movement uncertainty",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: decentralized scheduling under deadline",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured"
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "elf",
+    "barbarian"
+  ],
+  "hero_loadouts": {
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step",
+        "quiet_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    },
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#############\n#E..D...D..I#\n#...#...#...#\n#...#G..#N..#\n###D#####D###\n#..T..C.....#\n#############",
+    "width": 13,
+    "height": 7
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "sand_key",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      11,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "healing",
+              "item": "healing_draught"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Hourglass Escape is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "middle_room": {
+      "name": "Middle Room",
+      "rect": [
+        5,
+        1,
+        7,
+        3
+      ],
+      "description": "A compact pressure room isolates the challenge: decentralized scheduling under deadline.",
+      "tags": [
+        "pressure"
+      ]
+    },
+    "objective_room": {
+      "name": "Objective Room",
+      "rect": [
+        9,
+        1,
+        11,
+        3
+      ],
+      "description": "The core object of the lite challenge is visible here; taking it should trigger extraction thinking, not exhaustive exploration.",
+      "tags": [
+        "objective",
+        "pressure"
+      ]
+    },
+    "lower_route": {
+      "name": "Lower Route",
+      "rect": [
+        1,
+        5,
+        11,
+        5
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "hourglass_escape_focus_1",
+      "name": "Leaking Hourglass",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for decentralized scheduling under deadline. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "scheduling",
+        "time_varying_graph"
+      ]
+    },
+    {
+      "id": "hourglass_escape_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        10,
+        5
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "hourglass_escape_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "hourglass_escape_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "hourglass_escape_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "hourglass_escape_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "hourglass_escape_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "hourglass_escape_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains decentralized scheduling under deadline.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "hourglass_escape_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up sand_key.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Hourglass Escape Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "A four-room escape clock with a sentinel and a bottom route; the agents must decide when to pick up the sand key.",
+    "warden_style": "timed route and objective sequencing",
+    "marl_axis": "decentralized scheduling under deadline"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "decentralized scheduling under deadline",
+      "tags": [
+        "scheduling",
+        "time_varying_graph",
+        "deadline",
+        "route_planning"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "soft_round_limit": 8,
+      "hourglass_warning_rounds": [
+        4,
+        6
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Use the clock as the main pressure",
+        "Block the greedy side route, not the only escape",
+        "Reward planned extraction",
+        "pressure the declared MARL axis: decentralized scheduling under deadline"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "torch": 12,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "bosses": {
+    "iron_sentinel_1": {
+      "name": "Sand-Gate Sentinel",
+      "public_summary": "Lite boss for decentralized scheduling under deadline; it should test coordination before raw damage.",
+      "counterplay_hint": "Search the focus object and coordinate roles before committing to damage.",
+      "defeat_reward": 0.16,
+      "defeat_description": "Defeat Sand-Gate Sentinel after using the lite challenge's coordination lesson."
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  }
+}

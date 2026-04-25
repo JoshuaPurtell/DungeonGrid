@@ -1,0 +1,396 @@
+{
+  "quest_id": "magistrate_gold_lite",
+  "title": "Magistrate Gold Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "magistrate_gold",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "II",
+    "marl_axis": "mixed-motive sequential social dilemma",
+    "coordination_type": "shared inventory accounting",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "social_dilemma",
+      "trust",
+      "inventory"
+    ],
+    "challenge_summary": "Individual treasure temptation can damage team outcome, forcing trust, reporting, and reward alignment.",
+    "dilemmas": [
+      "Keeping gold improves local score but worsens final pressure",
+      "Honest accounting may lower treasure reward",
+      "One hidden pickup can hurt both heroes"
+    ],
+    "coordination_problems": [
+      "Trust",
+      "Shared ledger",
+      "Norm enforcement",
+      "Team vs individual reward"
+    ],
+    "warden_runbook": [
+      "Tempt greed with visible caches",
+      "Punish concealed loot only after fair warning",
+      "Reward honest declaration",
+      "Do not invent unobserved theft"
+    ],
+    "lite_focus": "A three-room accounting test: one chest, one objective, one optional stash, and explicit need to communicate inventory.",
+    "monster_profile": [
+      "bone_guards"
+    ],
+    "room_count": 3,
+    "map_width": 11,
+    "map_height": 7,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "balance optional treasure against Warden dread and extraction tempo",
+    "classic_dynamic_warden_pressure": "convert greedy treasure searches into dread and wandering pressure",
+    "classic_dynamic_extraction_hook": "greedy heroes can extract partially but lower team quality"
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "dwarf",
+    "elf"
+  ],
+  "hero_loadouts": {
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step",
+        "quiet_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    }
+  },
+  "map": {
+    "ascii": "###########\n#E..D.....#\n#...#..I..#\n#...#..B..#\n###D#######\n#..T.C....#\n###########",
+    "width": 11,
+    "height": 7
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "magistrate_receipt_roll",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      2
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Magistrate Gold is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "objective_room": {
+      "name": "Objective Room",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "The core object of the lite challenge is visible here; taking it should trigger extraction thinking, not exhaustive exploration.",
+      "tags": [
+        "objective",
+        "pressure"
+      ]
+    },
+    "side_cache": {
+      "name": "Side Cache",
+      "rect": [
+        1,
+        5,
+        9,
+        5
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "magistrate_gold_focus_1",
+      "name": "Counting Slate",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for mixed-motive sequential social dilemma. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "social_dilemma",
+        "trust"
+      ]
+    },
+    {
+      "id": "magistrate_gold_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        8,
+        5
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "magistrate_gold_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "magistrate_gold_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "magistrate_gold_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "magistrate_gold_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "magistrate_gold_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "magistrate_gold_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains mixed-motive sequential social dilemma.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "magistrate_gold_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up magistrate_receipt_roll.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Magistrate Gold Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "A three-room accounting test: one chest, one objective, one optional stash, and explicit need to communicate inventory.",
+    "warden_style": "shared inventory accounting",
+    "marl_axis": "mixed-motive sequential social dilemma"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "mixed-motive sequential social dilemma",
+      "tags": [
+        "social_dilemma",
+        "trust",
+        "inventory",
+        "credit_assignment"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "honest_accounting_bonus": true,
+      "greed_threshold": 2
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Tempt greed with visible caches",
+        "Punish concealed loot only after fair warning",
+        "Reward honest declaration",
+        "convert greedy treasure searches into dread and wandering pressure"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    },
+    "classic_dynamic": {
+      "warden": "convert greedy treasure searches into dread and wandering pressure",
+      "metric": "hero_treasure and social_metrics.bad_treasure_draws",
+      "extraction": "greedy heroes can extract partially but lower team quality"
+    }
+  },
+  "torch": 10,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  }
+}

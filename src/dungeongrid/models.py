@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -35,14 +35,16 @@ class DungeonGridAction(BaseModel):
       - {"agent_id": "warden", "type": "warden_auto"}
     """
 
-    agent_id: Optional[str] = None
-    type: DungeonGridActionType = Field(..., description="Action type, e.g. move, open_door, attack_melee.")
-    direction: Optional[DungeonGridDirection] = None
-    target: Optional[Any] = None
+    agent_id: str | None = None
+    type: DungeonGridActionType = Field(
+        ..., description="Action type, e.g. move, open_door, attack_melee."
+    )
+    direction: DungeonGridDirection | None = None
+    target: Any | None = None
     payload: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def enforce_contract_target_shape(self) -> "DungeonGridAction":
+    def enforce_contract_target_shape(self) -> DungeonGridAction:
         contract = ACTION_CONTRACT_BY_TYPE[self.type.value]
         if contract.target_kind is DungeonGridTargetKind.DIRECTION:
             if self.direction is None:
@@ -95,13 +97,13 @@ class DungeonGridStep(BaseModel):
 class DungeonGridPlanResult(BaseModel):
     """Result of executing one OpenEnv ReAct-style queued action plan."""
 
-    intent: Optional[str] = None
+    intent: str | None = None
     submitted_actions: list[dict[str, Any]]
     executed_actions: list[dict[str, Any]] = Field(default_factory=list)
     skipped_actions: list[dict[str, Any]] = Field(default_factory=list)
     unused_actions: list[dict[str, Any]] = Field(default_factory=list)
     reveal_stopped: bool = False
-    reveal_reason: Optional[str] = None
+    reveal_reason: str | None = None
     reward: float = 0.0
     new_achievements: list[dict[str, Any]] = Field(default_factory=list)
     done: bool = False

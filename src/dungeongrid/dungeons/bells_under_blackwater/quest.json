@@ -84,7 +84,15 @@
     "initial_monster_count": 4,
     "has_secret_doors": false,
     "has_randomized_chests": false,
-    "has_custom_hooks": true
+    "has_custom_hooks": true,
+    "marl_axis": "shared global externality management",
+    "coordination_type": "team alert-budget discipline",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "coordinate quiet actions before bell pressure escalates",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: shared global externality management",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured"
   },
   "max_heroes": 4,
   "recommended_heroes": [
@@ -505,5 +513,33 @@
       "furniture"
     ],
     "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "shared global externality management",
+      "tags": [
+        "team_alert-budget_discipline"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "pressure the declared MARL axis: shared global externality management"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
   }
 }

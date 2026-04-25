@@ -47,12 +47,22 @@ def _on_warden_cleanup(ctx):
     if state.done:
         return []
     effects = []
-    if state.alert >= 3 and not state.scripts.get("drum_reinforcement_spawned") and not state.scripts.get("war_drum_broken"):
+    if (
+        state.alert >= 3
+        and not state.scripts.get("drum_reinforcement_spawned")
+        and not state.scripts.get("war_drum_broken")
+    ):
         effects.extend(
             [
                 SetFlag(key="drum_reinforcement_spawned", value=True),
-                EmitEvent(message="The war drum booms. A fresh skitterling darts from the lower pen."),
-                SpawnMonster(monster_id="drum_skitterling_1", role="skitterling", pos=(8, 12) if state.entity_at((8, 12)) is None else (9, 12)),
+                EmitEvent(
+                    message="The war drum booms. A fresh skitterling darts from the lower pen."
+                ),
+                SpawnMonster(
+                    monster_id="drum_skitterling_1",
+                    role="skitterling",
+                    pos=(8, 12) if state.entity_at((8, 12)) is None else (9, 12),
+                ),
             ]
         )
     if state.scripts.get("standard_taken"):

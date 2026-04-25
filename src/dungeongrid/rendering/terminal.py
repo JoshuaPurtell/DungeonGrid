@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from html import escape
 import json
+from html import escape
 from pathlib import Path
 from typing import Any
-
 
 CELL_W = 10
 CELL_H = 18
@@ -107,7 +106,9 @@ def render_terminal_gif(frames: list[dict[str, Any]], path: str | Path, fps: int
     return path
 
 
-def render_terminal_html(frames: list[dict[str, Any]], path: str | Path, title: str | None = None) -> Path:
+def render_terminal_html(
+    frames: list[dict[str, Any]], path: str | Path, title: str | None = None
+) -> Path:
     """Write a self-contained terminal-style HTML replay."""
 
     if not frames:
@@ -262,7 +263,24 @@ def _nethack_wall_glyphs(chars: list[list[str]]) -> list[list[str]]:
 def _is_open_terrain(chars: list[list[str]], x: int, y: int) -> bool:
     if y < 0 or y >= len(chars) or x < 0 or x >= len(chars[y]):
         return False
-    return chars[y][x] in {".", "/", "D", "C", "I", "E", "^", "T", "A", "a", "d", "v", "l", "s", "$", "f"}
+    return chars[y][x] in {
+        ".",
+        "/",
+        "D",
+        "C",
+        "I",
+        "E",
+        "^",
+        "T",
+        "A",
+        "a",
+        "d",
+        "v",
+        "l",
+        "s",
+        "$",
+        "f",
+    }
 
 
 def _place_static(
@@ -339,7 +357,14 @@ def _place_entities(
             _set_pos(grid, styles, hero.get("pos"), glyph, css)
     for monster in (state.get("monsters") or {}).values():
         if monster.get("alive", True):
-            _set_pos(grid, styles, monster.get("pos"), monster_glyphs.get(monster.get("role"), "m"), "monster", known)
+            _set_pos(
+                grid,
+                styles,
+                monster.get("pos"),
+                monster_glyphs.get(monster.get("role"), "m"),
+                "monster",
+                known,
+            )
 
 
 def _set_pos(
@@ -375,7 +400,10 @@ def _base_class_for_char(char: str) -> str:
         "C": "chest",
         "I": "objective",
         "E": "exit",
-    }.get(char, "monster" if char in {"g", "b", "k", "r", "w", "p", "n", "m", "f", "y", "h"} else "dim")
+    }.get(
+        char,
+        "monster" if char in {"g", "b", "k", "r", "w", "p", "n", "m", "f", "y", "h"} else "dim",
+    )
 
 
 def _draw_grid(draw, grid, x0: int, y0: int, font) -> None:
@@ -385,7 +413,9 @@ def _draw_grid(draw, grid, x0: int, y0: int, font) -> None:
             draw.text((x0 + x * CELL_W, y0 + y * CELL_H), char, fill=color, font=font)
 
 
-def _draw_terminal(draw, grid, state: dict[str, Any], events: dict[str, Any], x0: int, y0: int, font) -> None:
+def _draw_terminal(
+    draw, grid, state: dict[str, Any], events: dict[str, Any], x0: int, y0: int, font
+) -> None:
     lines = _terminal_lines(grid, state, events)
     styles = _terminal_styles(grid, lines)
     for y, line in enumerate(lines):
@@ -402,7 +432,9 @@ def _draw_terminal(draw, grid, state: dict[str, Any], events: dict[str, Any], x0
             draw.text((x0 + x * CELL_W, y0 + y * CELL_H), char, fill=color, font=font)
 
 
-def _terminal_lines(grid: list[list[tuple[str, str]]], state: dict[str, Any], events: dict[str, Any]) -> list[str]:
+def _terminal_lines(
+    grid: list[list[tuple[str, str]]], state: dict[str, Any], events: dict[str, Any]
+) -> list[str]:
     rows = [" " * TERM_COLS for _ in range(TERM_ROWS)]
     message = _terminal_message(state, events)
     rows[0] = message[:TERM_COLS].ljust(TERM_COLS)
@@ -430,7 +462,9 @@ def _terminal_lines(grid: list[list[tuple[str, str]]], state: dict[str, Any], ev
     return rows
 
 
-def _terminal_styles(grid: list[list[tuple[str, str]]], lines: list[str]) -> dict[tuple[int, int], str]:
+def _terminal_styles(
+    grid: list[list[tuple[str, str]]], lines: list[str]
+) -> dict[tuple[int, int], str]:
     styles: dict[tuple[int, int], str] = {}
     map_rows = ["".join(char for char, _css in row) for row in grid]
     map_width = max((len(row) for row in map_rows), default=0)
@@ -493,15 +527,25 @@ def _terminal_info_rows(state: dict[str, Any], events: dict[str, Any]) -> list[s
         rows.append("You do: " + "; ".join(_action_phrase(action) for action in actions[-3:]))
     achievements = events.get("new_achievements") or []
     if achievements:
-        rows.append("Achievement: " + ", ".join(str(item.get("id") or item.get("title") or item) for item in achievements[-2:]))
+        rows.append(
+            "Achievement: "
+            + ", ".join(
+                str(item.get("id") or item.get("title") or item) for item in achievements[-2:]
+            )
+        )
     messages = state.get("party_messages_tail") or []
     if messages:
         message = messages[-1]
         text = message.get("text") or message.get("message") or message.get("payload") or ""
-        rows.append(f"{message.get('from', '?')} whispers to {message.get('to', 'party')}: {str(text)}")
+        rows.append(
+            f"{message.get('from', '?')} whispers to {message.get('to', 'party')}: {text!s}"
+        )
     if not rows:
         objective = state.get("objective") or {}
-        rows.append(f"Objective: {objective.get('id', '-')} carrier={objective.get('carrier') or '-'} recovered={objective.get('recovered')}")
+        rows.append(
+            f"Objective: {objective.get('id', '-')} carrier={objective.get('carrier') or '-'} "
+            f"recovered={objective.get('recovered')} dread={state.get('dread', '-')}"
+        )
     return rows
 
 
@@ -526,7 +570,7 @@ def _status_line_two(state: dict[str, Any], events: dict[str, Any]) -> str:
     reward = events.get("reward", 0)
     return (
         f"Dlvl:{state.get('quest_id', '-')} $:{state.get('treasure_collected', 0)} "
-        f"Torch:{state.get('torch')} Alert:{state.get('alert')} Obj:{objective} "
+        f"Torch:{state.get('torch')} Alert:{state.get('alert')} Dread:{state.get('dread', '-')} Obj:{objective} "
         f"R:{state.get('round')} +{reward} {party}"
     )
 
@@ -572,7 +616,9 @@ def _action_phrase(action: Any) -> str:
         payload = action.get("payload") if isinstance(action.get("payload"), dict) else {}
         return f"give {payload.get('item', '?')} to {action.get('target', '?')}"[:40]
     if action_type == "message":
-        text = action.get("payload", {}).get("text") if isinstance(action.get("payload"), dict) else ""
+        text = (
+            action.get("payload", {}).get("text") if isinstance(action.get("payload"), dict) else ""
+        )
         return f"message: {text}"[:40]
     if action_type == "attack":
         return f"attack {action.get('target', '?')}"
@@ -596,11 +642,17 @@ def _color_for(char: str, css_class: str) -> tuple[int, int, int]:
     return COLORS.get(char, FG)
 
 
-def _draw_panel(draw, state: dict[str, Any], events: dict[str, Any], x: int, y: int, right: int, font, small) -> None:
+def _draw_panel(
+    draw, state: dict[str, Any], events: dict[str, Any], x: int, y: int, right: int, font, small
+) -> None:
     lines = _panel_lines(state, events)
     yy = y
     for index, line in enumerate(lines):
-        fill = FG if index < 7 or line.startswith(("actions", "events", "achievements", "messages")) else DIM
+        fill = (
+            FG
+            if index < 7 or line.startswith(("actions", "events", "achievements", "messages"))
+            else DIM
+        )
         draw.text((x, yy), line[:58], fill=fill, font=font if index == 0 else small)
         yy += 22 if index == 0 else 18
         if yy > 500:
@@ -609,12 +661,16 @@ def _draw_panel(draw, state: dict[str, Any], events: dict[str, Any], x: int, y: 
 
 def _panel_lines(state: dict[str, Any], events: dict[str, Any]) -> list[str]:
     objective = state.get("objective") or {}
+    active = state.get("active_agent")
     lines = [
         f"{state.get('title', state.get('quest_id', 'DungeonGrid'))}",
         f"round {state.get('round')}  phase {state.get('phase')}  active {state.get('active_agent')}",
         f"AP {state.get('ap_remaining', {}).get(state.get('active_agent'), '-')}"
-        f"  alert {state.get('alert')}  torch {state.get('torch')}",
+        f"  move {(state.get('movement_remaining') or {}).get(active, '-')}"
+        f"  alert {state.get('alert')}  dread {state.get('dread', '-')}"
+        f"  torch {state.get('torch')}",
         f"objective {objective.get('id')} carrier={objective.get('carrier') or '-'} recovered={objective.get('recovered')}",
+        f"extracted {len(state.get('extracted_heroes') or [])}  termination {state.get('termination_reason') or '-'}",
         f"reward {events.get('reward', 0)}  step {events.get('step_index', '-')}",
         "",
         "heroes:",
@@ -643,7 +699,9 @@ def _panel_lines(state: dict[str, Any], events: dict[str, Any]) -> list[str]:
         lines.append("messages:")
         for message in messages[-3:]:
             text = message.get("text") or message.get("message") or message.get("payload") or ""
-            lines.append(f"  {message.get('from', '?')}->{message.get('to', 'party')}: {str(text)[:42]}")
+            lines.append(
+                f"  {message.get('from', '?')}->{message.get('to', 'party')}: {str(text)[:42]}"
+            )
     event_log = state.get("event_log_tail") or []
     if event_log:
         lines.append("events:")
@@ -672,8 +730,7 @@ def _html_frame(frame: dict[str, Any], index: int) -> str:
     state = frame.get("state") or {}
     grid = _grid_from_state(state) if isinstance(state, dict) else []
     map_html = "\n".join(
-        "".join(f'<span class="{css}">{escape(char)}</span>' for char, css in row)
-        for row in grid
+        "".join(f'<span class="{css}">{escape(char)}</span>' for char, css in row) for row in grid
     )
     panel = "\n".join(escape(line) for line in _panel_lines(state, _frame_events(frame)))
     return f"""<section class="frame" id="frame-{index}">

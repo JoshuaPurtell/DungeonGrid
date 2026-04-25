@@ -11,8 +11,7 @@ from .rules_engine import RulesEngine
 
 
 class Policy(Protocol):
-    def act(self, observation: dict[str, Any]) -> dict[str, Any]:
-        ...
+    def act(self, observation: dict[str, Any]) -> dict[str, Any]: ...
 
 
 class RandomLegalPolicy:
@@ -71,12 +70,32 @@ class AchievementScoutPolicy(GreedyHeroPolicy):
                 return {
                     "type": "message",
                     "target": "party",
-                    "payload": {"text": "I am scouting for doors, furniture, traps, and objective progress."},
+                    "payload": {
+                        "text": "I am scouting for doors, furniture, traps, and objective progress."
+                    },
                 }
         for action in legal:
             if action.get("type") == "interact":
                 target = str(action.get("target"))
-                if target.startswith(("sarcophagus", "oil_", "weapon_", "bell_", "rite_", "supply_", "spice_", "ledger_", "ash_", "cinder_", "exit_", "guard_", "north_", "west_", "south_")):
+                if target.startswith(
+                    (
+                        "sarcophagus",
+                        "oil_",
+                        "weapon_",
+                        "bell_",
+                        "rite_",
+                        "supply_",
+                        "spice_",
+                        "ledger_",
+                        "ash_",
+                        "cinder_",
+                        "exit_",
+                        "guard_",
+                        "north_",
+                        "west_",
+                        "south_",
+                    )
+                ):
                     return action
         for action in legal:
             if action.get("type") in {"open_door", "inspect_room", "inspect_tile", "disarm"}:
@@ -133,6 +152,13 @@ class AgentEngine:
             "heroes_alive": living,
             "damage": state.total_damage_taken,
             "treasure": state.treasure_collected,
+            "hero_treasure": dict(state.hero_treasure),
+            "per_hero_stats": self._per_hero_stats(state),
+            "dread": state.dread,
+            "extracted_heroes": len(state.extracted_heroes),
+            "extraction_rate": len(state.extracted_heroes) / max(1, len(state.heroes)),
+            "termination_reason": state.termination_reason,
+            "social_metrics": dict(state.social_metrics),
             "exploration": explored / max(1, floor_tiles),
             "explored_tiles": explored,
             "floor_tiles": floor_tiles,
@@ -149,6 +175,24 @@ class AgentEngine:
             "invalid_actions": state.invalid_actions,
             "monsters_defeated": len([m for m in state.monsters.values() if not m.alive]),
         }
+
+    def _per_hero_stats(self, state: GameState) -> dict[str, dict[str, Any]]:
+        stats_by_hero: dict[str, dict[str, Any]] = {}
+        for hero_id, hero in state.heroes.items():
+            raw = dict(state.per_hero_stats.get(hero_id, {}))
+            raw.setdefault("role", hero.role)
+            raw["reward"] = round(float(raw.get("reward", 0.0) or 0.0), 4)
+            raw["achievement_reward"] = round(
+                float(raw.get("achievement_reward", 0.0) or 0.0), 4
+            )
+            raw["treasure"] = int(state.hero_treasure.get(hero_id, raw.get("treasure", 0)))
+            raw["extracted"] = hero_id in state.extracted_heroes
+            raw["alive"] = hero.alive
+            raw["hp"] = hero.hp
+            raw["max_hp"] = hero.max_hp
+            raw["achievement_count"] = len(raw.get("achievements_unlocked", []) or [])
+            stats_by_hero[hero_id] = raw
+        return stats_by_hero
 
     def _room_regions(self, state: GameState) -> list[set[tuple[int, int]]]:
         blocked_doors = {door.pos for door in state.doors.values()}
@@ -174,7 +218,9 @@ class AgentEngine:
             regions.append(region)
         return regions
 
-    def move_toward(self, state: GameState, actor_id: str, target: tuple[int, int]) -> dict[str, Any]:
+    def move_toward(
+        self, state: GameState, actor_id: str, target: tuple[int, int]
+    ) -> dict[str, Any]:
         actor = state.all_entities()[actor_id]
         best = None
         best_dist = 10**9

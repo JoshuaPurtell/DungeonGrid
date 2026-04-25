@@ -36,6 +36,17 @@ print(result.skipped_actions)
 print(result.observation.text)
 ```
 
+Classic dungeon-crawl dynamics are available as an opt-in benchmark mode:
+
+```python
+obs = env.reset(
+    quest_id="lantern_crypt",
+    num_heroes=2,
+    seed=1,
+    ruleset="classic_dynamic",
+)
+```
+
 Tool-call shape:
 
 ```json
@@ -64,3 +75,17 @@ dungeons/<dungeon_id>/
 ```
 
 `quest.json` defines the map, rooms, objective, decks, furniture, monsters, bosses, scripts, and achievements. `hooks.py` is optional Python for bespoke trigger/effect behavior.
+
+## Benchmark Protocol
+
+DungeonGrid includes default AP-mode suites plus the opt-in `classic_dynamic` suite:
+
+| Suite | Quests | Rules | Notes |
+|---|---|---|---|
+| `DG-Solo-20` | 20 full dungeons | default AP mode | one hero, no specialist hard gates |
+| `DG-Coop-20` | 20 full dungeons | default AP mode | two to four heroes |
+| `DG-Lite-20` | 20 lite diagnostics | default or `classic_dynamic` | short MARL probes |
+| `DG-ClassicDynamic-20` | 20 full dungeons | `ruleset="classic_dynamic"` | roll-to-move, major actions, dread, extraction, role requirements |
+| `DG-OpenEnv-ReAct` | full or lite | selected by config | queued JSON plans with reveal-boundary replanning |
+
+See `docs/benchmark_protocol.md`, `docs/action_contract.md`, and `docs/observation_contract.md` for the stable benchmark contract.

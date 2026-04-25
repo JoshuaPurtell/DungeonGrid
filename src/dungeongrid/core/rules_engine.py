@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Optional
+from typing import Any
 
 from .data import (
     ACTION_COSTS,
     ARMOR_ITEMS,
     DIRECTIONS,
     HERO_ARCHETYPES,
+    MAJOR_ACTION_TYPES,
     MONSTER_TYPES,
     SPELL_CARDS,
     WEAPON_ITEMS,
@@ -41,86 +42,163 @@ class RulesEngine:
             return [{"type": "end_turn"}]
         actions: list[dict[str, Any]] = []
         ap = state.ap_remaining.get(agent_id, 0)
+        classic = self._classic_enabled(state)
+        movement = state.movement_remaining.get(agent_id, 0)
+        major_available = not classic or not state.major_action_used.get(agent_id, False)
         visible = self.grid.visible_tiles(state, agent_id)
         if ap >= 1:
             actions.append({"type": "message", "target": "party"})
             for ally_id in state.heroes:
                 if ally_id != agent_id:
                     actions.append({"type": "message", "target": ally_id})
-            for direction, (dx, dy) in DIRECTIONS.items():
-                target = (hero.pos[0] + dx, hero.pos[1] + dy)
-                if self.grid.is_walkable(state, target):
-                    actions.append({"type": "move", "direction": direction, "target": list(target)})
-            for door in state.doors.values():
-                if door.state == "closed" and door.pos in self.grid.adjacent_positions(hero.pos):
-                    if not door.secret or door.discovered:
+            if not classic or movement > 0:
+                for direction, (dx, dy) in DIRECTIONS.items():
+                    target = (hero.pos[0] + dx, hero.pos[1] + dy)
+                    if self.grid.is_walkable(state, target):
+                        actions.append(
+                            {"type": "move", "direction": direction, "target": list(target)}
+                        )
+            if major_available:
+                for door in state.doors.values():
+                    if (
+                        door.state == "closed"
+                        and door.pos in self.grid.adjacent_positions(hero.pos)
+                        and (not door.secret or door.discovered)
+                    ):
                         actions.append({"type": "open_door", "target": door.id})
             for pos in [hero.pos, *self.grid.adjacent_positions(hero.pos)]:
                 if self.grid.in_bounds(state, pos):
                     actions.append({"type": "inspect_tile", "target": list(pos)})
-            for chest in state.chests.values():
-                if not chest.opened and self.grid.manhattan(hero.pos, chest.pos) <= 1 and chest.pos in visible:
-                    actions.append({"type": "interact", "target": chest.id})
-                    actions.append({"type": "search_treasure", "target": chest.id})
-            for furniture in state.furniture.values():
-                if (
-                    furniture.visible
-                    and not furniture.destroyed
-                    and self.grid.manhattan(hero.pos, furniture.pos) <= 1
-                    and furniture.pos in visible
-                ):
-                    if "interact" not in furniture.searched_categories:
-                        actions.append({"type": "interact", "target": furniture.id})
-                    if "treasure" not in furniture.searched_categories:
-                        actions.append({"type": "search_treasure", "target": furniture.id})
-                    if "furniture" not in furniture.searched_categories:
-                        actions.append({"type": "search_furniture", "target": furniture.id})
-            if state.objective.pos and self.grid.manhattan(hero.pos, state.objective.pos) <= 1 and state.objective.pos in visible:
+            safe_search = not classic or not self._safe_room_search_blocked(state, hero)
+            if major_available:
+                for chest in state.chests.values():
+                    if (
+                        not chest.opened
+                        and self.grid.manhattan(hero.pos, chest.pos) <= 1
+                        and chest.pos in visible
+                    ):
+                        actions.append({"type": "interact", "target": chest.id})
+                        if safe_search:
+                            actions.append({"type": "search_treasure", "target": chest.id})
+                for furniture in state.furniture.values():
+                    if (
+                        furniture.visible
+                        and not furniture.destroyed
+                        and self.grid.manhattan(hero.pos, furniture.pos) <= 1
+                        and furniture.pos in visible
+                    ):
+                        if "interact" not in furniture.searched_categories:
+                            actions.append({"type": "interact", "target": furniture.id})
+                        if safe_search and "treasure" not in furniture.searched_categories:
+                            actions.append({"type": "search_treasure", "target": furniture.id})
+                        if safe_search and "furniture" not in furniture.searched_categories:
+                            actions.append({"type": "search_furniture", "target": furniture.id})
+            if (
+                major_available
+                and state.objective.pos
+                and self.grid.manhattan(hero.pos, state.objective.pos) <= 1
+                and state.objective.pos in visible
+            ):
                 actions.append({"type": "interact", "target": state.objective.id})
-            if state.objective.carrier == hero.id and hero.pos == state.escape_tile:
+            if hero.pos == state.escape_tile and (
+                state.objective.carrier == hero.id or (classic and state.objective.recovered)
+            ):
                 actions.append({"type": "interact", "target": "escape"})
+            if (
+                classic
+                and state.objective.recovered
+                and state.ruleset.get("extraction", {}).get("allow_partial", True)
+            ):
+                actions.append({"type": "call_extraction"})
             for item in hero.inventory:
                 if item in {"healing_draught", "lantern_lens"}:
                     actions.append({"type": "use_item", "target": item})
-                if self._is_equippable(item) and self._can_equip(hero, item) and hero.equipment.get(self._item_slot(item)) != item:
+                if (
+                    self._is_equippable(item)
+                    and self._can_equip(hero, item)
+                    and hero.equipment.get(self._item_slot(item)) != item
+                ):
                     actions.append({"type": "equip_item", "target": item})
             for ally_id, ally in state.heroes.items():
-                if ally_id != hero.id and ally.alive and self.grid.manhattan(hero.pos, ally.pos) <= 1:
+                if (
+                    ally_id != hero.id
+                    and ally.alive
+                    and self.grid.manhattan(hero.pos, ally.pos) <= 1
+                ):
                     for item in hero.inventory:
                         if item != state.objective.id:
-                            actions.append({"type": "give_item", "target": ally_id, "payload": {"item": item}})
+                            actions.append(
+                                {"type": "give_item", "target": ally_id, "payload": {"item": item}}
+                            )
             actions.append({"type": "guard"})
-        if ap >= 2:
+        if ap >= 2 and major_available:
             for monster in state.monsters.values():
                 if monster.alive and monster.pos in visible:
                     if self.grid.manhattan(hero.pos, monster.pos) == 1:
                         actions.append({"type": "attack_melee", "target": monster.id})
                     weapon_range = self._weapon_range(hero)
-                    if weapon_range > 1 and self.grid.manhattan(hero.pos, monster.pos) <= weapon_range and self.grid.line_clear(state, hero.pos, monster.pos):
+                    if (
+                        weapon_range > 1
+                        and self.grid.manhattan(hero.pos, monster.pos) <= weapon_range
+                        and self.grid.line_clear(state, hero.pos, monster.pos)
+                    ):
                         actions.append({"type": "attack_ranged", "target": monster.id})
-                    if self._can_cast_spell(hero, "spark_lance") and self.grid.manhattan(hero.pos, monster.pos) <= int(SPELL_CARDS["spark_lance"].get("range", 5)) and self.grid.line_clear(state, hero.pos, monster.pos):
-                        actions.append({"type": "cast", "target": monster.id, "payload": {"spell": "spark_lance"}})
+                    if (
+                        self._can_cast_spell(hero, "spark_lance")
+                        and self.grid.manhattan(hero.pos, monster.pos)
+                        <= int(SPELL_CARDS["spark_lance"].get("range", 5))
+                        and self.grid.line_clear(state, hero.pos, monster.pos)
+                    ):
+                        actions.append(
+                            {
+                                "type": "cast",
+                                "target": monster.id,
+                                "payload": {"spell": "spark_lance"},
+                            }
+                        )
             if hero.role == "elf":
                 for ally in state.heroes.values():
-                    if self._can_cast_spell(hero, "mend_wounds") and ally.alive and ally.hp < ally.max_hp and self.grid.manhattan(hero.pos, ally.pos) <= 1:
-                        actions.append({"type": "cast", "target": ally.id, "payload": {"spell": "mend_wounds"}})
+                    if (
+                        self._can_cast_spell(hero, "mend_wounds")
+                        and ally.alive
+                        and ally.hp < ally.max_hp
+                        and self.grid.manhattan(hero.pos, ally.pos) <= 1
+                    ):
+                        actions.append(
+                            {"type": "cast", "target": ally.id, "payload": {"spell": "mend_wounds"}}
+                        )
             for ally in state.heroes.values():
                 if ally.alive and self.grid.manhattan(hero.pos, ally.pos) <= 1:
                     if self._can_cast_spell(hero, "ward_circle"):
-                        actions.append({"type": "cast", "target": ally.id, "payload": {"spell": "ward_circle"}})
+                        actions.append(
+                            {"type": "cast", "target": ally.id, "payload": {"spell": "ward_circle"}}
+                        )
                     if self._can_cast_spell(hero, "quiet_step"):
-                        actions.append({"type": "cast", "target": ally.id, "payload": {"spell": "quiet_step"}})
+                        actions.append(
+                            {"type": "cast", "target": ally.id, "payload": {"spell": "quiet_step"}}
+                        )
             if self._can_cast_spell(hero, "blink_step"):
                 for direction, (dx, dy) in DIRECTIONS.items():
                     first = (hero.pos[0] + dx, hero.pos[1] + dy)
                     second = (hero.pos[0] + 2 * dx, hero.pos[1] + 2 * dy)
                     if self.grid.is_walkable(state, first) or self.grid.is_walkable(state, second):
-                        actions.append({"type": "cast", "target": direction, "payload": {"spell": "blink_step"}})
+                        actions.append(
+                            {
+                                "type": "cast",
+                                "target": direction,
+                                "payload": {"spell": "blink_step"},
+                            }
+                        )
             for spell in ("reveal_glyph", "hush_flame", "silence"):
                 if self._can_cast_spell(hero, spell):
                     actions.append({"type": "cast", "target": hero.id, "payload": {"spell": spell}})
             for trap in state.traps.values():
-                if trap.armed and trap.revealed and self.grid.manhattan(hero.pos, trap.pos) <= 1:
+                if (
+                    trap.armed
+                    and trap.revealed
+                    and self.grid.manhattan(hero.pos, trap.pos) <= 1
+                    and not self._specialist_action_blocked(state, hero, "disarm")
+                ):
                     actions.append({"type": "disarm", "target": trap.id})
             for furniture in state.furniture.values():
                 if (
@@ -131,19 +209,87 @@ class RulesEngine:
                     and furniture.pos in visible
                 ):
                     actions.append({"type": "attack_object", "target": furniture.id})
-            actions.append({"type": "inspect_room"})
-            actions.append({"type": "search_traps"})
-            actions.append({"type": "search_secrets"})
+            if not classic or not self._safe_room_search_blocked(state, hero):
+                actions.append({"type": "inspect_room"})
+                actions.append({"type": "search_traps"})
+                actions.append({"type": "search_secrets"})
         actions.append({"type": "end_turn"})
         return self._dedupe_actions(actions)
 
     def _warden_legal_actions(self, state: GameState) -> list[dict[str, Any]]:
         actions = [{"type": "warden_auto"}]
+        if state.ruleset.get("warden_dread", {}).get("enabled") and state.dread > 0:
+            for hero in state.heroes.values():
+                if hero.alive and hero.id not in state.extracted_heroes:
+                    actions.append(
+                        {
+                            "type": "warden_spend_dread",
+                            "target": hero.id,
+                            "payload": {"effect": "spawn_wanderer"},
+                        }
+                    )
+                    actions.append(
+                        {
+                            "type": "warden_spend_dread",
+                            "target": hero.id,
+                            "payload": {"effect": "pressure_carrier"},
+                        }
+                    )
+            actions.append(
+                {
+                    "type": "warden_spend_dread",
+                    "target": "torch",
+                    "payload": {"effect": "darken_lantern"},
+                }
+            )
         for monster in state.monsters.values():
             if monster.alive and monster.activation != "dormant":
                 actions.append({"type": "activate_monster", "target": monster.id})
         actions.append({"type": "end_turn"})
         return actions
+
+    def _classic_enabled(self, state: GameState) -> bool:
+        return bool(state.ruleset)
+
+    def _required_roles(self, state: GameState) -> list[str]:
+        requirements = state.scripts.get("role_requirements", {})
+        if not isinstance(requirements, dict):
+            return []
+        return [str(role) for role in requirements.get("required_roles", [])]
+
+    def _specialist_action_blocked(self, state: GameState, hero: Entity, action_type: str) -> bool:
+        if not self._classic_enabled(state) or action_type != "disarm":
+            return False
+        required = self._required_roles(state)
+        return bool(required and hero.role not in required)
+
+    def _is_major_action(self, state: GameState, action_type: str) -> bool:
+        if action_type not in MAJOR_ACTION_TYPES:
+            return False
+        if action_type == "open_door":
+            return bool(state.ruleset.get("one_major_action", {}).get("open_door_is_major", True))
+        return True
+
+    def _safe_room_search_blocked(self, state: GameState, hero: Entity) -> bool:
+        spec = state.ruleset.get("safe_room_search", {})
+        if not spec.get("enabled"):
+            return False
+        visible = self.grid.visible_tiles(state, hero.id)
+        hero_room = self.grid.room_id_at(state.rooms, hero.pos)
+        for monster in state.monsters.values():
+            if not monster.alive:
+                continue
+            if monster.activation == "dormant" and not spec.get("include_dormant_monsters", False):
+                continue
+            if hero_room and monster.room_id == hero_room:
+                return True
+            if (
+                spec.get("include_visible_corridor_monsters", True)
+                and monster.pos in visible
+                and monster.activation != "dormant"
+            ):
+                return True
+        return False
 
     def _dedupe_actions(self, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         seen: set[str] = set()
@@ -155,156 +301,20 @@ class RulesEngine:
                 result.append(action)
         return result
 
-    def apply_action(self, state: GameState, agent_id: str, action: dict[str, Any]) -> tuple[float, str, dict[str, Any]]:
+    def apply_action(
+        self, state: GameState, agent_id: str, action: dict[str, Any]
+    ) -> tuple[float, str, dict[str, Any]]:
         """Apply an action. Returns reward, narration, info."""
-        runtime = self._runtime
-        if runtime is None:
+        return self._runtime_for_step().apply_action(state, agent_id, action)
+
+    def _runtime_for_step(self):
+        """Return the action runtime, keeping RNG synchronized with this rules engine."""
+        if self._runtime is None:
             from .engine_runtime import EngineRuntime
 
-            runtime = EngineRuntime(self)
-            self._runtime = runtime
-        runtime.rng = self.rng
-        return runtime.apply_action(state, agent_id, action)
-
-        if state.done:
-            return 0.0, "The quest is already over.", {"done": True}
-        active = state.active_agent()
-        if agent_id != active:
-            state.invalid_actions += 1
-            feedback = self._invalid_feedback(
-                state,
-                agent_id,
-                action,
-                "not_active_agent",
-                f"{agent_id} is not active; {active} must act.",
-            )
-            return -1.0, f"Invalid action: {feedback['message']}", {"invalid": True, **feedback}
-        action_type = action.get("type")
-        legal = self.legal_actions(state, agent_id)
-        if not self._action_is_legal(action, legal):
-            state.invalid_actions += 1
-            reason, message = self._classify_illegal_action(state, agent_id, action, legal)
-            feedback = self._invalid_feedback(state, agent_id, action, reason, message)
-            return -1.0, f"Invalid action for {agent_id}: {message}", {"invalid": True, **feedback}
-
-        if agent_id == "warden":
-            if action_type == "warden_auto":
-                reward, text = self._warden_auto(state)
-                self._end_warden_phase(state)
-                return reward, text, {"auto": True}
-            if action_type == "activate_monster":
-                monster_id = str(action.get("target"))
-                reward, text = self._activate_monster(state, monster_id)
-                return reward, text, {"monster_id": monster_id}
-            if action_type == "end_turn":
-                self._end_warden_phase(state)
-                return -0.01, "The Warden ends the dungeon phase.", {}
-
-        hero = state.heroes[agent_id]
-        known_before = set(state.known_tiles)
-        room_ids_before = self._known_room_ids(state, known_before)
-        before_damage = sum(h.max_hp - h.hp for h in state.heroes.values())
-        reward = -0.01
-        narration = ""
-        if action_type == "move":
-            narration, extra = self._move_hero(state, hero, action)
-            reward += extra
-        elif action_type == "open_door":
-            narration, extra = self._open_door(state, hero, str(action.get("target")))
-            reward += extra
-        elif action_type in {"attack_melee", "attack_ranged"}:
-            narration, extra = self._attack(state, hero, str(action.get("target")), ranged=action_type == "attack_ranged")
-            reward += extra
-        elif action_type == "cast":
-            narration, extra = self._cast(state, hero, str(action.get("target")), action.get("payload", {}))
-            reward += extra
-        elif action_type == "inspect_tile":
-            narration, extra = self._inspect_tile(state, hero, self._pos_from_target(action.get("target"), hero.pos))
-            reward += extra
-        elif action_type == "inspect_room":
-            narration, extra = self._inspect_room(state, hero)
-            reward += extra
-        elif action_type == "search_traps":
-            narration, extra = self._search_traps(state, hero)
-            reward += extra
-        elif action_type == "search_secrets":
-            narration, extra = self._search_secrets(state, hero)
-            reward += extra
-        elif action_type == "search_treasure":
-            narration, extra = self._search_treasure(state, hero, str(action.get("target")))
-            reward += extra
-        elif action_type == "search_furniture":
-            narration, extra = self._search_furniture_target(state, hero, str(action.get("target")))
-            reward += extra
-        elif action_type == "attack_object":
-            narration, extra = self._attack_object(state, hero, str(action.get("target")))
-            reward += extra
-        elif action_type == "disarm":
-            narration, extra = self._disarm(state, hero, str(action.get("target")))
-            reward += extra
-        elif action_type == "interact":
-            narration, extra = self._interact(state, hero, str(action.get("target")))
-            reward += extra
-        elif action_type == "use_item":
-            narration, extra = self._use_item(state, hero, str(action.get("target")))
-            reward += extra
-        elif action_type == "equip_item":
-            narration, extra = self._equip_item(state, hero, str(action.get("target")))
-            reward += extra
-        elif action_type == "give_item":
-            narration, extra = self._give_item(state, hero, str(action.get("target")), action.get("payload", {}))
-            reward += extra
-        elif action_type == "message":
-            narration, extra = self._message(state, hero, action)
-            reward += extra
-        elif action_type == "guard":
-            narration, extra = self._guard(state, hero)
-            reward += extra
-        elif action_type == "end_turn":
-            narration = f"{hero.role} ends their turn."
-            state.ap_remaining[hero.id] = 0
-            self._advance_hero_turn(state)
-        else:
-            state.invalid_actions += 1
-            feedback = self._invalid_feedback(
-                state,
-                agent_id,
-                action,
-                "unknown_action_type",
-                f"Unknown action type: {action_type}",
-            )
-            return -1.0, feedback["message"], {"invalid": True, **feedback}
-
-        after_damage = sum(h.max_hp - h.hp for h in state.heroes.values())
-        if after_damage > before_damage:
-            reward -= 0.1 * (after_damage - before_damage)
-        self.grid.update_known_tiles(state)
-        scout_reward, scout_info = self._scout_reward(
-            state,
-            known_before=known_before,
-            room_ids_before=room_ids_before,
-        )
-        if scout_reward:
-            reward += scout_reward
-            state.scout_reward += scout_reward
-            narration += (
-                f" Scout progress: +{scout_info['new_floor_tiles']} floor tiles"
-                f", +{scout_info['new_rooms']} rooms."
-            )
-        self._check_end_conditions(state)
-        if state.done and state.winner == "heroes":
-            reward += 1.0
-            narration += " The heroes complete the objective and escape."
-        elif state.done and state.winner == "dungeon":
-            reward -= 1.0
-            narration += " The dungeon prevails."
-        if action_type != "end_turn" and state.ap_remaining.get(agent_id, 0) <= 0 and not state.done:
-            self._advance_hero_turn(state)
-        info = {"scout_reward": round(scout_reward, 4), **scout_info}
-        furniture_result = state.scripts.pop("_last_furniture_result", None)
-        if furniture_result:
-            info["furniture_result"] = furniture_result
-        return reward, narration, info
+            self._runtime = EngineRuntime(self)
+        self._runtime.rng = self.rng
+        return self._runtime
 
     def _invalid_feedback(
         self,
@@ -341,8 +351,42 @@ class RulesEngine:
         if action_type not in known_types:
             return "unknown_action_type", f"{action_type} is not a known action type."
         hero = state.heroes.get(agent_id)
-        if hero and state.ap_remaining.get(agent_id, 0) < ACTION_COSTS.get(str(action_type), 0):
-            return "insufficient_ap", f"{action_type} requires more AP than {agent_id} has remaining."
+        if hero and self._classic_enabled(state):
+            if self._specialist_action_blocked(state, hero, str(action_type)):
+                required = ", ".join(self._required_roles(state))
+                return (
+                    "wrong_role",
+                    f"{action_type} is a specialist action here; required role: {required}.",
+                )
+            if action_type == "move" and state.movement_remaining.get(agent_id, 0) <= 0:
+                return "insufficient_movement", f"{agent_id} has no movement remaining this turn."
+            if self._is_major_action(state, str(action_type)) and state.major_action_used.get(
+                agent_id, False
+            ):
+                return (
+                    "major_action_already_used",
+                    f"{agent_id} already used a major action this turn.",
+                )
+            blocked_search_actions = set(
+                state.ruleset.get("safe_room_search", {}).get("block_search_actions", [])
+            )
+            if action_type in blocked_search_actions and self._safe_room_search_blocked(
+                state, hero
+            ):
+                return (
+                    "unsafe_search",
+                    "Search actions are blocked while monsters threaten the area.",
+                )
+        effective_cost = (
+            0
+            if hero and self._classic_enabled(state) and action_type == "move"
+            else ACTION_COSTS.get(str(action_type), 0)
+        )
+        if hero and state.ap_remaining.get(agent_id, 0) < effective_cost:
+            return (
+                "insufficient_ap",
+                f"{action_type} requires more AP than {agent_id} has remaining.",
+            )
         if action_type == "move":
             direction = action.get("direction")
             if direction not in DIRECTIONS:
@@ -351,18 +395,23 @@ class RulesEngine:
             target = (hero.pos[0] + dx, hero.pos[1] + dy) if hero else (0, 0)
             if not self.grid.is_walkable(state, target):
                 return "blocked_movement", f"Cannot move {direction}; the target tile is blocked."
-        if action_type in {
-            "open_door",
-            "attack_melee",
-            "attack_ranged",
-            "cast",
-            "disarm",
-            "interact",
-            "search_treasure",
-            "search_furniture",
-            "attack_object",
-            "give_item",
-        } and action.get("target") is None:
+        if (
+            action_type
+            in {
+                "open_door",
+                "attack_melee",
+                "attack_ranged",
+                "cast",
+                "disarm",
+                "interact",
+                "search_treasure",
+                "search_furniture",
+                "attack_object",
+                "give_item",
+                "warden_spend_dread",
+            }
+            and action.get("target") is None
+        ):
             return "missing_target", f"{action_type} requires a target."
         matching_type = [candidate for candidate in legal if candidate.get("type") == action_type]
         if matching_type:
@@ -393,7 +442,9 @@ class RulesEngine:
         return False
 
     def _cost(self, state: GameState, entity: Entity, action_type: str) -> None:
-        state.ap_remaining[entity.id] = max(0, state.ap_remaining.get(entity.id, 0) - ACTION_COSTS.get(action_type, 0))
+        state.ap_remaining[entity.id] = max(
+            0, state.ap_remaining.get(entity.id, 0) - ACTION_COSTS.get(action_type, 0)
+        )
 
     def _scout_reward(
         self,
@@ -404,9 +455,7 @@ class RulesEngine:
     ) -> tuple[float, dict[str, Any]]:
         known_after = set(state.known_tiles)
         new_floor_tiles = [
-            pos
-            for pos in known_after - known_before
-            if state.terrain[pos[1]][pos[0]] == "."
+            pos for pos in known_after - known_before if state.terrain[pos[1]][pos[0]] == "."
         ]
         room_ids_after = self._known_room_ids(state, known_after)
         new_rooms = room_ids_after - room_ids_before
@@ -449,7 +498,9 @@ class RulesEngine:
             regions.append(region)
         return regions
 
-    def _move_hero(self, state: GameState, hero: Entity, action: dict[str, Any]) -> tuple[str, float]:
+    def _move_hero(
+        self, state: GameState, hero: Entity, action: dict[str, Any]
+    ) -> tuple[str, float]:
         direction = action.get("direction")
         dx, dy = DIRECTIONS[direction]
         target = (hero.pos[0] + dx, hero.pos[1] + dy)
@@ -506,8 +557,14 @@ class RulesEngine:
         state.alert += 1
         return f"{hero.role} opens {door.id}; the passage beyond is now visible.", 0.02
 
-    def _attack(self, state: GameState, attacker: Entity, target_id: str, ranged: bool = False) -> tuple[str, float]:
-        target = state.monsters.get(target_id) if attacker.team == "heroes" else state.heroes.get(target_id)
+    def _attack(
+        self, state: GameState, attacker: Entity, target_id: str, ranged: bool = False
+    ) -> tuple[str, float]:
+        target = (
+            state.monsters.get(target_id)
+            if attacker.team == "heroes"
+            else state.heroes.get(target_id)
+        )
         if target is None or not target.alive:
             return "The attack finds no living target.", -0.2
         self._cost(state, attacker, "attack_ranged" if ranged else "attack_melee")
@@ -531,9 +588,13 @@ class RulesEngine:
             target.status.remove("guarded")
         special_text = ""
         if target.team == "dungeon" and attacker.team == "heroes":
-            damage, special_text = self._monster_incoming_damage_specials(state, attacker, target, damage)
+            damage, special_text = self._monster_incoming_damage_specials(
+                state, attacker, target, damage
+            )
         if target.team == "heroes":
-            damage, prevention_text = self._apply_hero_defense_prevention(state, target, damage, source="lethal")
+            damage, prevention_text = self._apply_hero_defense_prevention(
+                state, target, damage, source="lethal"
+            )
             special_text += prevention_text
         target.hp -= damage
         if target.team == "dungeon" and attacker.team == "heroes":
@@ -542,7 +603,9 @@ class RulesEngine:
             state.total_damage_taken += damage
         killed = False
         if target.hp <= 0:
-            if target.team == "dungeon" and self._maybe_revive_hollow_knight(state, target, attacker):
+            if target.team == "dungeon" and self._maybe_revive_hollow_knight(
+                state, target, attacker
+            ):
                 special_text += f" {target.role} rises again."
             else:
                 target.alive = False
@@ -556,7 +619,9 @@ class RulesEngine:
                     else:
                         state.objective.carrier = None
                         state.objective.pos = target.pos
-                        target.inventory = [item for item in target.inventory if item != state.objective.id]
+                        target.inventory = [
+                            item for item in target.inventory if item != state.objective.id
+                        ]
         mode = "ranged" if ranged else "melee"
         weapon_name = weapon.get("name") if weapon else None
         with_weapon = f" with {weapon_name}" if weapon_name else ""
@@ -568,8 +633,12 @@ class RulesEngine:
             reward += 0.15 if target.team == "dungeon" else -0.3
         return text, reward
 
-    def _cast(self, state: GameState, caster: Entity, target_id: str, payload: dict[str, Any]) -> tuple[str, float]:
-        spell = str(payload.get("spell") or ("mend_wounds" if caster.role == "elf" else "spark_lance"))
+    def _cast(
+        self, state: GameState, caster: Entity, target_id: str, payload: dict[str, Any]
+    ) -> tuple[str, float]:
+        spell = str(
+            payload.get("spell") or ("mend_wounds" if caster.role == "elf" else "spark_lance")
+        )
         spec = SPELL_CARDS.get(spell)
         if not spec:
             return f"{caster.role} does not know spell {spell}.", -0.2
@@ -588,13 +657,17 @@ class RulesEngine:
             target = state.monsters.get(target_id)
             if not target or not target.alive:
                 return "The spark lance has no valid target.", -0.2
-            if self.grid.manhattan(caster.pos, target.pos) > int(spec.get("range", 5)) or not self.grid.line_clear(state, caster.pos, target.pos):
+            if self.grid.manhattan(caster.pos, target.pos) > int(
+                spec.get("range", 5)
+            ) or not self.grid.line_clear(state, caster.pos, target.pos):
                 return "The spark lance has no clear line to its target.", -0.2
             self._cost(state, caster, "cast")
             hits = self._roll_successes(max(2, caster.focus // 2))
             blocks = self._roll_successes(target.guard)
             damage = max(0, hits - blocks)
-            damage, special_text = self._monster_incoming_damage_specials(state, caster, target, damage)
+            damage, special_text = self._monster_incoming_damage_specials(
+                state, caster, target, damage
+            )
             target.hp -= damage
             special_text += self._apply_boss_phase_after_damage(state, target, caster)
             killed = target.hp <= 0
@@ -642,7 +715,10 @@ class RulesEngine:
             found = self._reveal_glyphs_near(state, caster)
             self._consume_spell_card(state, caster, spell, target_id=caster.id)
             if found:
-                return f"{caster.role} reveals hidden glyphs: {', '.join(found)}.", 0.08 + 0.03 * len(found)
+                return (
+                    f"{caster.role} reveals hidden glyphs: {', '.join(found)}.",
+                    0.08 + 0.03 * len(found),
+                )
             return f"{caster.role} casts reveal glyph but finds no hidden marks nearby.", 0.02
         if spell == "quiet_step":
             target = state.heroes.get(target_id)
@@ -659,7 +735,10 @@ class RulesEngine:
             state.alert = max(0, state.alert - (2 if spell == "hush_flame" else 1))
             state.scripts[f"{spell}_active"] = True
             self._consume_spell_card(state, caster, spell, target_id=caster.id)
-            return f"{caster.role} casts {spell}; alert falls from {old_alert} to {state.alert}.", 0.06 + 0.03 * (old_alert - state.alert)
+            return (
+                f"{caster.role} casts {spell}; alert falls from {old_alert} to {state.alert}.",
+                0.06 + 0.03 * (old_alert - state.alert),
+            )
         return f"{caster.role} does not know spell {spell}.", -0.2
 
     def _can_cast_spell(self, hero: Entity, spell: str) -> bool:
@@ -672,7 +751,9 @@ class RulesEngine:
         cards = self._available_spell_cards(hero)
         if spell in cards:
             return True
-        return bool(spec.get("reusable")) and (hero.ability == spell or spell in hero.equipment.get("spell_cards", []))
+        return bool(spec.get("reusable")) and (
+            hero.ability == spell or spell in hero.equipment.get("spell_cards", [])
+        )
 
     def _available_spell_cards(self, hero: Entity) -> list[str]:
         cards = [str(card) for card in hero.equipment.get("spell_cards", [])]
@@ -688,7 +769,9 @@ class RulesEngine:
             available.append(card)
         return available
 
-    def _consume_spell_card(self, state: GameState, hero: Entity, spell: str, *, target_id: str) -> None:
+    def _consume_spell_card(
+        self, state: GameState, hero: Entity, spell: str, *, target_id: str
+    ) -> None:
         spec = SPELL_CARDS.get(spell, {})
         if not spec.get("reusable", False):
             used = list(hero.equipment.get("used_spell_cards", []))
@@ -724,7 +807,14 @@ class RulesEngine:
                 furniture.visible = True
                 found.append(furniture.id)
         if found:
-            state.trace.append({"kind": "spell_reveal", "round": state.round, "agent_id": caster.id, "found": list(found)})
+            state.trace.append(
+                {
+                    "kind": "spell_reveal",
+                    "round": state.round,
+                    "agent_id": caster.id,
+                    "found": list(found),
+                }
+            )
         return found
 
     def _monster_incoming_damage_specials(
@@ -737,7 +827,9 @@ class RulesEngine:
         if damage <= 0:
             return damage, ""
         if monster.role != "mirror_adept" or "mirror_decoy_spent" in monster.status:
-            boss_damage, boss_text = self._boss_incoming_damage_gate(state, attacker, monster, damage)
+            boss_damage, boss_text = self._boss_incoming_damage_gate(
+                state, attacker, monster, damage
+            )
             return boss_damage, boss_text
         monster.status.append("mirror_decoy_spent")
         self._record_monster_special(
@@ -761,7 +853,11 @@ class RulesEngine:
             return damage, ""
         counter_flag = monster.equipment.get("counter_flag")
         max_without_counter = monster.equipment.get("max_damage_without_counter")
-        if counter_flag and not state.scripts.get(str(counter_flag)) and max_without_counter is not None:
+        if (
+            counter_flag
+            and not state.scripts.get(str(counter_flag))
+            and max_without_counter is not None
+        ):
             capped = min(damage, int(max_without_counter))
             if capped < damage:
                 state.trace.append(
@@ -775,11 +871,18 @@ class RulesEngine:
                         "attacker_id": attacker.id,
                     }
                 )
-                state.event_log.append(f"{monster.role}'s boss ward turns aside the worst of the hit.")
-                return capped, f" {monster.role}'s boss ward caps the damage until its counterplay is found."
+                state.event_log.append(
+                    f"{monster.role}'s boss ward turns aside the worst of the hit."
+                )
+                return (
+                    capped,
+                    f" {monster.role}'s boss ward caps the damage until its counterplay is found.",
+                )
         return damage, ""
 
-    def _apply_boss_phase_after_damage(self, state: GameState, monster: Entity, attacker: Entity) -> str:
+    def _apply_boss_phase_after_damage(
+        self, state: GameState, monster: Entity, attacker: Entity
+    ) -> str:
         if not monster.equipment.get("boss"):
             return ""
         phases = monster.equipment.get("phases")
@@ -803,7 +906,9 @@ class RulesEngine:
                 if status and status not in monster.status:
                     monster.status.append(status)
             if "attack_bonus" in phase:
-                monster.equipment["phase_attack_bonus"] = int(monster.equipment.get("phase_attack_bonus", 0)) + int(phase["attack_bonus"])
+                monster.equipment["phase_attack_bonus"] = int(
+                    monster.equipment.get("phase_attack_bonus", 0)
+                ) + int(phase["attack_bonus"])
             if "alert" in phase:
                 state.alert += int(phase["alert"])
             if isinstance(phase.get("set_script"), dict):
@@ -824,7 +929,9 @@ class RulesEngine:
             state.event_log.append(message)
         return (" " + " ".join(texts)) if texts else ""
 
-    def _maybe_revive_hollow_knight(self, state: GameState, monster: Entity, attacker: Entity) -> bool:
+    def _maybe_revive_hollow_knight(
+        self, state: GameState, monster: Entity, attacker: Entity
+    ) -> bool:
         if monster.role != "hollow_knight":
             return False
         if attacker.equipment.get("charm") == "holy_charm":
@@ -843,7 +950,9 @@ class RulesEngine:
         counter_statuses = {"banished", "vulnerable", "hollow_banished"}
         if counter_statuses & set(monster.status):
             return False
-        if state.scripts.get(f"{monster.id}_banished") or state.scripts.get("hollow_knight_banished"):
+        if state.scripts.get(f"{monster.id}_banished") or state.scripts.get(
+            "hollow_knight_banished"
+        ):
             return False
         monster.status.append("revived")
         monster.alive = True
@@ -894,7 +1003,9 @@ class RulesEngine:
             return reduced, " Iron helm turns the lethal blow."
         return damage, ""
 
-    def _apply_cleave_defense_prevention(self, state: GameState, hero: Entity, damage: int) -> tuple[int, str]:
+    def _apply_cleave_defense_prevention(
+        self, state: GameState, hero: Entity, damage: int
+    ) -> tuple[int, str]:
         if damage <= 0:
             return damage, ""
         if hero.equipment.get("helm") == "iron_helm":
@@ -1010,7 +1121,9 @@ class RulesEngine:
                 found.append(door.id)
         self._record_search(state, hero, "secrets", found)
         if found:
-            return f"{hero.role} searches for secrets and finds: {', '.join(found)}.", 0.08 * len(found)
+            return f"{hero.role} searches for secrets and finds: {', '.join(found)}.", 0.08 * len(
+                found
+            )
         return f"{hero.role} searches for secrets but finds none.", 0.0
 
     def _disarm(self, state: GameState, hero: Entity, trap_id: str) -> tuple[str, float]:
@@ -1042,23 +1155,30 @@ class RulesEngine:
                 return f"{hero.role} exits with {state.objective.id}.", 1.0
             return f"{hero.role} cannot escape yet.", -0.1
         if target_id == state.objective.id:
-            if state.objective.carrier is None and state.objective.pos is not None:
-                if self.grid.manhattan(hero.pos, state.objective.pos) <= 1:
-                    state.objective.carrier = hero.id
-                    state.objective.pos = None
-                    hero.inventory.append(state.objective.id)
-                    self._run_script(state, "on_objective_taken")
-                    return f"{hero.role} takes {state.objective.id}.", 0.25
+            if (
+                state.objective.carrier is None
+                and state.objective.pos is not None
+                and self.grid.manhattan(hero.pos, state.objective.pos) <= 1
+            ):
+                state.objective.carrier = hero.id
+                state.objective.pos = None
+                hero.inventory.append(state.objective.id)
+                self._run_script(state, "on_objective_taken")
+                return f"{hero.role} takes {state.objective.id}.", 0.25
             return f"{hero.role} cannot reach {state.objective.id}.", -0.1
         chest = state.chests.get(target_id)
         if chest and not chest.opened:
             chest.opened = True
             return self._open_chest(state, hero, chest.contents)
         furniture = state.furniture.get(target_id)
-        if furniture and not furniture.destroyed and "interact" not in furniture.searched_categories:
-            if self.grid.manhattan(hero.pos, furniture.pos) <= 1:
-                furniture.searched_categories.add("interact")
-                return self._search_furniture(state, hero, furniture)
+        if (
+            furniture
+            and not furniture.destroyed
+            and "interact" not in furniture.searched_categories
+            and self.grid.manhattan(hero.pos, furniture.pos) <= 1
+        ):
+            furniture.searched_categories.add("interact")
+            return self._search_furniture(state, hero, furniture)
         return f"{hero.role} finds nothing useful to interact with.", -0.05
 
     def _search_treasure(self, state: GameState, hero: Entity, target_id: str) -> tuple[str, float]:
@@ -1070,15 +1190,25 @@ class RulesEngine:
             text, reward = self._open_chest(state, hero, chest.contents)
             return text.replace("opens a chest", "searches a chest", 1), reward
         furniture = state.furniture.get(target_id)
-        if furniture and not furniture.destroyed and "treasure" not in furniture.searched_categories:
+        if (
+            furniture
+            and not furniture.destroyed
+            and "treasure" not in furniture.searched_categories
+        ):
             return self._search_furniture(state, hero, furniture, action_type="search_treasure")
         self._record_search(state, hero, "treasure", [])
         return f"{hero.role} searches for treasure but finds no searchable target.", -0.03
 
-    def _search_furniture_target(self, state: GameState, hero: Entity, target_id: str) -> tuple[str, float]:
+    def _search_furniture_target(
+        self, state: GameState, hero: Entity, target_id: str
+    ) -> tuple[str, float]:
         self._cost(state, hero, "search_furniture")
         furniture = state.furniture.get(target_id)
-        if furniture and not furniture.destroyed and "furniture" not in furniture.searched_categories:
+        if (
+            furniture
+            and not furniture.destroyed
+            and "furniture" not in furniture.searched_categories
+        ):
             return self._search_furniture(state, hero, furniture, action_type="search_furniture")
         self._record_search(state, hero, "furniture", [])
         return f"{hero.role} searches furniture but finds no searchable target.", -0.03
@@ -1169,7 +1299,11 @@ class RulesEngine:
         reward = 0.0
         resolved: list[dict[str, Any]] = []
         for raw in effects:
-            payload = {"type": "draw_deck", "deck": furniture.deck or "treasure"} if raw == "draw_deck" else raw
+            payload = (
+                {"type": "draw_deck", "deck": furniture.deck or "treasure"}
+                if raw == "draw_deck"
+                else raw
+            )
             if isinstance(payload, str):
                 payload = {"type": payload}
             if not isinstance(payload, dict):
@@ -1177,9 +1311,13 @@ class RulesEngine:
             kind = str(payload.get("type", "emit"))
             item = str(payload.get("item", ""))
             if kind == "draw_deck":
-                card = self._draw_card(state, str(payload.get("deck", furniture.deck or "treasure")))
+                card = self._draw_card(
+                    state, str(payload.get("deck", furniture.deck or "treasure"))
+                )
                 if card:
-                    card_text, card_reward = self._resolve_furniture_card(state, hero, furniture, card)
+                    card_text, card_reward = self._resolve_furniture_card(
+                        state, hero, furniture, card
+                    )
                     texts.append(card_text)
                     reward += card_reward
                     resolved.append({"type": "card", "card": dict(card)})
@@ -1194,7 +1332,9 @@ class RulesEngine:
                     texts.append(f"{hero.role} learns {item_name}.")
                 else:
                     hero.inventory.append(item)
-                    item_name = (WEAPON_ITEMS.get(item) or ARMOR_ITEMS.get(item) or {}).get("name", item)
+                    item_name = (WEAPON_ITEMS.get(item) or ARMOR_ITEMS.get(item) or {}).get(
+                        "name", item
+                    )
                     texts.append(f"{hero.role} gains {item_name}.")
                 reward += float(payload.get("reward", 0.1))
                 resolved.append({"type": kind, "item": item})
@@ -1260,14 +1400,31 @@ class RulesEngine:
                     if status and status not in monster.status:
                         monster.status.append(status)
                 if target and status:
-                    texts.append(f"{status.title()} marked on {', '.join(monster.id for monster in target)}.")
-                    resolved.append({"type": "monster_status", "status": status, "targets": [m.id for m in target]})
+                    texts.append(
+                        f"{status.title()} marked on {', '.join(monster.id for monster in target)}."
+                    )
+                    resolved.append(
+                        {
+                            "type": "monster_status",
+                            "status": status,
+                            "targets": [m.id for m in target],
+                        }
+                    )
             elif kind == "spawn_monster":
                 monster_id = str(payload.get("id", ""))
                 role = str(payload.get("role", "skitterling"))
                 pos_raw = payload.get("pos")
-                pos = tuple(pos_raw) if isinstance(pos_raw, list) and len(pos_raw) == 2 else self._nearest_free_adjacent(state, hero.pos)
-                if monster_id and role in MONSTER_TYPES and pos and monster_id not in state.monsters:
+                pos = (
+                    tuple(pos_raw)
+                    if isinstance(pos_raw, list) and len(pos_raw) == 2
+                    else self._nearest_free_adjacent(state, hero.pos)
+                )
+                if (
+                    monster_id
+                    and role in MONSTER_TYPES
+                    and pos
+                    and monster_id not in state.monsters
+                ):
                     spec = MONSTER_TYPES[role]
                     state.monsters[monster_id] = Entity(
                         id=monster_id,
@@ -1321,7 +1478,9 @@ class RulesEngine:
         )
         return " ".join(texts), reward, result
 
-    def _resolve_furniture_card(self, state: GameState, hero: Entity, furniture, card: dict[str, Any]) -> tuple[str, float]:
+    def _resolve_furniture_card(
+        self, state: GameState, hero: Entity, furniture, card: dict[str, Any]
+    ) -> tuple[str, float]:
         reward = float(card.get("reward", 0.05))
         name = card.get("name", card.get("id", "a card"))
         texts = [f"Draws {name}."]
@@ -1364,11 +1523,17 @@ class RulesEngine:
             return [monster] if monster else []
         role = payload.get("role")
         if role:
-            return [monster for monster in state.monsters.values() if monster.alive and monster.role == role]
+            return [
+                monster
+                for monster in state.monsters.values()
+                if monster.alive and monster.role == role
+            ]
         if payload.get("nearest_to_objective"):
             targets = [monster for monster in state.monsters.values() if monster.alive]
             if state.objective.pos:
-                targets.sort(key=lambda monster: self.grid.manhattan(monster.pos, state.objective.pos))
+                targets.sort(
+                    key=lambda monster: self.grid.manhattan(monster.pos, state.objective.pos)
+                )
             return targets[:1]
         return []
 
@@ -1399,7 +1564,9 @@ class RulesEngine:
         state.event_log.append(f"{hero.role} {category} {furniture.name}.")
         return event
 
-    def _record_search(self, state: GameState, hero: Entity, category: str, found: list[str]) -> None:
+    def _record_search(
+        self, state: GameState, hero: Entity, category: str, found: list[str]
+    ) -> None:
         event = {
             "kind": "search",
             "round": state.round,
@@ -1419,11 +1586,15 @@ class RulesEngine:
                 state.decks[deck_id] = list(state.discards.get(deck_id, []))
                 self.rng.shuffle(state.decks[deck_id])
                 state.discards[deck_id] = []
-                state.trace.append({"kind": "deck_reshuffled", "round": state.round, "deck": deck_id})
+                state.trace.append(
+                    {"kind": "deck_reshuffled", "round": state.round, "deck": deck_id}
+                )
                 state.event_log.append(f"The {deck_id} deck is reshuffled.")
                 deck = state.decks.get(deck_id)
             else:
-                state.trace.append({"kind": "deck_exhausted", "round": state.round, "deck": deck_id})
+                state.trace.append(
+                    {"kind": "deck_exhausted", "round": state.round, "deck": deck_id}
+                )
                 state.event_log.append(f"The {deck_id} deck is exhausted.")
         if not deck:
             return None
@@ -1440,7 +1611,9 @@ class RulesEngine:
                 "rarity": card.get("rarity", "common"),
             }
         )
-        state.event_log.append(f"Card drawn from {deck_id}: {card.get('name', card.get('id', 'unknown card'))}.")
+        state.event_log.append(
+            f"Card drawn from {deck_id}: {card.get('name', card.get('id', 'unknown card'))}."
+        )
         return card
 
     def _deck_policy(self, state: GameState, deck_id: str) -> dict[str, Any]:
@@ -1495,7 +1668,9 @@ class RulesEngine:
         state.event_log.append(f"{hero.role} equips {self._item_name(item_id)}.")
         return f"{hero.role} equips {self._item_name(item_id)}.", 0.04
 
-    def _give_item(self, state: GameState, hero: Entity, target_id: str, payload: dict[str, Any]) -> tuple[str, float]:
+    def _give_item(
+        self, state: GameState, hero: Entity, target_id: str, payload: dict[str, Any]
+    ) -> tuple[str, float]:
         self._cost(state, hero, "give_item")
         item_id = str((payload or {}).get("item", "")).strip()
         target = state.heroes.get(target_id)
@@ -1583,7 +1758,9 @@ class RulesEngine:
             return f"{hero.role} opens a chest and finds {contents}.", 0.08
         return f"{hero.role} opens a chest; it is empty.", 0.0
 
-    def _open_chest_payload(self, state: GameState, hero: Entity, payload: dict[str, Any]) -> tuple[str, float]:
+    def _open_chest_payload(
+        self, state: GameState, hero: Entity, payload: dict[str, Any]
+    ) -> tuple[str, float]:
         payload_type = str(payload.get("type", "item"))
         if payload_type == "table":
             entries = list(payload.get("entries", []))
@@ -1596,44 +1773,66 @@ class RulesEngine:
             amount = int(payload.get("amount", payload.get("treasure", 1)))
             state.treasure_collected += amount
             hero.inventory.append("coin_cache")
-            return f"{hero.role} opens a chest and finds {amount} gold cache{'s' if amount != 1 else ''}.", 0.1 * amount
+            return (
+                f"{hero.role} opens a chest and finds {amount} gold cache{'s' if amount != 1 else ''}.",
+                0.1 * amount,
+            )
         if payload_type == "weapon":
             item = str(payload.get("item", ""))
             if item in WEAPON_ITEMS:
                 hero.inventory.append(item)
-                return f"{hero.role} opens a chest and finds {WEAPON_ITEMS[item]['name']}.", float(payload.get("reward", 0.14))
+                return f"{hero.role} opens a chest and finds {WEAPON_ITEMS[item]['name']}.", float(
+                    payload.get("reward", 0.14)
+                )
             return f"{hero.role} opens a chest and finds an unfamiliar weapon.", 0.02
         if payload_type == "armor":
             item = str(payload.get("item", ""))
             if item in ARMOR_ITEMS:
                 hero.inventory.append(item)
-                return f"{hero.role} opens a chest and finds {ARMOR_ITEMS[item]['name']}.", float(payload.get("reward", 0.12))
+                return f"{hero.role} opens a chest and finds {ARMOR_ITEMS[item]['name']}.", float(
+                    payload.get("reward", 0.12)
+                )
             return f"{hero.role} opens a chest and finds unfamiliar armor.", 0.02
         if payload_type == "spell":
             item = str(payload.get("item", payload.get("spell", "")))
             if item in SPELL_CARDS:
                 hero.equipment.setdefault("spell_cards", []).append(item)
-                return f"{hero.role} opens a chest and finds the {SPELL_CARDS[item]['name']} spell card.", float(payload.get("reward", 0.12))
+                return (
+                    f"{hero.role} opens a chest and finds the {SPELL_CARDS[item]['name']} spell card.",
+                    float(payload.get("reward", 0.12)),
+                )
             return f"{hero.role} opens a chest and finds an unreadable spell card.", 0.02
         if payload_type == "draw_deck":
             deck_id = str(payload.get("deck", "treasure"))
             card = self._draw_card(state, deck_id)
             if card:
-                text, reward = self._resolve_furniture_card(state, hero, type("ChestCardSource", (), {"id": "chest", "deck": deck_id, "name": "Chest"})(), card)
+                text, reward = self._resolve_furniture_card(
+                    state,
+                    hero,
+                    type(
+                        "ChestCardSource", (), {"id": "chest", "deck": deck_id, "name": "Chest"}
+                    )(),
+                    card,
+                )
                 return f"{hero.role} opens a chest. {text}", reward
             return f"{hero.role} opens a chest, but the {deck_id} deck is empty.", 0.0
         if payload_type == "item":
             item = str(payload.get("item", payload.get("id", "")))
             if item:
                 hero.inventory.append(item)
-                return f"{hero.role} opens a chest and finds {item}.", float(payload.get("reward", 0.08))
+                return f"{hero.role} opens a chest and finds {item}.", float(
+                    payload.get("reward", 0.08)
+                )
         if payload_type == "trap":
             damage = int(payload.get("damage", 1))
             hero.hp = max(0, hero.hp - damage)
             state.total_damage_taken += damage
             if hero.hp <= 0:
                 hero.alive = False
-            return f"{hero.role} opens a chest; a trap snaps shut for {damage} damage.", -0.15 * damage
+            return (
+                f"{hero.role} opens a chest; a trap snaps shut for {damage} damage.",
+                -0.15 * damage,
+            )
         if payload_type == "ambush":
             return self._open_chest(state, hero, "ambush")
         return f"{hero.role} opens a chest; it is empty.", 0.0
@@ -1654,11 +1853,15 @@ class RulesEngine:
         return str(ARMOR_ITEMS.get(item_id, {}).get("slot", "item"))
 
     def _item_name(self, item_id: str) -> str:
-        return str((WEAPON_ITEMS.get(item_id) or ARMOR_ITEMS.get(item_id) or {}).get("name", item_id))
+        return str(
+            (WEAPON_ITEMS.get(item_id) or ARMOR_ITEMS.get(item_id) or {}).get("name", item_id)
+        )
 
     def _refresh_equipment_stats(self, hero: Entity) -> None:
         base = HERO_ARCHETYPES.get(hero.role, {})
-        hero.speed = max(1, int(base.get("speed", hero.speed)) + self._equipment_speed_modifier(hero))
+        hero.speed = max(
+            1, int(base.get("speed", hero.speed)) + self._equipment_speed_modifier(hero)
+        )
 
     def _equipment_speed_modifier(self, hero: Entity) -> int:
         return sum(
@@ -1755,7 +1958,9 @@ class RulesEngine:
             ]
             if ranged_targets:
                 monster.activation = "engaged"
-                target = min(ranged_targets, key=lambda h: (h.hp, self.grid.manhattan(monster.pos, h.pos)))
+                target = min(
+                    ranged_targets, key=lambda h: (h.hp, self.grid.manhattan(monster.pos, h.pos))
+                )
                 text, reward = self._monster_attack(state, monster, target, ranged=True)
                 state.alert += 1
                 return reward - 0.01, text + " Cinders flare; alert rises."
@@ -1779,7 +1984,9 @@ class RulesEngine:
                 return -0.02, f"{monster.role} advances toward {target.role}."
         return 0.0, f"{monster.role} cannot find a route."
 
-    def _monster_attack(self, state: GameState, monster: Entity, hero: Entity, *, ranged: bool = False) -> tuple[str, float]:
+    def _monster_attack(
+        self, state: GameState, monster: Entity, hero: Entity, *, ranged: bool = False
+    ) -> tuple[str, float]:
         attack_dice = monster.attack + int(monster.equipment.get("phase_attack_bonus", 0))
         attack_dice = max(1, attack_dice - (1 if "weakened" in monster.status else 0))
         special_parts: list[str] = []
@@ -1805,7 +2012,9 @@ class RulesEngine:
                 {"range": self.grid.manhattan(monster.pos, hero.pos)},
             )
         hits = self._roll_successes(attack_dice)
-        blocks = self._roll_successes(self._hero_guard(hero, ranged=ranged) + (1 if "guarded" in hero.status else 0))
+        blocks = self._roll_successes(
+            self._hero_guard(hero, ranged=ranged) + (1 if "guarded" in hero.status else 0)
+        )
         if "guarded" in hero.status:
             hero.status.remove("guarded")
         damage = max(0, hits - blocks)
@@ -1822,7 +2031,9 @@ class RulesEngine:
             )
             damage = reduced
             quiet_text = " Quiet step blunts the pressure."
-        damage, prevention_text = self._apply_hero_defense_prevention(state, hero, damage, source="lethal")
+        damage, prevention_text = self._apply_hero_defense_prevention(
+            state, hero, damage, source="lethal"
+        )
         hero.hp -= damage
         state.total_damage_taken += damage
         if hero.hp <= 0:
@@ -1862,7 +2073,9 @@ class RulesEngine:
         adjacent = [
             hero
             for hero in state.heroes.values()
-            if hero.id != primary.id and hero.alive and self.grid.manhattan(monster.pos, hero.pos) == 1
+            if hero.id != primary.id
+            and hero.alive
+            and self.grid.manhattan(monster.pos, hero.pos) == 1
         ]
         if not adjacent:
             return ""
@@ -2005,7 +2218,7 @@ class RulesEngine:
                         pos=pos,  # type: ignore[arg-type]
                     )
 
-    def _nearest_free_adjacent(self, state: GameState, pos: Pos) -> Optional[Pos]:
+    def _nearest_free_adjacent(self, state: GameState, pos: Pos) -> Pos | None:
         for candidate in self.grid.adjacent_positions(pos):
             if self.grid.is_walkable(state, candidate):
                 return candidate

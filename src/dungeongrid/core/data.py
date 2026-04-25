@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 Pos = tuple[int, int]
 Team = Literal["heroes", "dungeon"]
@@ -36,9 +36,81 @@ ACTION_COSTS: dict[str, int] = {
     "message": 1,
     "guard": 1,
     "end_turn": 0,
+    "call_extraction": 0,
     "warden_auto": 0,
     "activate_monster": 0,
+    "warden_spend_dread": 0,
 }
+
+MAJOR_ACTION_TYPES: set[str] = {
+    "open_door",
+    "attack_melee",
+    "attack_ranged",
+    "cast",
+    "inspect_room",
+    "search_traps",
+    "search_secrets",
+    "search_treasure",
+    "search_furniture",
+    "attack_object",
+    "disarm",
+    "interact",
+}
+
+CLASSIC_DYNAMIC_RULESET: dict[str, Any] = {
+    "roll_to_move": {"enabled": True, "dice": [6, 6], "minimum": 2},
+    "one_major_action": {
+        "enabled": True,
+        "open_door_is_major": True,
+        "use_item_is_major": False,
+        "give_item_is_major": False,
+    },
+    "safe_room_search": {
+        "enabled": True,
+        "block_search_actions": [
+            "inspect_room",
+            "search_traps",
+            "search_secrets",
+            "search_treasure",
+            "search_furniture",
+        ],
+        "include_visible_corridor_monsters": True,
+        "include_dormant_monsters": False,
+    },
+    "treasure_risk": {"enabled": True, "default_treasure_deck": True},
+    "warden_dread": {"enabled": True, "max": 6},
+    "extraction": {"enabled": True, "allow_partial": True},
+}
+
+DEFAULT_CLASSIC_TREASURE_DECK: list[dict[str, Any]] = [
+    {"id": "loose_coin", "name": "Loose Coin", "type": "treasure", "treasure": 1, "reward": 0.06},
+    {"id": "old_cache", "name": "Old Cache", "type": "treasure", "treasure": 2, "reward": 0.10},
+    {
+        "id": "healing_vial",
+        "name": "Healing Vial",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.08,
+    },
+    {
+        "id": "needle_spring",
+        "name": "Needle Spring",
+        "type": "trap",
+        "damage": 1,
+        "dread": 1,
+        "reward": -0.05,
+        "recycle": True,
+    },
+    {
+        "id": "wandering_shape",
+        "name": "Wandering Shape",
+        "type": "wandering_monster",
+        "spawn": {"role": "skitterling", "near": "searching_hero"},
+        "dread": 1,
+        "reward": -0.08,
+        "recycle": True,
+    },
+]
 
 WEAPON_ITEMS: dict[str, dict[str, Any]] = {
     "broad_sword": {
@@ -235,7 +307,13 @@ MONSTER_TYPES: dict[str, dict[str, Any]] = {
     "bone_guard": {"hp": 2, "attack": 2, "guard": 2, "speed": 2, "behavior": "hold_room"},
     "gloom_cultist": {"hp": 2, "attack": 1, "guard": 1, "speed": 3, "behavior": "ranged_or_alarm"},
     "crypt_brute": {"hp": 4, "attack": 3, "guard": 2, "speed": 2, "behavior": "protect_objective"},
-    "lantern_wight": {"hp": 3, "attack": 2, "guard": 2, "speed": 3, "behavior": "hunt_objective_carrier"},
+    "lantern_wight": {
+        "hp": 3,
+        "attack": 2,
+        "guard": 2,
+        "speed": 3,
+        "behavior": "hunt_objective_carrier",
+    },
     "rat_pack": {"hp": 1, "attack": 1, "guard": 0, "speed": 4, "behavior": "isolate_swarm"},
     "iron_sentinel": {"hp": 5, "attack": 2, "guard": 3, "speed": 1, "behavior": "hold_chokepoint"},
     "tusk_mauler": {"hp": 4, "attack": 3, "guard": 2, "speed": 2, "behavior": "cleave_cluster"},
@@ -343,6 +421,34 @@ class Entity:
         }
 
 
+def default_per_hero_stats(hero: Entity | None = None, *, role: str = "") -> dict[str, Any]:
+    hero_role = hero.role if hero is not None else role
+    return {
+        "role": hero_role,
+        "reward": 0.0,
+        "actions_submitted": 0,
+        "actions_executed": 0,
+        "invalid_actions": 0,
+        "unused_actions": 0,
+        "achievements_unlocked": [],
+        "achievement_reward": 0.0,
+        "damage_dealt": 0,
+        "damage_taken": 0,
+        "monsters_defeated": 0,
+        "tiles_revealed": 0,
+        "rooms_revealed": 0,
+        "doors_opened": 0,
+        "treasure": 0,
+        "items_given": 0,
+        "items_received": 0,
+        "messages_sent": 0,
+        "spell_casts": 0,
+        "searches": 0,
+        "specialist_actions": 0,
+        "extracted": False,
+    }
+
+
 @dataclass(slots=True)
 class Door:
     id: str
@@ -444,8 +550,8 @@ class Furniture:
 @dataclass(slots=True)
 class Objective:
     id: str
-    pos: Optional[Pos]
-    carrier: Optional[str] = None
+    pos: Pos | None
+    carrier: str | None = None
     recovered: bool = False
     fragile: bool = False
 
@@ -482,21 +588,33 @@ class GameState:
     discards: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     hero_loadouts: dict[str, Any] = field(default_factory=dict)
     scripts: dict[str, Any] = field(default_factory=dict)
+    ruleset: dict[str, Any] = field(default_factory=dict)
     round: int = 1
     phase: Literal["hero", "warden", "done"] = "hero"
     turn_index: int = 0
     hero_order: list[str] = field(default_factory=list)
     ap_remaining: dict[str, int] = field(default_factory=dict)
+    movement_remaining: dict[str, int] = field(default_factory=dict)
+    movement_rolls: dict[str, int] = field(default_factory=dict)
+    major_action_used: dict[str, bool] = field(default_factory=dict)
+    turn_flags: dict[str, Any] = field(default_factory=dict)
     alert: int = 0
+    dread: int = 0
     torch: int = 20
     known_tiles: set[Pos] = field(default_factory=set)
     revealed_rooms: set[str] = field(default_factory=set)
     done: bool = False
-    winner: Optional[str] = None
+    winner: str | None = None
     invalid_actions: int = 0
     violations: int = 0
     total_damage_taken: int = 0
     treasure_collected: int = 0
+    hero_treasure: dict[str, int] = field(default_factory=dict)
+    per_hero_stats: dict[str, dict[str, Any]] = field(default_factory=dict)
+    extracted_heroes: set[str] = field(default_factory=set)
+    extraction_events: list[dict[str, Any]] = field(default_factory=list)
+    termination_reason: str | None = None
+    social_metrics: dict[str, Any] = field(default_factory=dict)
     scout_reward: float = 0.0
     achievement_reward: float = 0.0
     achievements_unlocked: set[str] = field(default_factory=set)
@@ -526,19 +644,19 @@ class GameState:
     def all_entities(self) -> dict[str, Entity]:
         return {**self.heroes, **self.monsters}
 
-    def entity_at(self, pos: Pos, alive_only: bool = True) -> Optional[Entity]:
+    def entity_at(self, pos: Pos, alive_only: bool = True) -> Entity | None:
         for ent in self.all_entities().values():
             if ent.pos == pos and (ent.alive or not alive_only):
                 return ent
         return None
 
-    def door_at(self, pos: Pos) -> Optional[Door]:
+    def door_at(self, pos: Pos) -> Door | None:
         return next((door for door in self.doors.values() if door.pos == pos), None)
 
-    def trap_at(self, pos: Pos) -> Optional[Trap]:
+    def trap_at(self, pos: Pos) -> Trap | None:
         return next((trap for trap in self.traps.values() if trap.pos == pos), None)
 
-    def chest_at(self, pos: Pos) -> Optional[Chest]:
+    def chest_at(self, pos: Pos) -> Chest | None:
         return next((chest for chest in self.chests.values() if chest.pos == pos), None)
 
     def to_dict(self, visibility: str = "omniscient") -> dict[str, Any]:
@@ -558,7 +676,12 @@ class GameState:
             "active_agent": self.active_agent(),
             "hero_order": list(self.hero_order),
             "ap_remaining": dict(self.ap_remaining),
+            "movement_remaining": dict(self.movement_remaining),
+            "movement_rolls": dict(self.movement_rolls),
+            "major_action_used": dict(self.major_action_used),
+            "ruleset": dict(self.ruleset),
             "alert": self.alert,
+            "dread": self.dread,
             "torch": self.torch,
             "done": self.done,
             "winner": self.winner,
@@ -566,6 +689,14 @@ class GameState:
             "violations": self.violations,
             "total_damage_taken": self.total_damage_taken,
             "treasure_collected": self.treasure_collected,
+            "hero_treasure": dict(self.hero_treasure),
+            "per_hero_stats": {
+                hero_id: dict(stats) for hero_id, stats in self.per_hero_stats.items()
+            },
+            "extracted_heroes": sorted(self.extracted_heroes),
+            "extraction_events_tail": self.extraction_events[-20:],
+            "termination_reason": self.termination_reason,
+            "social_metrics": dict(self.social_metrics),
             "scout_reward": round(self.scout_reward, 4),
             "achievement_reward": round(self.achievement_reward, 4),
             "achievements_unlocked": sorted(self.achievements_unlocked),

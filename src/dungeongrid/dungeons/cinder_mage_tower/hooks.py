@@ -87,7 +87,9 @@ def _on_warden_cleanup(ctx):
             ]
         )
     elif state.scripts.get("focus_ring_broken") or state.scripts.get("furnace_valve_broken"):
-        effects.append(EmitEvent(message="The damaged tower focus vents wide instead of tracking the carrier."))
+        effects.append(
+            EmitEvent(message="The damaged tower focus vents wide instead of tracking the carrier.")
+        )
     else:
         effects.extend(
             [
@@ -156,6 +158,8 @@ def _monster_status(state, role):
     status = []
     if role == "lantern_wight" and state.scripts.get("focus_formula_read"):
         status.append("vulnerable")
-    if role == "lantern_wight" and (state.scripts.get("focus_ring_broken") or state.scripts.get("furnace_valve_broken")):
+    if role == "lantern_wight" and (
+        state.scripts.get("focus_ring_broken") or state.scripts.get("furnace_valve_broken")
+    ):
         status.append("weakened")
     return status

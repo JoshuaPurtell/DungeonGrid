@@ -9,9 +9,14 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from dungeongrid.env import DungeonGridEnvironment
 from dungeongrid.contracts import dungeongrid_rules
-from dungeongrid.models import DungeonGridAction, DungeonGridObservation, DungeonGridPlanResult, DungeonGridStep
+from dungeongrid.env import DungeonGridEnvironment
+from dungeongrid.models import (
+    DungeonGridAction,
+    DungeonGridObservation,
+    DungeonGridPlanResult,
+    DungeonGridStep,
+)
 
 app = FastAPI(title="DungeonGrid OpenEnv", version="0.1.0")
 _env = DungeonGridEnvironment()

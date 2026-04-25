@@ -58,6 +58,18 @@ class PayAP(Effect):
 
 
 @dataclass(slots=True)
+class SpendMovement(Effect):
+    entity_id: str = ""
+    amount: int = 1
+
+
+@dataclass(slots=True)
+class MarkMajorAction(Effect):
+    entity_id: str = ""
+    action_type: str = ""
+
+
+@dataclass(slots=True)
 class Move(Effect):
     entity_id: str = ""
     to: Pos = (0, 0)
@@ -273,6 +285,18 @@ class ObjectiveEscape(Effect):
 
 
 @dataclass(slots=True)
+class ExtractHero(Effect):
+    actor_id: str = ""
+    with_objective: bool = False
+    partial: bool = False
+
+
+@dataclass(slots=True)
+class CallExtraction(Effect):
+    actor_id: str = ""
+
+
+@dataclass(slots=True)
 class SearchArea(Effect):
     actor_id: str = ""
     category: str = "traps"
@@ -307,3 +331,16 @@ class MonsterAct(Effect):
 @dataclass(slots=True)
 class EndTurn(Effect):
     actor_id: str = ""
+
+
+@dataclass(slots=True)
+class ModifyDread(Effect):
+    amount: int = 0
+    reason: str = "dread"
+
+
+@dataclass(slots=True)
+class WardenSpendDread(Effect):
+    effect: str = ""
+    target_id: str = ""
+    cost: int = 1

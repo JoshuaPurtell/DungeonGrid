@@ -30,6 +30,7 @@ class DungeonGridActionType(StrEnum):
     END_TURN = "end_turn"
     WARDEN_AUTO = "warden_auto"
     ACTIVATE_MONSTER = "activate_monster"
+    WARDEN_SPEND_DREAD = "warden_spend_dread"
 
 
 class DungeonGridDirection(StrEnum):
@@ -252,6 +253,12 @@ ACTION_CONTRACTS: tuple[DungeonGridActionContract, ...] = (
         0,
         "Environment-only Warden monster activation.",
     ),
+    DungeonGridActionContract(
+        DungeonGridActionType.WARDEN_SPEND_DREAD,
+        DungeonGridTargetKind.ENTITY_ID,
+        0,
+        "Environment-only Warden dread spend. Target is a hero id; payload.effect names a bounded Warden pressure move.",
+    ),
 )
 
 ACTION_CONTRACT_BY_TYPE = {contract.action_type.value: contract for contract in ACTION_CONTRACTS}
@@ -280,5 +287,6 @@ def action_contract_summary() -> str:
     return " ".join(
         f"{contract.action_type.value} costs {contract.ap_cost} AP; target={contract.target_kind.value}."
         for contract in ACTION_CONTRACTS
-        if contract.action_type not in {DungeonGridActionType.WARDEN_AUTO, DungeonGridActionType.ACTIVATE_MONSTER}
+        if contract.action_type
+        not in {DungeonGridActionType.WARDEN_AUTO, DungeonGridActionType.ACTIVATE_MONSTER}
     )

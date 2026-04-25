@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from dungeongrid.core.effects import (
     Effect,
@@ -65,7 +65,9 @@ def guard_after(flag: str, set_flag: str, achievement: dict | None = None) -> ca
     return handler
 
 
-def attack_after(flag: str, set_flag: str, *, ranged: bool | None = None, achievement: dict | None = None) -> callable:
+def attack_after(
+    flag: str, set_flag: str, *, ranged: bool | None = None, achievement: dict | None = None
+) -> callable:
     def handler(ctx) -> list[Effect]:
         if not ctx.state.scripts.get(flag):
             return []
@@ -97,7 +99,9 @@ def achievement_effect(
     )
 
 
-def spawn_once(state, monster_id: str, role: str, pos: tuple[int, int], fallback: tuple[int, int] | None = None) -> SpawnMonster | None:
+def spawn_once(
+    state, monster_id: str, role: str, pos: tuple[int, int], fallback: tuple[int, int] | None = None
+) -> SpawnMonster | None:
     if monster_id in state.monsters:
         return None
     spawn_pos = pos

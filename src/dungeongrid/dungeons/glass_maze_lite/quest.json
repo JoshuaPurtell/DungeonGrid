@@ -1,0 +1,398 @@
+{
+  "quest_id": "glass_maze_lite",
+  "title": "Glass Maze Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "glass_maze",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "II",
+    "marl_axis": "shared map memory and route compression",
+    "coordination_type": "scout-report-map-update loop",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "shared_memory",
+      "partial_observability",
+      "route_planning"
+    ],
+    "challenge_summary": "Agents must maintain a shared map and avoid redundant looping through already-known paths.",
+    "dilemmas": [
+      "The secret route saves extraction time but costs a search",
+      "Splitting helps map coverage but creates confusion",
+      "The mirror adept tempts overreaction"
+    ],
+    "coordination_problems": [
+      "Map synchronization",
+      "Route naming",
+      "Scout trust",
+      "Loop avoidance"
+    ],
+    "warden_runbook": [
+      "Punish repeated loops with light pressure",
+      "Let correct map-sharing matter",
+      "Use decoys to test shared memory",
+      "Do not randomize the true shortcut mid-run"
+    ],
+    "lite_focus": "A secret-panel mazelet: one objective room, one optional shortcut, one decoy enemy, and a small lower route.",
+    "monster_profile": [
+      "skitterlings",
+      "mirror_adepts"
+    ],
+    "room_count": 3,
+    "map_width": 11,
+    "map_height": 7,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "turn scout observations into a shared route plan",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: shared map memory and route compression",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured"
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "elf",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step",
+        "quiet_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "###########\n#E..D.....#\n#...#..I..#\n#...#..G..#\n###S#######\n#..T.C..Y.#\n###########",
+    "width": 11,
+    "height": 7
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "glass_key_sliver",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      2
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "healing",
+              "item": "healing_draught"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Glass Maze is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "objective_room": {
+      "name": "Objective Room",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "The core object of the lite challenge is visible here; taking it should trigger extraction thinking, not exhaustive exploration.",
+      "tags": [
+        "objective",
+        "pressure"
+      ]
+    },
+    "secret_cache": {
+      "name": "Secret Cache",
+      "rect": [
+        1,
+        5,
+        9,
+        5
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "glass_maze_focus_1",
+      "name": "Glass Direction Pane",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for shared map memory and route compression. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "shared_memory",
+        "partial_observability"
+      ]
+    },
+    {
+      "id": "glass_maze_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        8,
+        5
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "glass_maze_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "glass_maze_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "glass_maze_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "glass_maze_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "glass_maze_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "glass_maze_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains shared map memory and route compression.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "glass_maze_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up glass_key_sliver.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Glass Maze Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "A secret-panel mazelet: one objective room, one optional shortcut, one decoy enemy, and a small lower route.",
+    "warden_style": "scout-report-map-update loop",
+    "marl_axis": "shared map memory and route compression"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "shared map memory and route compression",
+      "tags": [
+        "shared_memory",
+        "partial_observability",
+        "route_planning",
+        "scouting"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "shortcut_compression": "high",
+      "secret_panel_required_for_fast_score": true
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Punish repeated loops with light pressure",
+        "Let correct map-sharing matter",
+        "Use decoys to test shared memory",
+        "pressure the declared MARL axis: shared map memory and route compression"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "torch": 10,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  }
+}

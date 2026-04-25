@@ -81,7 +81,15 @@
     "initial_monster_count": 5,
     "has_secret_doors": false,
     "has_randomized_chests": true,
-    "has_custom_hooks": true
+    "has_custom_hooks": true,
+    "marl_axis": "joint-action synchronization",
+    "coordination_type": "ready-check and simultaneous activation",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "let the lock specialist handle shrine hazards while allies cover timing",
+    "classic_dynamic_warden_pressure": "pressure unsynchronized lock attempts and exposed non-specialists",
+    "classic_dynamic_extraction_hook": "partial extraction is allowed once the shrine objective is secured"
   },
   "max_heroes": 4,
   "recommended_heroes": [
@@ -383,6 +391,16 @@
       "condition": {
         "type": "success"
       }
+    },
+    {
+      "id": "classic_dynamic_extraction",
+      "title": "Classic Extraction Pressure",
+      "reward": 0.08,
+      "condition": {
+        "type": "extracted_heroes_at_least",
+        "count": 1
+      },
+      "description": "Extract at least one hero under classic dungeon-crawl dynamics."
     }
   ],
   "scripts": {
@@ -424,5 +442,75 @@
       "furniture"
     ],
     "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "ruleset": {
+    "classic_dynamic_available": true,
+    "treasure_risk": {
+      "enabled": true,
+      "default_treasure_deck": true
+    },
+    "extraction": {
+      "enabled": true,
+      "allow_partial": true
+    },
+    "warden_dread": {
+      "enabled": true,
+      "max": 6
+    }
+  },
+  "role_selection": {
+    "required_roles_by_party_size": {
+      "1": [
+        "dwarf"
+      ],
+      "2": [
+        "dwarf"
+      ],
+      "3": [
+        "dwarf"
+      ]
+    }
+  },
+  "quest_notes": [
+    {
+      "id": "lockcraft_hint",
+      "text": "The shrine locks favor a trap-and-lock specialist.",
+      "trigger": {
+        "type": "room_revealed",
+        "roles": [
+          "dwarf"
+        ]
+      }
+    }
+  ],
+  "mechanics": {
+    "marl_contract": {
+      "axis": "joint-action synchronization",
+      "tags": [
+        "ready-check_and_simultaneous_activation"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "pressure unsynchronized lock attempts and exposed non-specialists"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    },
+    "classic_dynamic": {
+      "warden": "pressure unsynchronized lock attempts and exposed non-specialists",
+      "metric": "specialist_actions.dwarf_disarm",
+      "extraction": "partial extraction is allowed once the shrine objective is secured"
+    }
   }
 }

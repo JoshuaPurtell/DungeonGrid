@@ -40,14 +40,14 @@ class HookContext:
             "id": achievement_id,
             "title": title or achievement_id.rsplit(".", 1)[-1].replace("_", " ").title(),
             "layer": layer,
-            "reward": float(reward),
+            "reward": max(0.0, float(reward)),
             "round": self.state.round,
         }
         if description:
             event["description"] = description
         self.state.achievements_unlocked.add(achievement_id)
         self.state.achievement_events.append(event)
-        self.state.achievement_reward += float(reward)
+        self.state.achievement_reward += max(0.0, float(reward))
         self.state.event_log.append(f"Achievement unlocked: {event['title']}.")
         return event
 

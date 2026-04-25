@@ -1,0 +1,420 @@
+{
+  "quest_id": "cinder_exit_lite",
+  "title": "Cinder Exit Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "cinder_exit",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "II",
+    "marl_axis": "cooperative extraction under pursuit",
+    "coordination_type": "carrier escort and rear-guard handoff",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "escort",
+      "handoff",
+      "dynamic_roles"
+    ],
+    "challenge_summary": "The team must pre-plan extraction, decide who carries the object, and decide when the rear guard stops delaying and runs.",
+    "dilemmas": [
+      "The barbarian carries safely but is needed to hold pursuers",
+      "The elf extracts quickly but is fragile",
+      "Fighting every pursuer loses the clock"
+    ],
+    "coordination_problems": [
+      "Carrier protection",
+      "Rear-guard timing",
+      "Dynamic role reassignment",
+      "Extraction route reservation"
+    ],
+    "warden_runbook": [
+      "Pressure the carrier after pickup",
+      "Use pursuers to force handoff decisions",
+      "Reward pre-cleared routes",
+      "Do not body-block the exit without warning"
+    ],
+    "lite_focus": "Four-room extraction race with a mauler near the objective and a lower return route that can be pre-cleared.",
+    "monster_profile": [
+      "skitterlings",
+      "tusk_maulers"
+    ],
+    "room_count": 4,
+    "map_width": 13,
+    "map_height": 7,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "assign carrier, escort, and rear guard before pursuit pressure peaks",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: cooperative extraction under pursuit",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured"
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "elf",
+    "barbarian"
+  ],
+  "hero_loadouts": {
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step",
+        "quiet_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    },
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#############\n#E..D...D..I#\n#...#...#...#\n#...#G..#M..#\n###D#####D###\n#..T..C.....#\n#############",
+    "width": 13,
+    "height": 7
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "cinder_exit_key",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      11,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "healing",
+              "item": "healing_draught"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Cinder Exit is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "middle_room": {
+      "name": "Middle Room",
+      "rect": [
+        5,
+        1,
+        7,
+        3
+      ],
+      "description": "A compact pressure room isolates the challenge: cooperative extraction under pursuit.",
+      "tags": [
+        "pressure"
+      ]
+    },
+    "objective_room": {
+      "name": "Objective Room",
+      "rect": [
+        9,
+        1,
+        11,
+        3
+      ],
+      "description": "The core object of the lite challenge is visible here; taking it should trigger extraction thinking, not exhaustive exploration.",
+      "tags": [
+        "objective",
+        "pressure"
+      ]
+    },
+    "lower_route": {
+      "name": "Lower Route",
+      "rect": [
+        1,
+        5,
+        11,
+        5
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "cinder_exit_focus_1",
+      "name": "Cinder Route Sign",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for cooperative extraction under pursuit. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "escort",
+        "handoff"
+      ]
+    },
+    {
+      "id": "cinder_exit_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        10,
+        5
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "cinder_exit_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "cinder_exit_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "cinder_exit_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "cinder_exit_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "cinder_exit_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "cinder_exit_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains cooperative extraction under pursuit.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "cinder_exit_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up cinder_exit_key.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Cinder Exit Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "Four-room extraction race with a mauler near the objective and a lower return route that can be pre-cleared.",
+    "warden_style": "carrier escort and rear-guard handoff",
+    "marl_axis": "cooperative extraction under pursuit"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "cooperative extraction under pursuit",
+      "tags": [
+        "escort",
+        "handoff",
+        "dynamic_roles",
+        "extraction"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "post_objective_pursuit": "lite",
+      "carrier_penalty": "described"
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Pressure the carrier after pickup",
+        "Use pursuers to force handoff decisions",
+        "Reward pre-cleared routes",
+        "pressure the declared MARL axis: cooperative extraction under pursuit"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "torch": 12,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "bosses": {
+    "tusk_mauler_1": {
+      "name": "Cinder Mauler",
+      "public_summary": "Lite boss for cooperative extraction under pursuit; it should test coordination before raw damage.",
+      "counterplay_hint": "Search the focus object and coordinate roles before committing to damage.",
+      "defeat_reward": 0.16,
+      "defeat_description": "Defeat Cinder Mauler after using the lite challenge's coordination lesson."
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  }
+}

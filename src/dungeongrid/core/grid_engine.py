@@ -5,11 +5,15 @@ from __future__ import annotations
 import json
 import random
 from collections import deque
+from collections.abc import Iterable
 from importlib import resources
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any
 
+from ..achievements import achievement_from_quest
 from .data import (
+    CLASSIC_DYNAMIC_RULESET,
+    DEFAULT_CLASSIC_TREASURE_DECK,
     DIRECTIONS,
     HERO_ARCHETYPES,
     HERO_GLYPHS,
@@ -25,8 +29,8 @@ from .data import (
     Objective,
     Pos,
     Trap,
+    default_per_hero_stats,
 )
-from ..achievements import achievement_from_quest
 
 
 class GridEngine:
@@ -39,7 +43,11 @@ class GridEngine:
         if self.quest_dir:
             return sorted(p.name for p in self.quest_dir.iterdir() if (p / "quest.json").exists())
         dungeon_pkg = resources.files("dungeongrid.dungeons")
-        return sorted(p.name for p in dungeon_pkg.iterdir() if p.is_dir() and p.joinpath("quest.json").is_file())
+        return sorted(
+            p.name
+            for p in dungeon_pkg.iterdir()
+            if p.is_dir() and p.joinpath("quest.json").is_file()
+        )
 
     def load_quest_data(self, quest_id: str) -> dict[str, Any]:
         if self.quest_dir:
@@ -48,14 +56,26 @@ class GridEngine:
                 raise FileNotFoundError(f"Quest not found: {quest_id}")
             return json.loads(path.read_text(encoding="utf-8"))
         try:
-            text = resources.files("dungeongrid.dungeons").joinpath(quest_id, "quest.json").read_text(encoding="utf-8")
+            text = (
+                resources.files("dungeongrid.dungeons")
+                .joinpath(quest_id, "quest.json")
+                .read_text(encoding="utf-8")
+            )
             return json.loads(text)
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Quest not found: {quest_id}") from exc
 
-    def new_state(self, quest_id: str = "lantern_crypt", num_heroes: int = 4, seed: int | None = None) -> GameState:
+    def new_state(
+        self,
+        quest_id: str = "lantern_crypt",
+        num_heroes: int = 4,
+        seed: int | None = None,
+        ruleset: str | dict[str, Any] | None = None,
+        hero_roles: list[str] | None = None,
+    ) -> GameState:
         rng = random.Random(seed)
         data = self.load_quest_data(quest_id)
+        resolved_ruleset = self._resolve_ruleset(data, ruleset)
         ascii_map = data["map"]["ascii"]
         lines = [line.rstrip("\n") for line in ascii_map.strip("\n").splitlines()]
         if not lines:
@@ -134,11 +154,7 @@ class GridEngine:
                         sight_range=int(spec.get("sight_range", 6)),
                         activation=str(spec.get("activation", default_activation)),
                         wake_on=str(spec.get("wake_on", default_wake_on)),
-                        equipment={
-                            key: spec[key]
-                            for key in ("attack_range",)
-                            if key in spec
-                        },
+                        equipment={key: spec[key] for key in ("attack_range",) if key in spec},
                     )
                     self._apply_monster_override(monster, data.get("monster_overrides", {}))
                     self._apply_boss_config(monster, data.get("bosses", {}))
@@ -151,7 +167,7 @@ class GridEngine:
             options = list(randomized_chests.get("contents", []))
             chest_ids = list(chests)
             rng.shuffle(options)
-            for chest_id, contents in zip(chest_ids, options):
+            for chest_id, contents in zip(chest_ids, options, strict=False):
                 chests[chest_id].contents = contents
 
         if entry is None:
@@ -159,9 +175,18 @@ class GridEngine:
         if objective_pos is None:
             objective_pos = tuple(data["objective"].get("start_pos", entry))  # type: ignore[assignment]
 
-        roles = list(data.get("recommended_heroes", ["barbarian", "wizard", "elf", "dwarf"]))[
-            :num_heroes
-        ]
+        roles = self._select_roles(
+            data,
+            num_heroes=num_heroes,
+            hero_roles=hero_roles,
+            apply_requirements=bool(resolved_ruleset),
+        )
+        role_requirements = self._role_requirements(data, num_heroes)
+        role_requirement_warnings = (
+            [role for role in role_requirements if role not in roles]
+            if not resolved_ruleset
+            else []
+        )
         hero_starts_raw = data.get("hero_starts")
         if hero_starts_raw:
             starts = [tuple(p) for p in hero_starts_raw[:num_heroes]]
@@ -219,6 +244,12 @@ class GridEngine:
             deck_id: [dict(card) for card in cards]
             for deck_id, cards in data.get("decks", {}).items()
         }
+        if (
+            resolved_ruleset.get("treasure_risk", {}).get("enabled")
+            and resolved_ruleset.get("treasure_risk", {}).get("default_treasure_deck", True)
+            and "treasure" not in decks
+        ):
+            decks["treasure"] = [dict(card) for card in DEFAULT_CLASSIC_TREASURE_DECK]
         objective = Objective(
             id=data["objective"].get("item_id", "objective_item"),
             pos=objective_pos,
@@ -250,15 +281,134 @@ class GridEngine:
                 "mechanics": dict(data.get("mechanics", {})),
                 "metadata": dict(data.get("metadata", {})),
                 "deck_policies": dict(data.get("deck_policies", {})),
+                "role_gates": list(data.get("role_gates", [])),
+                "role_requirements": {
+                    "required_roles": role_requirements,
+                    "mode": "hard" if resolved_ruleset else "soft",
+                    "warnings": role_requirement_warnings,
+                },
             },
+            ruleset=resolved_ruleset,
             quest_achievement_defs=achievement_from_quest(quest_id, data),
             hero_order=list(heroes),
             ap_remaining={hero_id: 3 for hero_id in heroes},
+            movement_remaining={hero_id: 0 for hero_id in heroes},
+            movement_rolls={hero_id: 0 for hero_id in heroes},
+            major_action_used={hero_id: False for hero_id in heroes},
+            hero_treasure={hero_id: 0 for hero_id in heroes},
+            per_hero_stats={
+                hero_id: default_per_hero_stats(hero) for hero_id, hero in heroes.items()
+            },
+            social_metrics=self._initial_social_metrics(heroes),
             torch=int(data.get("torch", 20)),
         )
+        if role_requirement_warnings:
+            state.event_log.append(
+                "Role warning: this dungeon favors "
+                f"{role_requirement_warnings}, but default/AP mode keeps the run playable."
+            )
         state.known_tiles.update(self.visible_tiles(state, agent_id="party"))
         self.update_revealed_rooms(state, reason="initial_visibility")
         return state
+
+    def _resolve_ruleset(
+        self, data: dict[str, Any], ruleset: str | dict[str, Any] | None
+    ) -> dict[str, Any]:
+        quest_rules = dict(data.get("ruleset", {}))
+        if ruleset is None:
+            return {}
+        if ruleset == "classic_dynamic":
+            base = self._deep_merge({}, CLASSIC_DYNAMIC_RULESET)
+        elif isinstance(ruleset, dict):
+            base = self._deep_merge({}, ruleset)
+        else:
+            base = {}
+        return self._deep_merge(base, quest_rules)
+
+    def _deep_merge(self, base: dict[str, Any], update: dict[str, Any]) -> dict[str, Any]:
+        merged = dict(base)
+        for key, value in update.items():
+            if isinstance(value, dict) and isinstance(merged.get(key), dict):
+                merged[key] = self._deep_merge(dict(merged[key]), value)
+            else:
+                merged[key] = value
+        return merged
+
+    def _select_roles(
+        self,
+        data: dict[str, Any],
+        *,
+        num_heroes: int,
+        hero_roles: list[str] | None,
+        apply_requirements: bool,
+    ) -> list[str]:
+        if hero_roles is not None:
+            roles = [str(role) for role in hero_roles]
+            if len(roles) != num_heroes:
+                raise ValueError("hero_roles length must match num_heroes")
+        else:
+            recommended = [
+                str(role)
+                for role in data.get("recommended_heroes", ["barbarian", "wizard", "elf", "dwarf"])
+            ]
+            required = self._role_requirements(data, num_heroes) if apply_requirements else []
+            roles = []
+            for role in [*required, *recommended]:
+                if role not in roles:
+                    roles.append(role)
+                if len(roles) == num_heroes:
+                    break
+        self._validate_roles(data, roles, num_heroes, apply_requirements=apply_requirements)
+        return roles[:num_heroes]
+
+    def _validate_roles(
+        self, data: dict[str, Any], roles: list[str], num_heroes: int, *, apply_requirements: bool
+    ) -> None:
+        unknown = [role for role in roles if role not in HERO_ARCHETYPES]
+        if unknown:
+            raise ValueError(f"Unknown hero roles: {unknown}")
+        if not apply_requirements:
+            return
+        required = self._role_requirements(data, num_heroes)
+        missing = [role for role in required if role not in roles]
+        if missing:
+            raise ValueError(f"Quest requires roles for {num_heroes} heroes: {missing}")
+
+    def _role_requirements(self, data: dict[str, Any], num_heroes: int) -> list[str]:
+        explicit = [
+            str(role)
+            for role in data.get("role_selection", {})
+            .get("required_roles_by_party_size", {})
+            .get(str(num_heroes), [])
+        ]
+        if explicit:
+            return explicit
+        metadata = data.get("metadata", {})
+        if not metadata.get("requires_specialist"):
+            return []
+        for role, affordances in metadata.get("role_affordances", {}).items():
+            if any("specialist" in str(affordance) for affordance in affordances):
+                return [str(role)]
+        for role, loadout in data.get("hero_loadouts", {}).items():
+            if "specialist" in str(loadout.get("combat_role", "")):
+                return [str(role)]
+        return ["dwarf"]
+
+    def _initial_social_metrics(self, heroes: dict[str, Entity]) -> dict[str, Any]:
+        return {
+            "treasure_searches": {hero_id: 0 for hero_id in heroes},
+            "bad_treasure_draws": {hero_id: 0 for hero_id in heroes},
+            "wanderers_spawned_by_greed": 0,
+            "items_given": 0,
+            "objective_passes": 0,
+            "rescue_actions": 0,
+            "split_party_rounds": 0,
+            "doorway_hold_turns": 0,
+            "body_blocked_ally_escape": 0,
+            "healing_items_given": 0,
+            "potions_hoarded_while_ally_critical": 0,
+            "specialist_actions": {},
+        }
 
     def room_id_at(self, rooms: dict[str, Any], pos: Pos) -> str | None:
         x, y = pos
@@ -271,7 +421,9 @@ class GridEngine:
                 return str(room_id)
         return None
 
-    def update_revealed_rooms(self, state: GameState, reason: str, opener_id: str | None = None) -> list[dict[str, Any]]:
+    def update_revealed_rooms(
+        self, state: GameState, reason: str, opener_id: str | None = None
+    ) -> list[dict[str, Any]]:
         events: list[dict[str, Any]] = []
         visible = self.visible_tiles(state, "party")
         for room_id, room in state.rooms.items():
@@ -298,12 +450,18 @@ class GridEngine:
             events.extend(self.activate_room_monsters(state, str(room_id), reason=reason))
         return events
 
-    def activate_room_monsters(self, state: GameState, room_id: str, reason: str) -> list[dict[str, Any]]:
+    def activate_room_monsters(
+        self, state: GameState, room_id: str, reason: str
+    ) -> list[dict[str, Any]]:
         events: list[dict[str, Any]] = []
         for monster in state.monsters.values():
             if not monster.alive or monster.room_id != room_id or monster.activation != "dormant":
                 continue
-            if monster.wake_on in {"line_of_sight", "visible", "sighted"} and not self._monster_seen_by_party(state, monster):
+            if monster.wake_on in {
+                "line_of_sight",
+                "visible",
+                "sighted",
+            } and not self._monster_seen_by_party(state, monster):
                 continue
             if monster.wake_on in {"alert", "alarm"} and state.alert <= 0:
                 continue
@@ -364,7 +522,17 @@ class GridEngine:
         raw = overrides.get(monster.id) or overrides.get(monster.role)
         if not isinstance(raw, dict):
             return
-        for attr in ("hp", "max_hp", "attack", "guard", "speed", "behavior", "activation", "wake_on", "sight_range"):
+        for attr in (
+            "hp",
+            "max_hp",
+            "attack",
+            "guard",
+            "speed",
+            "behavior",
+            "activation",
+            "wake_on",
+            "sight_range",
+        ):
             if attr not in raw:
                 continue
             value = raw[attr]
@@ -374,7 +542,9 @@ class GridEngine:
         if "hp" in raw and "max_hp" not in raw:
             monster.max_hp = int(raw["hp"])
         if isinstance(raw.get("status"), list):
-            monster.status.extend(str(item) for item in raw["status"] if str(item) not in monster.status)
+            monster.status.extend(
+                str(item) for item in raw["status"] if str(item) not in monster.status
+            )
         if isinstance(raw.get("equipment"), dict):
             monster.equipment.update(raw["equipment"])
 
@@ -404,9 +574,13 @@ class GridEngine:
             if gate.get("max_damage_without_counter") is not None:
                 monster.equipment["max_damage_without_counter"] = gate["max_damage_without_counter"]
         if isinstance(raw.get("phases"), list):
-            monster.equipment["phases"] = [dict(phase) for phase in raw["phases"] if isinstance(phase, dict)]
+            monster.equipment["phases"] = [
+                dict(phase) for phase in raw["phases"] if isinstance(phase, dict)
+            ]
 
-    def _adjacent_start_positions(self, entry: Pos, terrain: list[list[str]], num_heroes: int) -> list[Pos]:
+    def _adjacent_start_positions(
+        self, entry: Pos, terrain: list[list[str]], num_heroes: int
+    ) -> list[Pos]:
         width, height = len(terrain[0]), len(terrain)
         starts = [entry]
         q: deque[Pos] = deque([entry])
@@ -442,9 +616,7 @@ class GridEngine:
         if self.terrain_at(state, pos) == "#":
             return True
         door = state.door_at(pos)
-        if door and door.secret and not door.discovered and for_heroes:
-            return True
-        return False
+        return bool(door and door.secret and not door.discovered and for_heroes)
 
     def is_transparent(self, state: GameState, pos: Pos) -> bool:
         if self.is_wall(state, pos):
@@ -455,7 +627,9 @@ class GridEngine:
         door = state.door_at(pos)
         return not (door and door.state == "closed")
 
-    def is_walkable(self, state: GameState, pos: Pos, ignore_entities: bool = False, for_heroes: bool = True) -> bool:
+    def is_walkable(
+        self, state: GameState, pos: Pos, ignore_entities: bool = False, for_heroes: bool = True
+    ) -> bool:
         if self.is_wall(state, pos, for_heroes=for_heroes):
             return False
         door = state.door_at(pos)
@@ -464,12 +638,12 @@ class GridEngine:
         furniture = self.furniture_at(state, pos)
         if furniture and not furniture.destroyed and furniture.blocks_movement:
             return False
-        if not ignore_entities and state.entity_at(pos) is not None:
-            return False
-        return True
+        return not (not ignore_entities and state.entity_at(pos) is not None)
 
     def furniture_at(self, state: GameState, pos: Pos) -> Furniture | None:
-        return next((item for item in state.furniture.values() if item.pos == pos and item.visible), None)
+        return next(
+            (item for item in state.furniture.values() if item.pos == pos and item.visible), None
+        )
 
     def neighbors(self, state: GameState, pos: Pos, ignore_entities: bool = True) -> Iterable[Pos]:
         x, y = pos
@@ -522,7 +696,9 @@ class GridEngine:
     def manhattan(self, a: Pos, b: Pos) -> int:
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-    def find_path(self, state: GameState, start: Pos, goal: Pos, ignore_entities: bool = True) -> list[Pos]:
+    def find_path(
+        self, state: GameState, start: Pos, goal: Pos, ignore_entities: bool = True
+    ) -> list[Pos]:
         if start == goal:
             return [start]
         q: deque[Pos] = deque([start])
@@ -558,7 +734,9 @@ class GridEngine:
                 return False
         return True
 
-    def render_ascii(self, state: GameState, agent_id: str | None = None, known_only: bool = True) -> str:
+    def render_ascii(
+        self, state: GameState, agent_id: str | None = None, known_only: bool = True
+    ) -> str:
         if agent_id == "warden" or known_only is False:
             visible = {(x, y) for y in range(state.height) for x in range(state.width)}
         else:
@@ -592,7 +770,11 @@ class GridEngine:
             if agent_id != "warden" and ent.activation == "dormant":
                 return "." if self.terrain_at(state, pos) == "." else "#"
             return MONSTER_RENDER_GLYPHS.get(ent.role, "m")
-        if state.objective.pos == pos and state.objective.carrier is None and not state.objective.recovered:
+        if (
+            state.objective.pos == pos
+            and state.objective.carrier is None
+            and not state.objective.recovered
+        ):
             return "I"
         chest = state.chest_at(pos)
         if chest and not chest.opened:
@@ -625,7 +807,11 @@ class GridEngine:
         result: list[dict[str, Any]] = []
         for entity in state.all_entities().values():
             if entity.alive and entity.pos in visible:
-                if entity.team == "dungeon" and agent_id != "warden" and entity.activation == "dormant":
+                if (
+                    entity.team == "dungeon"
+                    and agent_id != "warden"
+                    and entity.activation == "dormant"
+                ):
                     continue
                 if entity.team == "dungeon" and agent_id != "warden" and entity.pos not in visible:
                     continue
@@ -651,7 +837,12 @@ class GridEngine:
                 objs.append({"type": "door", **door.to_dict()})
         for chest in state.chests.values():
             if chest.pos in visible and not chest.opened:
-                data = {"type": "chest", "id": chest.id, "pos": list(chest.pos), "opened": chest.opened}
+                data = {
+                    "type": "chest",
+                    "id": chest.id,
+                    "pos": list(chest.pos),
+                    "opened": chest.opened,
+                }
                 if agent_id == "warden":
                     data["contents"] = chest.contents
                 objs.append(data)
@@ -666,6 +857,10 @@ class GridEngine:
         for trap in state.traps.values():
             if trap.pos in visible and (agent_id == "warden" or trap.revealed):
                 objs.append({"type": "trap", **trap.to_dict()})
-        if state.objective.pos and state.objective.pos in visible and state.objective.carrier is None:
+        if (
+            state.objective.pos
+            and state.objective.pos in visible
+            and state.objective.carrier is None
+        ):
             objs.append({"type": "objective", **state.objective.to_dict()})
         return objs

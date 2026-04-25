@@ -128,7 +128,10 @@ GLOBAL_ACHIEVEMENTS: tuple[Achievement, ...] = (
         title="Survived Special Pressure",
         layer="global",
         reward=0.06,
-        condition={"type": "trace_kind_happened", "kinds": ["monster_cleave", "monster_ranged_attack"]},
+        condition={
+            "type": "trace_kind_happened",
+            "kinds": ["monster_cleave", "monster_ranged_attack"],
+        },
         description="Survive a cleave or ranged caster threat.",
     ),
     Achievement(
@@ -188,6 +191,42 @@ GLOBAL_ACHIEVEMENTS: tuple[Achievement, ...] = (
         description="Resolve a dungeon deck card.",
     ),
     Achievement(
+        id="classic.first_hero_extracted",
+        title="First Hero Extracted",
+        layer="global",
+        reward=0.08,
+        condition={"type": "extracted_heroes_at_least", "count": 1},
+        description="Extract at least one hero from a classic-dynamic dungeon.",
+    ),
+    Achievement(
+        id="classic.no_one_left_behind",
+        title="No One Left Behind",
+        layer="global",
+        reward=0.18,
+        condition={"type": "termination_reason", "reason": "full_party_extraction"},
+        description="Finish with every submitted hero extracted.",
+    ),
+    Achievement(
+        id="classic.partial_extraction",
+        title="Partial Extraction",
+        layer="global",
+        reward=0.06,
+        condition={"type": "termination_reason", "reason": "partial_extraction"},
+        description="Secure the objective and call a partial extraction.",
+    ),
+    Achievement(
+        id="classic.bad_treasure_survived",
+        title="Bad Treasure Draw Survived",
+        layer="global",
+        reward=0.05,
+        condition={
+            "type": "social_metric_at_least",
+            "metric": "wanderers_spawned_by_greed",
+            "count": 1,
+        },
+        description="Trigger a risky treasure draw that spawns Warden pressure.",
+    ),
+    Achievement(
         id="objective.item_recovered",
         title="Objective Item Recovered",
         layer="global",
@@ -240,16 +279,25 @@ class AchievementEngine:
                 trap_id: {"armed": trap.armed, "revealed": trap.revealed}
                 for trap_id, trap in state.traps.items()
             },
-            "chests": {chest_id: {"opened": chest.opened} for chest_id, chest in state.chests.items()},
+            "chests": {
+                chest_id: {"opened": chest.opened} for chest_id, chest in state.chests.items()
+            },
             "furniture": {
                 item_id: {"searched": item.searched, "category": item.category}
                 for item_id, item in state.furniture.items()
             },
             "monsters": {
-                monster_id: {"alive": monster.alive, "role": monster.role, "status": list(monster.status)}
+                monster_id: {
+                    "alive": monster.alive,
+                    "role": monster.role,
+                    "status": list(monster.status),
+                }
                 for monster_id, monster in state.monsters.items()
             },
             "trace_kind_counts": self._trace_kind_counts(state),
+            "extracted_heroes": len(state.extracted_heroes),
+            "termination_reason": state.termination_reason,
+            "social_metrics": dict(state.social_metrics),
         }
 
     def unlock_new(
@@ -271,7 +319,7 @@ class AchievementEngine:
                 "id": achievement.id,
                 "title": achievement.title,
                 "layer": achievement.layer,
-                "reward": achievement.reward,
+                "reward": max(0.0, achievement.reward),
                 "round": state.round,
             }
             if achievement.description:
@@ -283,14 +331,16 @@ class AchievementEngine:
 
         state.achievements_unlocked.update(event["id"] for event in new_events)
         state.achievement_events.extend(new_events)
-        reward = sum(float(event["reward"]) for event in new_events)
+        reward = sum(max(0.0, float(event["reward"])) for event in new_events)
         state.achievement_reward += reward
         state.event_log.append(
             "Achievements unlocked: " + ", ".join(event["title"] for event in new_events) + "."
         )
         return reward, new_events
 
-    def _condition_met(self, condition: dict[str, Any], state: GameState, before: dict[str, Any]) -> bool:
+    def _condition_met(
+        self, condition: dict[str, Any], state: GameState, before: dict[str, Any]
+    ) -> bool:
         condition_type = condition.get("type")
         if condition_type == "door_opened":
             return self._door_opened(state, before, condition.get("id"))
@@ -301,7 +351,9 @@ class AchievementEngine:
         if condition_type == "chest_opened":
             return self._chest_opened(state, before, condition.get("id"))
         if condition_type == "furniture_searched":
-            return self._furniture_searched(state, before, condition.get("id"), condition.get("category"))
+            return self._furniture_searched(
+                state, before, condition.get("id"), condition.get("category")
+            )
         if condition_type == "treasure_collected":
             return state.treasure_collected > int(before.get("treasure_collected", 0))
         if condition_type == "monster_defeated":
@@ -315,7 +367,9 @@ class AchievementEngine:
         if condition_type == "revived_monster_defeated":
             return self._revived_monster_defeated(state, before, condition.get("role"))
         if condition_type == "trace_kind_happened":
-            return self._trace_kind_happened(state, before, condition.get("kind"), condition.get("kinds"))
+            return self._trace_kind_happened(
+                state, before, condition.get("kind"), condition.get("kinds")
+            )
         if condition_type == "all_trace_kinds_happened":
             return self._all_trace_kinds_happened(state, condition.get("kinds"))
         if condition_type == "spell_used":
@@ -325,7 +379,22 @@ class AchievementEngine:
         if condition_type == "success":
             return state.done and state.winner == "heroes"
         if condition_type == "all_heroes_survive_success":
-            return state.done and state.winner == "heroes" and len(state.living_heroes()) == len(state.heroes)
+            return (
+                state.done
+                and state.winner == "heroes"
+                and len(state.living_heroes()) == len(state.heroes)
+            )
+        if condition_type == "extracted_heroes_at_least":
+            return len(state.extracted_heroes) >= int(condition.get("count", 1))
+        if condition_type == "termination_reason":
+            return state.termination_reason == str(condition.get("reason"))
+        if condition_type == "social_metric_at_least":
+            value = state.social_metrics.get(str(condition.get("metric", "")), 0)
+            if isinstance(value, dict):
+                total = sum(int(item) for item in value.values())
+            else:
+                total = int(value)
+            return total >= int(condition.get("count", 1))
         if condition_type == "messages_sent_at_least":
             if len(state.heroes) < int(condition.get("min_heroes", 1)):
                 return False
@@ -335,7 +404,11 @@ class AchievementEngine:
         if condition_type == "rooms_explored_at_least":
             return self._rooms_explored(state) >= int(condition.get("count", 1))
         if condition_type == "round_at_most_success":
-            return state.done and state.winner == "heroes" and state.round <= int(condition.get("round", 999))
+            return (
+                state.done
+                and state.winner == "heroes"
+                and state.round <= int(condition.get("round", 999))
+            )
         if condition_type == "inventory_contains":
             item = condition.get("item")
             return any(item in hero.inventory for hero in state.heroes.values())
@@ -414,7 +487,9 @@ class AchievementEngine:
             if mid in state.monsters
         )
 
-    def _revived_monster_defeated(self, state: GameState, before: dict[str, Any], role: Any = None) -> bool:
+    def _revived_monster_defeated(
+        self, state: GameState, before: dict[str, Any], role: Any = None
+    ) -> bool:
         before_monsters = before.get("monsters", {})
         return any(
             before_monsters.get(monster_id, {}).get("alive", False)
@@ -446,7 +521,9 @@ class AchievementEngine:
         counts = self._trace_kind_counts(state)
         return all(counts.get(str(kind), 0) > 0 for kind in kinds)
 
-    def _spell_used(self, state: GameState, before: dict[str, Any], spell: Any = None, spells: Any = None) -> bool:
+    def _spell_used(
+        self, state: GameState, before: dict[str, Any], spell: Any = None, spells: Any = None
+    ) -> bool:
         spell_set = {str(spell)} if spell else set()
         if isinstance(spells, list):
             spell_set.update(str(item) for item in spells)
@@ -511,7 +588,9 @@ def achievement_from_quest(quest_id: str, data: dict[str, Any]) -> list[Achievem
         achievements.append(
             Achievement(
                 id=achievement_id,
-                title=str(raw.get("title") or achievement_id.rsplit(".", 1)[-1].replace("_", " ").title()),
+                title=str(
+                    raw.get("title") or achievement_id.rsplit(".", 1)[-1].replace("_", " ").title()
+                ),
                 layer="quest",
                 reward=float(raw.get("reward", 0.1)),
                 condition=dict(raw.get("condition", {})),

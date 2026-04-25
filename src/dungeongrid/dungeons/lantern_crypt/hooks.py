@@ -73,7 +73,9 @@ def _on_warden_cleanup(ctx):
         status = _wight_status(state)
         effects.extend(
             [
-                EmitEvent(message="The ember idol pulses. A lantern-wight pulls itself out of the lower wall."),
+                EmitEvent(
+                    message="The ember idol pulses. A lantern-wight pulls itself out of the lower wall."
+                ),
                 SpawnMonster(
                     monster_id="lantern_wight_1",
                     role="lantern_wight",

@@ -12,7 +12,6 @@ from html import escape
 from pathlib import Path
 from typing import Any
 
-
 NATIVE_TILE = 16
 TILE = 32
 PAD = 18
@@ -68,7 +67,9 @@ def render_sprite_frame(
     small = _font(ImageFont, 12)
     title_font = _font(ImageFont, 18)
 
-    _draw_message_bar(draw, state_json, events, PAD, PAD, board_w + HUD_W + PAD, MSG_H, title_font, font)
+    _draw_message_bar(
+        draw, state_json, events, PAD, PAD, board_w + HUD_W + PAD, MSG_H, title_font, font
+    )
     board_x = PAD
     board_y = PAD * 2 + MSG_H
     _draw_board_backdrop(draw, board_x, board_y, board_w, board_h)
@@ -76,11 +77,24 @@ def render_sprite_frame(
     _draw_statics(draw, state_json, board_x, board_y, tile)
     _draw_action_trails(draw, state_json, events, board_x, board_y, tile)
     _draw_entities(draw, state_json, board_x, board_y, tile, font)
-    _draw_hud(draw, state_json, events, board_x + board_w + PAD, board_y, HUD_W, board_h, title_font, font, small)
+    _draw_hud(
+        draw,
+        state_json,
+        events,
+        board_x + board_w + PAD,
+        board_y,
+        HUD_W,
+        board_h,
+        title_font,
+        font,
+        small,
+    )
     return image
 
 
-def render_sprite_gif(frames: list[dict[str, Any]], path: str | Path, fps: int = 2, tile_px: int = TILE) -> Path:
+def render_sprite_gif(
+    frames: list[dict[str, Any]], path: str | Path, fps: int = 2, tile_px: int = TILE
+) -> Path:
     """Render replay frames to an animated sprite GIF."""
 
     if not frames:
@@ -103,7 +117,9 @@ def render_sprite_gif(frames: list[dict[str, Any]], path: str | Path, fps: int =
     return path
 
 
-def render_sprite_html(frames: list[dict[str, Any]], path: str | Path, title: str | None = None) -> Path:
+def render_sprite_html(
+    frames: list[dict[str, Any]], path: str | Path, title: str | None = None
+) -> Path:
     """Write a compact HTML index for sprite replay artifacts."""
 
     if not frames:
@@ -158,7 +174,17 @@ def _font(ImageFont, size: int):
     return ImageFont.load_default()
 
 
-def _draw_message_bar(draw, state: dict[str, Any], events: dict[str, Any], x: int, y: int, w: int, h: int, title_font, font) -> None:
+def _draw_message_bar(
+    draw,
+    state: dict[str, Any],
+    events: dict[str, Any],
+    x: int,
+    y: int,
+    w: int,
+    h: int,
+    title_font,
+    font,
+) -> None:
     draw.rounded_rectangle((x, y, x + w, y + h), radius=10, fill=PANEL, outline=(74, 60, 46))
     message = _message(state, events)
     draw.text((x + 14, y + 9), message[:96], fill=(244, 229, 182), font=title_font)
@@ -167,7 +193,9 @@ def _draw_message_bar(draw, state: dict[str, Any], events: dict[str, Any], x: in
 
 
 def _draw_board_backdrop(draw, x: int, y: int, w: int, h: int) -> None:
-    draw.rounded_rectangle((x - 6, y - 6, x + w + 6, y + h + 6), radius=12, fill=(19, 16, 14), outline=(91, 72, 49))
+    draw.rounded_rectangle(
+        (x - 6, y - 6, x + w + 6, y + h + 6), radius=12, fill=(19, 16, 14), outline=(91, 72, 49)
+    )
 
 
 def _paste_native(draw, box: tuple[int, int, int, int], painter) -> None:
@@ -249,7 +277,9 @@ def _paint_marker(sprite, kind: str) -> None:
         sprite.rectangle((2, 2, 5, 14), fill=(17, 18, 19))
     elif kind == "exit":
         sprite.rectangle((2, 2, 14, 14), fill=(20, 30, 34), outline=BLUE)
-        sprite.polygon([(8, 3), (13, 8), (8, 13), (3, 8)], fill=(30, 73, 88), outline=(141, 209, 218))
+        sprite.polygon(
+            [(8, 3), (13, 8), (8, 13), (3, 8)], fill=(30, 73, 88), outline=(141, 209, 218)
+        )
 
 
 def _paint_furniture(sprite, category: str, destroyed: bool) -> None:
@@ -358,7 +388,9 @@ def _paint_monster(sprite, role: str) -> None:
         sprite.point((12, 4), fill=(255, 219, 85))
         return
     if role == "mirror_adept":
-        sprite.polygon([(8, 1), (13, 6), (8, 15), (3, 6)], fill=(150, 194, 202), outline=(31, 75, 83))
+        sprite.polygon(
+            [(8, 1), (13, 6), (8, 15), (3, 6)], fill=(150, 194, 202), outline=(31, 75, 83)
+        )
         sprite.polygon([(8, 3), (11, 6), (8, 12), (5, 6)], fill=(202, 232, 232))
         sprite.line((5, 5, 11, 11), fill=(246, 255, 255))
         sprite.line((10, 4, 6, 12), fill=(83, 145, 156))
@@ -478,7 +510,15 @@ def _draw_statics(draw, state: dict[str, Any], x0: int, y0: int, tile: int) -> N
     for door in (state.get("doors") or {}).values():
         if door.get("secret") and not door.get("discovered"):
             continue
-        _draw_marker(draw, door.get("pos"), x0, y0, tile, "open_door" if door.get("state") == "open" else "door", visible)
+        _draw_marker(
+            draw,
+            door.get("pos"),
+            x0,
+            y0,
+            tile,
+            "open_door" if door.get("state") == "open" else "door",
+            visible,
+        )
     for trap in (state.get("traps") or {}).values():
         if trap.get("revealed") and trap.get("armed", True):
             _draw_marker(draw, trap.get("pos"), x0, y0, tile, "trap", visible)
@@ -493,7 +533,9 @@ def _draw_statics(draw, state: dict[str, Any], x0: int, y0: int, tile: int) -> N
         _draw_marker(draw, objective.get("pos"), x0, y0, tile, "objective", visible)
 
 
-def _draw_marker(draw, pos: Any, x0: int, y0: int, tile: int, kind: str, visible: set[tuple[int, int]] | None) -> None:
+def _draw_marker(
+    draw, pos: Any, x0: int, y0: int, tile: int, kind: str, visible: set[tuple[int, int]] | None
+) -> None:
     parsed = _pos(pos)
     if parsed is None:
         return
@@ -504,7 +546,14 @@ def _draw_marker(draw, pos: Any, x0: int, y0: int, tile: int, kind: str, visible
     _paste_native(draw, box, lambda sprite: _paint_marker(sprite, kind))
 
 
-def _draw_furniture(draw, furniture: dict[str, Any], x0: int, y0: int, tile: int, visible: set[tuple[int, int]] | None) -> None:
+def _draw_furniture(
+    draw,
+    furniture: dict[str, Any],
+    x0: int,
+    y0: int,
+    tile: int,
+    visible: set[tuple[int, int]] | None,
+) -> None:
     pos = _pos(furniture.get("pos"))
     if pos is None:
         return
@@ -512,7 +561,11 @@ def _draw_furniture(draw, furniture: dict[str, Any], x0: int, y0: int, tile: int
         return
     box = _tile_box(x0, y0, pos[0], pos[1], tile)
     category = str(furniture.get("category") or "furniture")
-    _paste_native(draw, box, lambda sprite: _paint_furniture(sprite, category, bool(furniture.get("destroyed"))))
+    _paste_native(
+        draw,
+        box,
+        lambda sprite: _paint_furniture(sprite, category, bool(furniture.get("destroyed"))),
+    )
     if furniture.get("destructible"):
         x1, y1, _x2, _y2 = box
         hp = max(0, int(furniture.get("hp", 1)))
@@ -538,7 +591,9 @@ def _draw_entities(draw, state: dict[str, Any], x0: int, y0: int, tile: int, fon
                 _draw_hero(draw, hero, pos, x0, y0, tile, font, active=hero.get("id") == active)
 
 
-def _draw_action_trails(draw, state: dict[str, Any], events: dict[str, Any], x0: int, y0: int, tile: int) -> None:
+def _draw_action_trails(
+    draw, state: dict[str, Any], events: dict[str, Any], x0: int, y0: int, tile: int
+) -> None:
     actions = events.get("executed_actions") or []
     if not actions:
         return
@@ -566,7 +621,9 @@ def _draw_action_trails(draw, state: dict[str, Any], events: dict[str, Any], x0:
         _draw_footprints(draw, hero, trail, x0, y0, tile, direction)
 
 
-def _draw_footprints(draw, hero: dict[str, Any], pos: tuple[int, int], x0: int, y0: int, tile: int, direction: str) -> None:
+def _draw_footprints(
+    draw, hero: dict[str, Any], pos: tuple[int, int], x0: int, y0: int, tile: int, direction: str
+) -> None:
     role = str(hero.get("role") or "")
     color = {
         "barbarian": (198, 82, 72),
@@ -591,7 +648,16 @@ def _draw_footprints(draw, hero: dict[str, Any], pos: tuple[int, int], x0: int, 
         draw.line(arrow, fill=color, width=2)
 
 
-def _draw_hero(draw, hero: dict[str, Any], pos: tuple[int, int], x0: int, y0: int, tile: int, font, active: bool) -> None:
+def _draw_hero(
+    draw,
+    hero: dict[str, Any],
+    pos: tuple[int, int],
+    x0: int,
+    y0: int,
+    tile: int,
+    font,
+    active: bool,
+) -> None:
     role = str(hero.get("role") or "hero")
     x, y = pos
     box = _tile_box(x0, y0, x, y, tile)
@@ -610,34 +676,56 @@ def _draw_equipment_marks(draw, hero: dict[str, Any], box: tuple[int, int, int, 
     tile = x2 - x1 + 1
     scale = max(1, tile // NATIVE_TILE)
     if equipment.get("offhand") == "shield":
-        draw.rectangle((x1 + 2 * scale, y1 + 8 * scale, x1 + 4 * scale, y1 + 12 * scale), fill=BLUE, outline=GOLD)
+        draw.rectangle(
+            (x1 + 2 * scale, y1 + 8 * scale, x1 + 4 * scale, y1 + 12 * scale),
+            fill=BLUE,
+            outline=GOLD,
+        )
     if equipment.get("cloak") == "warding_cloak":
-        draw.line((x1 + 4 * scale, y1 + 4 * scale, x1 + 12 * scale, y1 + 4 * scale), fill=(96, 174, 190), width=max(1, scale))
+        draw.line(
+            (x1 + 4 * scale, y1 + 4 * scale, x1 + 12 * scale, y1 + 4 * scale),
+            fill=(96, 174, 190),
+            width=max(1, scale),
+        )
     if equipment.get("helm") == "iron_helm":
-        draw.rectangle((x1 + 6 * scale, y1 + 2 * scale, x1 + 10 * scale, y1 + 4 * scale), fill=STONE_LIGHT)
+        draw.rectangle(
+            (x1 + 6 * scale, y1 + 2 * scale, x1 + 10 * scale, y1 + 4 * scale), fill=STONE_LIGHT
+        )
     if equipment.get("charm") == "holy_charm":
-        draw.rectangle((x1 + 11 * scale, y1 + 4 * scale, x1 + 12 * scale, y1 + 5 * scale), fill=GOLD)
+        draw.rectangle(
+            (x1 + 11 * scale, y1 + 4 * scale, x1 + 12 * scale, y1 + 5 * scale), fill=GOLD
+        )
 
 
 def _draw_barbarian(draw, cx: int, cy: int) -> None:
     # Compatibility shim for third-party code that may call the old private helper.
-    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "barbarian"))
+    _paste_native(
+        draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "barbarian")
+    )
 
 
 def _draw_wizard(draw, cx: int, cy: int) -> None:
-    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "wizard"))
+    _paste_native(
+        draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "wizard")
+    )
 
 
 def _draw_elf(draw, cx: int, cy: int) -> None:
-    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "elf"))
+    _paste_native(
+        draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "elf")
+    )
 
 
 def _draw_dwarf(draw, cx: int, cy: int) -> None:
-    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "dwarf"))
+    _paste_native(
+        draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "dwarf")
+    )
 
 
 def _draw_adventurer(draw, cx: int, cy: int) -> None:
-    _paste_native(draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "hero"))
+    _paste_native(
+        draw, (cx - 16, cy - 16, cx + 15, cy + 15), lambda sprite: _paint_hero(sprite, "hero")
+    )
 
 
 def _draw_face(draw, cx: int, cy: int) -> None:
@@ -645,13 +733,23 @@ def _draw_face(draw, cx: int, cy: int) -> None:
     draw.rectangle((cx + 3, cy, cx + 4, cy + 1), fill=OUTLINE)
 
 
-def _draw_monster(draw, monster: dict[str, Any], pos: tuple[int, int], x0: int, y0: int, tile: int) -> None:
+def _draw_monster(
+    draw, monster: dict[str, Any], pos: tuple[int, int], x0: int, y0: int, tile: int
+) -> None:
     role = str(monster.get("role") or "monster")
     x, y = pos
     box = _tile_box(x0, y0, x, y, tile)
     x1, y1, _x2, _y2 = box
     _paste_native(draw, box, lambda sprite: _paint_monster(sprite, role))
-    _draw_hp_bar(draw, x1 + 5, y1 + 2, tile - 10, 3, monster.get("hp", 1), monster.get("max_hp", monster.get("hp", 1)))
+    _draw_hp_bar(
+        draw,
+        x1 + 5,
+        y1 + 2,
+        tile - 10,
+        3,
+        monster.get("hp", 1),
+        monster.get("max_hp", monster.get("hp", 1)),
+    )
 
 
 def _draw_hp_bar(draw, x: int, y: int, w: int, h: int, hp: Any, max_hp: Any) -> None:
@@ -667,15 +765,37 @@ def _draw_hp_bar(draw, x: int, y: int, w: int, h: int, hp: Any, max_hp: Any) -> 
     draw.line((x, y, x + w, y), fill=(82, 63, 45))
 
 
-def _draw_hud(draw, state: dict[str, Any], events: dict[str, Any], x: int, y: int, w: int, h: int, title_font, font, small) -> None:
+def _draw_hud(
+    draw,
+    state: dict[str, Any],
+    events: dict[str, Any],
+    x: int,
+    y: int,
+    w: int,
+    h: int,
+    title_font,
+    font,
+    small,
+) -> None:
     draw.rounded_rectangle((x, y, x + w, y + h), radius=12, fill=PANEL, outline=(74, 60, 46))
     yy = y + 14
-    draw.text((x + 14, yy), str(state.get("title") or state.get("quest_id") or "DungeonGrid")[:26], fill=TEXT, font=title_font)
+    draw.text(
+        (x + 14, yy),
+        str(state.get("title") or state.get("quest_id") or "DungeonGrid")[:26],
+        fill=TEXT,
+        font=title_font,
+    )
     yy += 32
     objective = state.get("objective") or {}
+    active = state.get("active_agent")
+    movement = (state.get("movement_remaining") or {}).get(active, "-")
+    major = (state.get("major_action_used") or {}).get(active, False)
     lines = [
         f"Objective: {objective.get('id', '-')}",
         f"Carrier: {objective.get('carrier') or '-'}",
+        f"Move: {movement}  Major: {'used' if major else 'ready'}",
+        f"Dread: {state.get('dread', '-')}",
+        f"Extracted: {len(state.get('extracted_heroes') or [])}",
         f"Reward this turn: {events.get('reward', 0)}",
         "",
         "Party",
@@ -686,7 +806,12 @@ def _draw_hud(draw, state: dict[str, Any], events: dict[str, Any], x: int, y: in
     for hero in (state.get("heroes") or {}).values():
         role = str(hero.get("role") or hero.get("id"))
         weapon = (hero.get("equipment") or {}).get("weapon", "-")
-        draw.text((x + 22, yy), f"{role:<9} HP {hero.get('hp')}/{hero.get('max_hp')}", fill=TEXT, font=font)
+        draw.text(
+            (x + 22, yy),
+            f"{role:<9} HP {hero.get('hp')}/{hero.get('max_hp')}",
+            fill=TEXT,
+            font=font,
+        )
         yy += 19
         draw.text((x + 32, yy), f"weapon: {weapon}", fill=MUTED, font=small)
         yy += 16
@@ -712,7 +837,12 @@ def _draw_hud(draw, state: dict[str, Any], events: dict[str, Any], x: int, y: in
         draw.text((x + 14, yy), "Achievements", fill=GOLD, font=font)
         yy += 20
         for item in achievements[-3:]:
-            draw.text((x + 22, yy), str(item.get("title") or item.get("id") or item)[:34], fill=TEXT, font=small)
+            draw.text(
+                (x + 22, yy),
+                str(item.get("title") or item.get("id") or item)[:34],
+                fill=TEXT,
+                font=small,
+            )
             yy += 17
 
 
@@ -806,12 +936,13 @@ def _frame_events(frame: dict[str, Any]) -> dict[str, Any]:
 def _title_from_frames(frames: list[dict[str, Any]]) -> str:
     state = frames[0].get("state") if frames else {}
     if isinstance(state, dict):
-        return f"DungeonGrid Sprite Replay: {state.get('title') or state.get('quest_id') or 'episode'}"
+        return (
+            f"DungeonGrid Sprite Replay: {state.get('title') or state.get('quest_id') or 'episode'}"
+        )
     return "DungeonGrid Sprite Replay"
 
 
 def _html_frame(frame: dict[str, Any], index: int) -> str:
-    state = frame.get("state") or {}
     events = _frame_events(frame)
     lines = [
         f"step={events.get('step_index', index)} agent={events.get('agent_id', '-')}",

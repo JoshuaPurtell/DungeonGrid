@@ -45,7 +45,9 @@ def summarize_achievement_frequencies(rollouts: list[dict[str, Any]]) -> dict[st
     rewards: dict[str, float] = {}
     by_quest: dict[str, dict[str, int]] = {}
     for rollout in rollouts:
-        quest_id = str(rollout.get("quest_id") or rollout.get("transcript", {}).get("quest_id") or "unknown")
+        quest_id = str(
+            rollout.get("quest_id") or rollout.get("transcript", {}).get("quest_id") or "unknown"
+        )
         metrics = rollout.get("metrics") or rollout.get("transcript", {}).get("metrics", {})
         achievements = metrics.get("achievements_unlocked") or [
             event.get("id") for event in rollout.get("transcript", {}).get("achievements", [])
@@ -58,7 +60,9 @@ def summarize_achievement_frequencies(rollouts: list[dict[str, Any]]) -> dict[st
         for event in rollout.get("transcript", {}).get("achievements", []):
             achievement_id = event.get("id")
             if achievement_id:
-                rewards[str(achievement_id)] = max(rewards.get(str(achievement_id), 0.0), float(event.get("reward", 0.0)))
+                rewards[str(achievement_id)] = max(
+                    rewards.get(str(achievement_id), 0.0), float(event.get("reward", 0.0))
+                )
     return {
         "episodes": total,
         "achievement_counts": dict(sorted(counts.items())),
@@ -69,7 +73,18 @@ def summarize_achievement_frequencies(rollouts: list[dict[str, Any]]) -> dict[st
         "achievement_rewards": dict(sorted(rewards.items())),
         "by_quest": {
             quest_id: {
-                achievement_id: count / max(1, len([r for r in rollouts if (r.get("quest_id") or r.get("transcript", {}).get("quest_id")) == quest_id]))
+                achievement_id: count
+                / max(
+                    1,
+                    len(
+                        [
+                            r
+                            for r in rollouts
+                            if (r.get("quest_id") or r.get("transcript", {}).get("quest_id"))
+                            == quest_id
+                        ]
+                    ),
+                )
                 for achievement_id, count in sorted(quest_counts.items())
             }
             for quest_id, quest_counts in sorted(by_quest.items())

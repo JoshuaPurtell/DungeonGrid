@@ -15,13 +15,13 @@ from collections.abc import Mapping
 from datetime import datetime, timezone
 from typing import Any
 
-from dungeongrid import DungeonGridEnvironment, __version__ as DUNGEONGRID_VERSION
-from dungeongrid.core.agent_engine import AchievementScoutPolicy, GreedyHeroPolicy
-from dungeongrid.models import model_to_dict
-
-from .task_sets import PLAYER_MODES, default_task_entries, entry_by_id
-
-from synth_containers.capabilities import DatasetDescriptor, RuntimeCapabilitySurface, RuntimeMetadata, TaskCatalog, TaskInfo
+from synth_containers.capabilities import (
+    DatasetDescriptor,
+    RuntimeCapabilitySurface,
+    RuntimeMetadata,
+    TaskCatalog,
+    TaskInfo,
+)
 from synth_containers.nouns import (
     Actor,
     ArtifactDescriptor,
@@ -48,8 +48,19 @@ from synth_containers.ontology import (
     RuntimeKind,
     StatefulnessTier,
 )
-from synth_containers.tool_runtime import ToolCallSchemaKind, ToolOutputMode, ToolRuntimeCapabilities, ToolRuntimeKind
+from synth_containers.tool_runtime import (
+    ToolCallSchemaKind,
+    ToolOutputMode,
+    ToolRuntimeCapabilities,
+    ToolRuntimeKind,
+)
 
+from dungeongrid import DungeonGridEnvironment
+from dungeongrid import __version__ as DUNGEONGRID_VERSION
+from dungeongrid.core.agent_engine import AchievementScoutPolicy, GreedyHeroPolicy
+from dungeongrid.models import model_to_dict
+
+from .task_sets import PLAYER_MODES, default_task_entries, entry_by_id
 
 DEFAULT_MAX_STEPS = 40
 CHECKPOINT_VERSION = "dungeongrid.true_env_snapshot.v1"
@@ -202,7 +213,9 @@ class DungeonGridContainerRuntime:
             capabilities=self.metadata().capabilities,
             limits={"default_max_steps": DEFAULT_MAX_STEPS},
             environment="dungeongrid",
-            task_metadata={"dungeons": sorted({entry.quest_id for entry in default_task_entries()})},
+            task_metadata={
+                "dungeons": sorted({entry.quest_id for entry in default_task_entries()})
+            },
         )
 
     async def task_catalog(self) -> TaskCatalog:
@@ -243,10 +256,16 @@ class DungeonGridContainerRuntime:
         )
 
     async def submit_rollout(self, request: Mapping[str, Any]) -> ExecutionRecord:
-        rollout_id = str(request.get("rollout_id") or f"dungeongrid_rollout_{uuid.uuid4().hex[:10]}")
+        rollout_id = str(
+            request.get("rollout_id") or f"dungeongrid_rollout_{uuid.uuid4().hex[:10]}"
+        )
         trace_correlation_id = str(request.get("trace_correlation_id") or rollout_id)
         task_instance_id = str(request.get("task_instance_id") or "").strip() or None
-        seed = _coerce_int((request.get("env") or {}).get("seed") if isinstance(request.get("env"), Mapping) else None)
+        seed = _coerce_int(
+            (request.get("env") or {}).get("seed")
+            if isinstance(request.get("env"), Mapping)
+            else None
+        )
         entry = entry_by_id(task_instance_id, seed=seed)
         env, config, parent_checkpoint_id = self._env_from_request(request, entry)
         max_steps = _max_steps(request, default=DEFAULT_MAX_STEPS)
@@ -273,7 +292,9 @@ class DungeonGridContainerRuntime:
     async def get_execution_state(self, rollout_id: str) -> ExecutionRecord | None:
         return self._executions.get(rollout_id)
 
-    async def terminate_execution(self, rollout_id: str, request: Mapping[str, Any]) -> ExecutionRecord | None:
+    async def terminate_execution(
+        self, rollout_id: str, request: Mapping[str, Any]
+    ) -> ExecutionRecord | None:
         execution = self._executions.get(rollout_id)
         if execution is None:
             return None
@@ -283,7 +304,9 @@ class DungeonGridContainerRuntime:
         execution.metadata["terminate_reason"] = str(request.get("reason") or "")
         return execution
 
-    async def pause_execution(self, rollout_id: str, request: Mapping[str, Any]) -> ExecutionRecord | None:
+    async def pause_execution(
+        self, rollout_id: str, request: Mapping[str, Any]
+    ) -> ExecutionRecord | None:
         execution = self._executions.get(rollout_id)
         if execution is None:
             return None
@@ -292,7 +315,9 @@ class DungeonGridContainerRuntime:
         execution.metadata["pause_reason"] = str(request.get("reason") or "")
         return execution
 
-    async def create_checkpoint(self, rollout_id: str, request: Mapping[str, Any]) -> CheckpointDescriptor | None:
+    async def create_checkpoint(
+        self, rollout_id: str, request: Mapping[str, Any]
+    ) -> CheckpointDescriptor | None:
         env = self._envs.get(rollout_id)
         execution = self._executions.get(rollout_id)
         if env is None or execution is None:
@@ -320,13 +345,17 @@ class DungeonGridContainerRuntime:
     async def get_checkpoint(self, checkpoint_id: str) -> CheckpointDescriptor | None:
         return self._checkpoints.get(checkpoint_id)
 
-    async def get_rollout_checkpoint(self, rollout_id: str, checkpoint_id: str) -> CheckpointDescriptor | None:
+    async def get_rollout_checkpoint(
+        self, rollout_id: str, checkpoint_id: str
+    ) -> CheckpointDescriptor | None:
         checkpoint = self._checkpoints.get(checkpoint_id)
         if checkpoint is None or checkpoint.rollout_id != rollout_id:
             return None
         return checkpoint
 
-    async def update_checkpoint_labels(self, checkpoint_id: str, request: Mapping[str, Any]) -> CheckpointDescriptor | None:
+    async def update_checkpoint_labels(
+        self, checkpoint_id: str, request: Mapping[str, Any]
+    ) -> CheckpointDescriptor | None:
         checkpoint = self._checkpoints.get(checkpoint_id)
         if checkpoint is None:
             return None
@@ -336,7 +365,9 @@ class DungeonGridContainerRuntime:
         checkpoint.metadata.update(dict(request.get("metadata") or {}))
         return checkpoint
 
-    async def resume_execution(self, rollout_id: str, request: Mapping[str, Any]) -> ExecutionRecord | None:
+    async def resume_execution(
+        self, rollout_id: str, request: Mapping[str, Any]
+    ) -> ExecutionRecord | None:
         checkpoint_id = str(request.get("checkpoint_id") or "").strip()
         if not checkpoint_id:
             source_execution = self._executions.get(rollout_id)
@@ -350,10 +381,19 @@ class DungeonGridContainerRuntime:
         env.state = copy.deepcopy(payload["state"])
         env.observation_mode = str(payload.get("observation_mode") or "mixed")
         config = dict(payload.get("config") or {})
-        overrides = request.get("overrides") if isinstance(request.get("overrides"), Mapping) else {}
-        max_steps = _coerce_int(overrides.get("continue_steps") or overrides.get("segment_steps")) or DEFAULT_MAX_STEPS
-        target_rollout_id = str(request.get("target_rollout_id") or f"dungeongrid_branch_{uuid.uuid4().hex[:10]}")
-        entry = entry_by_id(str(config.get("task_instance_id") or "") or None, seed=_coerce_int(config.get("seed")))
+        overrides = (
+            request.get("overrides") if isinstance(request.get("overrides"), Mapping) else {}
+        )
+        max_steps = (
+            _coerce_int(overrides.get("continue_steps") or overrides.get("segment_steps"))
+            or DEFAULT_MAX_STEPS
+        )
+        target_rollout_id = str(
+            request.get("target_rollout_id") or f"dungeongrid_branch_{uuid.uuid4().hex[:10]}"
+        )
+        entry = entry_by_id(
+            str(config.get("task_instance_id") or "") or None, seed=_coerce_int(config.get("seed"))
+        )
         execution = self._run_env(
             rollout_id=target_rollout_id,
             trace_correlation_id=str(request.get("trace_correlation_id") or target_rollout_id),
@@ -372,7 +412,9 @@ class DungeonGridContainerRuntime:
         self._envs[target_rollout_id] = env
         return execution
 
-    def _env_from_request(self, request: Mapping[str, Any], entry: Any) -> tuple[DungeonGridEnvironment, dict[str, Any], str | None]:
+    def _env_from_request(
+        self, request: Mapping[str, Any], entry: Any
+    ) -> tuple[DungeonGridEnvironment, dict[str, Any], str | None]:
         checkpoint_ref = request.get("checkpoint")
         checkpoint_id = checkpoint_ref if isinstance(checkpoint_ref, str) else None
         if isinstance(checkpoint_ref, Mapping):
@@ -385,14 +427,23 @@ class DungeonGridContainerRuntime:
             return env, dict(payload.get("config") or {}), checkpoint_id
 
         env_config = request.get("env") if isinstance(request.get("env"), Mapping) else {}
-        raw_config = env_config.get("config") if isinstance(env_config.get("config"), Mapping) else {}
+        raw_config = (
+            env_config.get("config") if isinstance(env_config.get("config"), Mapping) else {}
+        )
         quest_id = str(raw_config.get("quest_id") or env_config.get("quest_id") or entry.quest_id)
-        player_mode = str(raw_config.get("player_mode") or env_config.get("player_mode") or entry.player_mode)
-        num_heroes = _coerce_int(raw_config.get("num_heroes") or env_config.get("num_heroes")) or entry.num_heroes
+        player_mode = str(
+            raw_config.get("player_mode") or env_config.get("player_mode") or entry.player_mode
+        )
+        num_heroes = (
+            _coerce_int(raw_config.get("num_heroes") or env_config.get("num_heroes"))
+            or entry.num_heroes
+        )
         seed = _coerce_int(env_config.get("seed") or raw_config.get("seed")) or entry.seed
         observation_mode = str(raw_config.get("observation_mode") or "mixed")
         env = DungeonGridEnvironment()
-        env.reset(quest_id=quest_id, num_heroes=num_heroes, seed=seed, observation_mode=observation_mode)
+        env.reset(
+            quest_id=quest_id, num_heroes=num_heroes, seed=seed, observation_mode=observation_mode
+        )
         config = {
             "task_instance_id": entry.task_instance_id,
             "task_id": entry.task_id,
@@ -425,7 +476,9 @@ class DungeonGridContainerRuntime:
             Actor(actor_id=hero_id, role=hero.role, display_name=hero.role.title())
             for hero_id, hero in env.state.heroes.items()
         ]
-        policy = AchievementScoutPolicy() if policy_kind == "achievement_scout" else GreedyHeroPolicy()
+        policy = (
+            AchievementScoutPolicy() if policy_kind == "achievement_scout" else GreedyHeroPolicy()
+        )
         total_reward = 0.0
         for turn_index in range(max_steps):
             if env.state.done:
@@ -514,7 +567,11 @@ class DungeonGridContainerRuntime:
             label="final" if env.state.done else "frontier",
             labels=["final" if env.state.done else "frontier", str(summary["cell_key"])],
             actor_ids=[actor.actor_id for actor in actors],
-            metadata={"cell_key": summary["cell_key"], "step_count": len(turns), "env_config": dict(config)},
+            metadata={
+                "cell_key": summary["cell_key"],
+                "step_count": len(turns),
+                "env_config": dict(config),
+            },
             annotations={"metrics": metrics},
         )
         summary["checkpoint_id"] = checkpoint.checkpoint_id
@@ -543,7 +600,11 @@ class DungeonGridContainerRuntime:
             ),
             actors=actors,
             trajectory=Trajectory(turns=turns, events=events, metadata={"transcript": transcript}),
-            outcome=Outcome(reward=float(summary.get("total_reward", 0.0)), passed=bool(summary["success"]), details=metrics),
+            outcome=Outcome(
+                reward=float(summary.get("total_reward", 0.0)),
+                passed=bool(summary["success"]),
+                details=metrics,
+            ),
             checkpoint=checkpoint,
             parent_rollout_id=parent_rollout_id,
             parent_checkpoint_id=parent_checkpoint_id,
@@ -609,9 +670,13 @@ class DungeonGridContainerRuntime:
         state = env.state
         rooms = tuple(sorted(room["id"] for room in env._visible_rooms("party")))
         achievements = tuple(sorted(state.achievements_unlocked))
-        positions = tuple((hero_id, hero.pos, hero.hp) for hero_id, hero in sorted(state.heroes.items()))
+        positions = tuple(
+            (hero_id, hero.pos, hero.hp) for hero_id, hero in sorted(state.heroes.items())
+        )
         objective = state.objective.carrier or ("map" if state.objective.pos else "missing")
-        return repr((state.quest_id, state.round, state.phase, rooms, achievements, positions, objective))
+        return repr(
+            (state.quest_id, state.round, state.phase, rooms, achievements, positions, objective)
+        )
 
 
 def _coerce_int(value: Any) -> int | None:

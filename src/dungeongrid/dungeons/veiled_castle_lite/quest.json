@@ -1,0 +1,446 @@
+{
+  "quest_id": "veiled_castle_lite",
+  "title": "Veiled Castle Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "veiled_castle",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "IV",
+    "marl_axis": "compositional partial-observation final",
+    "coordination_type": "belief, clue, counterplay, and extraction composition",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "composition",
+      "partial_observability",
+      "opponent_modeling"
+    ],
+    "challenge_summary": "This lite finale composes map communication, decoy verification, ranged threat management, and objective extraction.",
+    "dilemmas": [
+      "More clues reduce risk but spend torch",
+      "The secret-like lower route is safer only if verified",
+      "Countering the mage may leave the objective unguarded"
+    ],
+    "coordination_problems": [
+      "Hierarchical planning",
+      "Shared belief",
+      "Multi-threat priority",
+      "Compositional transfer"
+    ],
+    "warden_runbook": [
+      "Use decoys and ranged pressure within legal vision",
+      "Reward verified route choice",
+      "Punish isolated objective carriers",
+      "Do not combine all pressures at once before the heroes reveal them"
+    ],
+    "lite_focus": "A four-room mini-finale with one decoy, one ranged threat, one objective, and enough doors to require explicit communication.",
+    "monster_profile": [
+      "cinder_mages",
+      "mirror_adepts"
+    ],
+    "room_count": 4,
+    "map_width": 11,
+    "map_height": 9,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "compose clues, role gates, Warden pressure, and extraction planning",
+    "classic_dynamic_warden_pressure": "apply revealed-state pressure to inconsistent beliefs and late extraction choices",
+    "classic_dynamic_extraction_hook": "final challenge should reward explicit carrier and exit planning"
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "elf",
+    "wizard"
+  ],
+  "hero_loadouts": {
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step",
+        "quiet_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "reveal_glyph",
+        "ward_circle"
+      ],
+      "combat_role": "caster",
+      "items": []
+    }
+  },
+  "map": {
+    "ascii": "###########\n#E..D.....#\n#...#..C..#\n#...#.....#\n###D#D#####\n#..T#..I..#\n#..Y#..F..#\n#...#.....#\n###########",
+    "width": 11,
+    "height": 9
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "veiled_castle_sigils",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      5
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "healing",
+              "item": "healing_draught"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Veiled Castle is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "upper_right": {
+      "name": "Upper Right",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "A compact pressure room isolates the challenge: compositional partial-observation final.",
+      "tags": [
+        "pressure"
+      ]
+    },
+    "lower_left": {
+      "name": "Lower Left",
+      "rect": [
+        1,
+        5,
+        3,
+        7
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    },
+    "lower_right": {
+      "name": "Lower Right",
+      "rect": [
+        5,
+        5,
+        9,
+        7
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "veiled_castle_focus_1",
+      "name": "Veil Lens",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for compositional partial-observation final. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "composition",
+        "partial_observability"
+      ]
+    },
+    {
+      "id": "veiled_castle_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        8,
+        3
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    },
+    {
+      "id": "veiled_castle_support_1",
+      "name": "Support Marker",
+      "category": "supply",
+      "pos": [
+        8,
+        7
+      ],
+      "deck": "supply",
+      "description": "A small support object that makes the non-damaging coordination action visible in transcript review.",
+      "traits": [
+        "support",
+        "coordination"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "veiled_castle_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "veiled_castle_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "veiled_castle_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "veiled_castle_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "veiled_castle_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "veiled_castle_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains compositional partial-observation final.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "veiled_castle_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up veiled_castle_sigils.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Veiled Castle Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "A four-room mini-finale with one decoy, one ranged threat, one objective, and enough doors to require explicit communication.",
+    "warden_style": "belief, clue, counterplay, and extraction composition",
+    "marl_axis": "compositional partial-observation final"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "compositional partial-observation final",
+      "tags": [
+        "composition",
+        "partial_observability",
+        "opponent_modeling",
+        "extraction"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "finale_lite": true,
+      "requires_prior_lessons": [
+        "belief",
+        "spacing",
+        "extraction"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Use decoys and ranged pressure within legal vision",
+        "Reward verified route choice",
+        "Punish isolated objective carriers",
+        "apply revealed-state pressure to inconsistent beliefs and late extraction choices"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    },
+    "classic_dynamic": {
+      "warden": "apply revealed-state pressure to inconsistent beliefs and late extraction choices",
+      "metric": "objective_passes, split_party_rounds, and specialist_actions",
+      "extraction": "final challenge should reward explicit carrier and exit planning"
+    }
+  },
+  "torch": 12,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "bosses": {
+    "cinder_mage_1": {
+      "name": "Veiled Castilian",
+      "public_summary": "Lite boss for compositional partial-observation final; it should test coordination before raw damage.",
+      "counterplay_hint": "Search the focus object and coordinate roles before committing to damage.",
+      "defeat_reward": 0.16,
+      "defeat_description": "Defeat Veiled Castilian after using the lite challenge's coordination lesson."
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  }
+}

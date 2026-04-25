@@ -6,13 +6,20 @@ import random
 from typing import Any
 
 from .achievements import AchievementEngine
-from .core.data import DIRECTIONS
 from .core.agent_engine import AgentEngine
+from .core.data import DIRECTIONS, default_per_hero_stats
 from .core.grid_engine import GridEngine
 from .core.rules_engine import RulesEngine
 from .core.trace import trace_record
 from .hooks import HookContext, HookEngine
-from .models import DungeonGridAction, DungeonGridObservation, DungeonGridPlanResult, DungeonGridStep, model_to_dict
+from .models import (
+    DungeonGridAction,
+    DungeonGridObservation,
+    DungeonGridPlanResult,
+    DungeonGridStep,
+    model_to_dict,
+)
+from .warden import WARDEN_REASONING_FIELDS, build_warden_observation
 
 
 class _OpenEnvEnvironment:
@@ -45,13 +52,27 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         num_heroes: int = 4,
         seed: int | None = None,
         observation_mode: str = "mixed",
+        ruleset: str | dict[str, Any] | None = None,
+        hero_roles: list[str] | None = None,
     ) -> DungeonGridObservation:
         self.rng.seed(seed)
         self.rules.rng = self.rng
         self.observation_mode = observation_mode
-        self.state = self.grid.new_state(quest_id=quest_id, num_heroes=num_heroes, seed=seed)
+        self.state = self.grid.new_state(
+            quest_id=quest_id,
+            num_heroes=num_heroes,
+            seed=seed,
+            ruleset=ruleset,
+            hero_roles=hero_roles,
+        )
         self.hooks.call(self.state.quest_id, "on_load", HookContext(state=self.state, env=self))
         self.grid.update_monster_awareness(self.state, reason="initial_visibility")
+        from .core.engine_runtime import EngineRuntime
+
+        runtime = EngineRuntime(self.rules)
+        self.rules._runtime = runtime
+        runtime.rng = self.rng
+        runtime.phase.start_hero_turn(self.state, self.state.active_agent())
         return self.observe(self.state.active_agent())
 
     def observe(self, agent_id: str | None = None) -> DungeonGridObservation:
@@ -75,15 +96,25 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         state = self._require_state()
         return self.rules.legal_actions(state, agent_id)
 
-    def step(self, action: DungeonGridAction | dict[str, Any], agent_id: str | None = None) -> DungeonGridStep:
+    def step(
+        self,
+        action: DungeonGridAction | dict[str, Any],
+        agent_id: str | None = None,
+        *,
+        _record_action_stats: bool = True,
+    ) -> DungeonGridStep:
         state = self._require_state()
         action_dict = model_to_dict(action)
         resolved_agent = agent_id or action_dict.pop("agent_id", None) or state.active_agent()
         obs_before = model_to_dict(self.observe(resolved_agent))
         state_before = self.private_state_json()
         achievement_before = self.achievements.snapshot(state)
+        trace_len_before = len(state.trace)
         reward, narration, info = self.rules.apply_action(state, resolved_agent, action_dict)
-        awareness_events = self.grid.update_monster_awareness(state, reason=str(action_dict.get("type", "action")))
+        effect_trace_entries = state.trace[trace_len_before:]
+        awareness_events = self.grid.update_monster_awareness(
+            state, reason=str(action_dict.get("type", "action"))
+        )
         if awareness_events:
             info = {
                 **info,
@@ -94,12 +125,13 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             before=achievement_before,
         )
         if new_achievements:
-            reward += new_achievement_reward
+            reward += max(0.0, new_achievement_reward)
             info = {
                 **info,
-                "achievement_reward": round(new_achievement_reward, 4),
+                "achievement_reward": round(max(0.0, new_achievement_reward), 4),
                 "new_achievements": new_achievements,
             }
+        reward = max(0.0, reward)
         info = {**info, "narration": narration}
         if narration:
             state.event_log.append(narration)
@@ -107,6 +139,20 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             self._clear_resolved_invalid_feedback(resolved_agent, action_dict)
         obs_after = self.observe(state.active_agent() if not state.done else resolved_agent)
         state_after = self.private_state_json()
+        if resolved_agent in state.heroes:
+            if _record_action_stats:
+                self._record_hero_action_stats(
+                    resolved_agent,
+                    submitted=1,
+                    executed=0 if info.get("invalid") else 1,
+                    skipped=1 if info.get("invalid") else 0,
+                    unused=0,
+                )
+            self._record_hero_reward(resolved_agent, reward, source="step")
+            self._record_hero_reveal_stats(resolved_agent, state_before, state_after)
+            self._record_hero_effect_stats(resolved_agent, action_dict, effect_trace_entries)
+            for event in info.get("new_achievements", []):
+                self._record_hero_achievement(resolved_agent, event)
         record = trace_record(
             turn_id=len(state.trace),
             round_num=state_before["round"],
@@ -121,10 +167,27 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             violations=["invalid_action"] if info.get("invalid") else [],
         )
         record["observation_text"] = obs_before.get("text", "")
+        for field in WARDEN_REASONING_FIELDS:
+            if field in action_dict:
+                record[field] = action_dict[field]
         if info.get("new_achievements"):
             record["new_achievements"] = info["new_achievements"]
+        if resolved_agent in state.heroes:
+            record["reward_attribution"] = {
+                resolved_agent: {
+                    "reward": round(reward, 4),
+                    "new_achievements": [
+                        event.get("id") for event in info.get("new_achievements", [])
+                    ],
+                }
+            }
         state.trace.append(record)
         return DungeonGridStep(observation=obs_after, reward=reward, done=state.done, info=info)
+
+    def observe_warden(self) -> dict[str, Any]:
+        """Return the private/eval Warden observation used by Warden policies."""
+
+        return build_warden_observation(self)
 
     def act_plan(
         self,
@@ -157,7 +220,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 break
 
             before = self._reveal_snapshot()
-            step = self.step(action, agent_id=resolved_agent)
+            step = self.step(action, agent_id=resolved_agent, _record_action_stats=False)
             total_reward += step.reward
             plan_new_achievements.extend(step.info.get("new_achievements", []))
             if step.info.get("invalid"):
@@ -194,6 +257,14 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             done=state.done,
             observation=observation,
         )
+        if resolved_agent in state.heroes:
+            self._record_hero_action_stats(
+                resolved_agent,
+                submitted=len(submitted_actions),
+                executed=len(executed_actions),
+                skipped=len(skipped_actions),
+                unused=len(unused_actions),
+            )
         state.trace.append(
             {
                 "kind": "plan",
@@ -209,6 +280,16 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 "reveal_reason": reveal_reason,
                 "reward": round(total_reward, 4),
                 "new_achievements": plan_new_achievements,
+                "reward_attribution": {
+                    resolved_agent: {
+                        "reward": round(total_reward, 4),
+                        "new_achievements": [
+                            event.get("id") for event in plan_new_achievements
+                        ],
+                    }
+                }
+                if resolved_agent in state.heroes
+                else {},
             }
         )
         return result
@@ -233,6 +314,13 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 f"HP {hero.hp}/{hero.max_hp}. AP {state.ap_remaining.get(agent_id, 0)}. "
                 f"Position {list(hero.pos)}. Inventory: {hero.inventory or ['empty']}."
             )
+            if state.ruleset:
+                movement = state.movement_remaining.get(agent_id, 0)
+                movement_roll = state.movement_rolls.get(agent_id, 0)
+                major = "used" if state.major_action_used.get(agent_id) else "available"
+                lines.append(
+                    f"Classic rules: movement {movement}/{movement_roll}; major action {major}."
+                )
             if hero.equipment:
                 lines.append(f"Equipment: {self._equipment_summary(hero.equipment)}.")
             available_spells = self._available_spell_cards(hero.equipment)
@@ -268,12 +356,12 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             lines.append("\nAdjacent tiles:")
             for tile in adjacent_tiles:
                 detail = f", {tile['detail']}" if tile.get("detail") else ""
-                lines.append(
-                    f"- {tile['direction']}: {tile['status']} at {tile['pos']}{detail}"
-                )
+                lines.append(f"- {tile['direction']}: {tile['status']} at {tile['pos']}{detail}")
         lines.append("\nVisible map:")
         lines.append(self._coordinate_map(visible_map))
-        lines.append("\nLegend: B/W/E/D heroes, g/b/k/r/w/p/n/m/f/y/h monsters, D closed door, / open door, C chest, A/a/d/v/l/s/$/f furniture, T revealed trap, I objective, E exit.")
+        lines.append(
+            "\nLegend: B/W/E/D heroes, g/b/k/r/w/p/n/m/f/y/h monsters, D closed door, / open door, C chest, A/a/d/v/l/s/$/f furniture, T revealed trap, I objective, E exit."
+        )
         visible_rooms = self._visible_rooms(agent_id)
         if visible_rooms:
             lines.append("\nVisible rooms:")
@@ -285,15 +373,17 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             lines.append("\nVisible entities:")
             for ent in visible_entities:
                 if ent["id"] != agent_id:
-                    distance = f", distance {ent['distance']}" if ent.get("distance") is not None else ""
-                    combat = (
-                        f", {ent['combat_affordance']}"
-                        if ent.get("combat_affordance")
-                        else ""
+                    distance = (
+                        f", distance {ent['distance']}" if ent.get("distance") is not None else ""
                     )
+                    combat = f", {ent['combat_affordance']}" if ent.get("combat_affordance") else ""
                     boss = ""
                     if ent.get("boss"):
-                        hint = f", hint={ent['boss_counterplay_hint']}" if ent.get("boss_counterplay_hint") else ""
+                        hint = (
+                            f", hint={ent['boss_counterplay_hint']}"
+                            if ent.get("boss_counterplay_hint")
+                            else ""
+                        )
                         boss = f", boss={ent.get('boss_name', ent['role'])} phase={ent.get('boss_phase', 'base')}{hint}"
                     statuses = f", status={ent.get('status')}" if ent.get("status") else ""
                     lines.append(
@@ -307,10 +397,20 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             for obj in visible_objects:
                 label = obj.get("id", obj.get("type"))
                 detail = f", {obj['affordance']}" if obj.get("affordance") else ""
-                distance = f", distance {obj['distance']}" if obj.get("distance") is not None else ""
+                distance = (
+                    f", distance {obj['distance']}" if obj.get("distance") is not None else ""
+                )
                 lines.append(f"- {obj['type']} {label} at {obj.get('pos')}{distance}{detail}")
         carrier = state.objective.carrier or "not carried"
-        lines.append(f"\nObjective: recover {state.objective.id} and reach {list(state.escape_tile)}. Carrier: {carrier}.")
+        lines.append(
+            f"\nObjective: recover {state.objective.id} and reach {list(state.escape_tile)}. Carrier: {carrier}."
+        )
+        if state.ruleset and state.ruleset.get("extraction", {}).get("enabled"):
+            extracted = sorted(state.extracted_heroes)
+            lines.append(
+                f"Extraction: extracted={extracted or ['none']}; "
+                f"termination={state.termination_reason or 'not_terminal'}."
+            )
         if state.event_log:
             lines.append("\nRecent events:")
             for event in state.event_log[-3:]:
@@ -408,7 +508,37 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 for deck_id, cards in state.discards.items()
             }
             data["recent_card_draws"] = self._recent_card_draws()
+            data["ruleset"] = {"enabled": bool(state.ruleset)}
+            data["dread"] = None
+            data["social_metrics"] = {
+                "items_given": state.social_metrics.get("items_given", 0),
+                "objective_passes": state.social_metrics.get("objective_passes", 0),
+                "split_party_rounds": state.social_metrics.get("split_party_rounds", 0),
+            }
+            data["per_hero_stats"] = self._public_per_hero_stats(data.get("per_hero_stats", {}))
         return data
+
+    def _public_per_hero_stats(self, per_hero_stats: dict[str, Any]) -> dict[str, Any]:
+        public: dict[str, Any] = {}
+        for hero_id, raw_stats in per_hero_stats.items():
+            if not isinstance(raw_stats, dict):
+                continue
+            public[str(hero_id)] = {
+                "role": raw_stats.get("role", ""),
+                "reward": round(float(raw_stats.get("reward", 0.0) or 0.0), 4),
+                "actions_executed": int(raw_stats.get("actions_executed", 0) or 0),
+                "invalid_actions": int(raw_stats.get("invalid_actions", 0) or 0),
+                "achievement_count": len(raw_stats.get("achievements_unlocked", []) or []),
+                "damage_dealt": int(raw_stats.get("damage_dealt", 0) or 0),
+                "damage_taken": int(raw_stats.get("damage_taken", 0) or 0),
+                "monsters_defeated": int(raw_stats.get("monsters_defeated", 0) or 0),
+                "tiles_revealed": int(raw_stats.get("tiles_revealed", 0) or 0),
+                "rooms_revealed": int(raw_stats.get("rooms_revealed", 0) or 0),
+                "messages_sent": int(raw_stats.get("messages_sent", 0) or 0),
+                "treasure": int(raw_stats.get("treasure", 0) or 0),
+                "extracted": bool(raw_stats.get("extracted", False)),
+            }
+        return public
 
     def _public_monster_state(self, monster: dict[str, Any]) -> dict[str, Any]:
         row = dict(monster)
@@ -425,7 +555,12 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
 
     def export_trace(self) -> dict[str, Any]:
         state = self._require_state()
-        return {"quest_id": state.quest_id, "title": state.title, "trace": list(state.trace), "metrics": self.agent_engine.metrics(state)}
+        return {
+            "quest_id": state.quest_id,
+            "title": state.title,
+            "trace": list(state.trace),
+            "metrics": self.agent_engine.metrics(state),
+        }
 
     def export_transcript(self) -> dict[str, Any]:
         """Return a compact LLM-reviewable transcript for the current run."""
@@ -456,10 +591,14 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                         "unused_actions": record.get("unused_actions", []),
                         "reveal_reason": record.get("reveal_reason"),
                         "new_achievements": record.get("new_achievements", []),
-                        "reward": record.get("reward", 0.0),
-                    }
-                )
-                continue
+                    "reward": record.get("reward", 0.0),
+                    "reward_attribution": record.get("reward_attribution", {}),
+                }
+            )
+            continue
+            warden_reasoning = {
+                field: record[field] for field in WARDEN_REASONING_FIELDS if field in record
+            }
             turns.append(
                 {
                     "kind": "action",
@@ -472,6 +611,8 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                     "new_achievements": record.get("new_achievements", []),
                     "violations": record.get("violations", []),
                     "reward": record.get("reward", 0.0),
+                    "reward_attribution": record.get("reward_attribution", {}),
+                    **warden_reasoning,
                 }
             )
         return {
@@ -481,11 +622,114 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "winner": state.winner,
             "done": state.done,
             "metrics": self.agent_engine.metrics(state),
+            "per_hero_stats": self.agent_engine.metrics(state).get("per_hero_stats", {}),
             "event_log": list(state.event_log),
             "party_messages": list(state.party_messages),
             "achievements": list(state.achievement_events),
             "turns": turns,
         }
+
+    def _hero_stats(self, hero_id: str) -> dict[str, Any]:
+        state = self._require_state()
+        hero = state.heroes.get(hero_id)
+        stats = state.per_hero_stats.setdefault(
+            hero_id, default_per_hero_stats(hero, role=hero.role if hero else "")
+        )
+        if hero:
+            stats["role"] = hero.role
+            stats["extracted"] = hero_id in state.extracted_heroes
+            stats["treasure"] = int(state.hero_treasure.get(hero_id, stats.get("treasure", 0)))
+        return stats
+
+    def _record_hero_action_stats(
+        self,
+        hero_id: str,
+        *,
+        submitted: int,
+        executed: int,
+        skipped: int,
+        unused: int,
+    ) -> None:
+        stats = self._hero_stats(hero_id)
+        stats["actions_submitted"] = int(stats.get("actions_submitted", 0)) + max(0, submitted)
+        stats["actions_executed"] = int(stats.get("actions_executed", 0)) + max(0, executed)
+        stats["invalid_actions"] = int(stats.get("invalid_actions", 0)) + max(0, skipped)
+        stats["unused_actions"] = int(stats.get("unused_actions", 0)) + max(0, unused)
+
+    def _record_hero_reward(self, hero_id: str, amount: float, *, source: str) -> None:
+        if amount <= 0:
+            return
+        stats = self._hero_stats(hero_id)
+        stats["reward"] = round(float(stats.get("reward", 0.0)) + max(0.0, amount), 4)
+        reward_sources = stats.setdefault("reward_sources", {})
+        reward_sources[source] = round(float(reward_sources.get(source, 0.0)) + amount, 4)
+
+    def _record_hero_achievement(self, hero_id: str, event: dict[str, Any]) -> None:
+        achievement_id = str(event.get("id") or "")
+        if not achievement_id:
+            return
+        stats = self._hero_stats(hero_id)
+        unlocked = list(stats.get("achievements_unlocked", []))
+        if achievement_id not in unlocked:
+            unlocked.append(achievement_id)
+        stats["achievements_unlocked"] = unlocked
+        stats["achievement_reward"] = round(
+            float(stats.get("achievement_reward", 0.0))
+            + max(0.0, float(event.get("reward", 0.0) or 0.0)),
+            4,
+        )
+        stats.setdefault("achievement_events", []).append(
+            {
+                "id": achievement_id,
+                "title": event.get("title"),
+                "reward": max(0.0, float(event.get("reward", 0.0) or 0.0)),
+                "team_achievement": True,
+            }
+        )
+
+    def _record_hero_reveal_stats(
+        self,
+        hero_id: str,
+        state_before: dict[str, Any],
+        state_after: dict[str, Any],
+    ) -> None:
+        before_tiles = {
+            tuple(pos)
+            for pos in state_before.get("known_tiles", [])
+            if isinstance(pos, list) and len(pos) == 2
+        }
+        after_tiles = {
+            tuple(pos)
+            for pos in state_after.get("known_tiles", [])
+            if isinstance(pos, list) and len(pos) == 2
+        }
+        before_rooms = set(state_before.get("revealed_rooms", []))
+        after_rooms = set(state_after.get("revealed_rooms", []))
+        stats = self._hero_stats(hero_id)
+        stats["tiles_revealed"] = int(stats.get("tiles_revealed", 0)) + max(
+            0, len(after_tiles - before_tiles)
+        )
+        stats["rooms_revealed"] = int(stats.get("rooms_revealed", 0)) + max(
+            0, len(after_rooms - before_rooms)
+        )
+
+    def _record_hero_effect_stats(
+        self,
+        hero_id: str,
+        action: dict[str, Any],
+        trace_entries: list[dict[str, Any]],
+    ) -> None:
+        stats = self._hero_stats(hero_id)
+        action_type = str(action.get("type", ""))
+        if action_type == "cast":
+            stats["spell_casts"] = int(stats.get("spell_casts", 0)) + 1
+        if action_type.startswith("search_") or action_type in {"inspect_tile", "inspect_room"}:
+            stats["searches"] = int(stats.get("searches", 0)) + 1
+        for entry in trace_entries:
+            if entry.get("kind") == "spell_used" and entry.get("agent_id") == hero_id:
+                stats["spell_casts"] = max(1, int(stats.get("spell_casts", 0)))
+            if entry.get("kind") == "search" and entry.get("agent_id") == hero_id:
+                stats["searches"] = max(1, int(stats.get("searches", 0)))
 
     def _symbolic_observation(self, agent_id: str, visible_map: str) -> dict[str, Any]:
         state = self._require_state()
@@ -516,6 +760,12 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "party_messages": list(state.party_messages[-10:]),
             "invalid_feedback": self._invalid_feedback_for_agent(agent_id)[-5:],
             "recent_card_draws": self._recent_card_draws(),
+            "movement_remaining": state.movement_remaining.get(agent_id, 0),
+            "movement_roll": state.movement_rolls.get(agent_id, 0),
+            "major_action_used": state.major_action_used.get(agent_id, False),
+            "ruleset_enabled": bool(state.ruleset),
+            "extracted_heroes": sorted(state.extracted_heroes),
+            "termination_reason": state.termination_reason,
             "known_discards": {
                 deck_id: [
                     {
@@ -546,9 +796,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             row = dict(obj)
             pos_raw = row.get("pos")
             pos = (
-                tuple(pos_raw)
-                if isinstance(pos_raw, (list, tuple)) and len(pos_raw) == 2
-                else None
+                tuple(pos_raw) if isinstance(pos_raw, (list, tuple)) and len(pos_raw) == 2 else None
             )
             distance = self.grid.manhattan(hero.pos, pos) if pos is not None else None
             row["distance"] = distance
@@ -580,9 +828,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             row = dict(entity)
             pos_raw = row.get("pos")
             pos = (
-                tuple(pos_raw)
-                if isinstance(pos_raw, (list, tuple)) and len(pos_raw) == 2
-                else None
+                tuple(pos_raw) if isinstance(pos_raw, (list, tuple)) and len(pos_raw) == 2 else None
             )
             distance = self.grid.manhattan(hero.pos, pos) if pos is not None else None
             row["distance"] = distance
@@ -592,7 +838,11 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                     row["combat_affordance"] = "visible_enemy_insufficient_ap"
                 elif distance == 1:
                     row["combat_affordance"] = "attack_melee_available"
-                elif distance is not None and distance <= 5 and self.grid.line_clear(state, hero.pos, pos):
+                elif (
+                    distance is not None
+                    and distance <= 5
+                    and self.grid.line_clear(state, hero.pos, pos)
+                ):
                     row["combat_affordance"] = "attack_ranged_available"
                 else:
                     row["combat_affordance"] = "visible_enemy_not_attackable_from_here"
@@ -619,7 +869,11 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 options.append("search_treasure_available")
             if adjacent and obj.get("destructible"):
                 options.append("attack_object_available")
-            return "+".join(options) if options else ("visible_furniture_searched" if adjacent else "visible_not_adjacent")
+            return (
+                "+".join(options)
+                if options
+                else ("visible_furniture_searched" if adjacent else "visible_not_adjacent")
+            )
         if obj_type == "chest":
             return "search_treasure_available" if adjacent else "visible_not_adjacent"
         if obj_type == "objective":
@@ -702,7 +956,9 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                     "equipment": dict(hero.equipment),
                     "equipment_summary": self._equipment_summary(hero.equipment),
                     "spell_cards": self._available_spell_cards(hero.equipment),
-                    "used_spell_cards": [str(card) for card in hero.equipment.get("used_spell_cards", [])],
+                    "used_spell_cards": [
+                        str(card) for card in hero.equipment.get("used_spell_cards", [])
+                    ],
                     "status": list(hero.status),
                 }
             )
@@ -712,11 +968,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         if not equipment:
             return "none"
         slot_order = ["weapon", "armor", "offhand", "cloak", "helm", "charm", "tool"]
-        parts = [
-            f"{slot}={equipment[slot]}"
-            for slot in slot_order
-            if equipment.get(slot)
-        ]
+        parts = [f"{slot}={equipment[slot]}" for slot in slot_order if equipment.get(slot)]
         parts.extend(
             f"{slot}={value}"
             for slot, value in sorted(equipment.items())
@@ -772,7 +1024,9 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             entity = state.entity_at(pos)
             door = state.door_at(pos)
             if entity:
-                row.update({"status": "blocked", "detail": f"occupied_by_{entity.id}_{entity.role}"})
+                row.update(
+                    {"status": "blocked", "detail": f"occupied_by_{entity.id}_{entity.role}"}
+                )
             elif door and door.secret and not door.discovered:
                 row.update({"status": "blocked", "detail": "wall_or_undiscovered_secret"})
             elif door and door.state == "closed":
@@ -800,7 +1054,9 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 trap_id: {"revealed": trap.revealed, "armed": trap.armed}
                 for trap_id, trap in state.traps.items()
             },
-            "chests": {chest_id: {"opened": chest.opened} for chest_id, chest in state.chests.items()},
+            "chests": {
+                chest_id: {"opened": chest.opened} for chest_id, chest in state.chests.items()
+            },
             "furniture": {
                 item_id: {
                     "searched": item.searched,
@@ -812,8 +1068,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             },
             "objective": state.objective.to_dict(),
             "monster_status": {
-                monster_id: list(monster.status)
-                for monster_id, monster in state.monsters.items()
+                monster_id: list(monster.status) for monster_id, monster in state.monsters.items()
             },
             "boss_state": {
                 monster_id: {
@@ -883,7 +1138,9 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 return "furniture_searched"
             if not before_item.get("destroyed") and after_item.get("destroyed"):
                 return "object_destroyed"
-        if before.get("monster_status") != after.get("monster_status") or before.get("boss_state") != after.get("boss_state"):
+        if before.get("monster_status") != after.get("monster_status") or before.get(
+            "boss_state"
+        ) != after.get("boss_state"):
             return "boss_state_changed"
         if before["objective"] != after["objective"]:
             return "objective_changed"
