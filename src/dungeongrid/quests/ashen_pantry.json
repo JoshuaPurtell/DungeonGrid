@@ -25,6 +25,36 @@
   "chest_contents": {
     "chest_1": "coin_cache"
   },
+  "achievements": [
+    {
+      "id": "find_pantry_shortcut",
+      "title": "Find the Pantry Shortcut",
+      "description": "Reveal the secret door in the ashen pantry.",
+      "reward": 0.18,
+      "condition": {"type": "door_opened", "id": "secret_1"}
+    },
+    {
+      "id": "reveal_pantry_trap",
+      "title": "Reveal the Pantry Trap",
+      "description": "Find the trap before or by entering the lower pantry.",
+      "reward": 0.12,
+      "condition": {"type": "trap_revealed"}
+    },
+    {
+      "id": "recover_sealed_ledger",
+      "title": "Recover the Sealed Ledger",
+      "description": "Pick up the sealed provision ledger.",
+      "reward": 0.30,
+      "condition": {"type": "objective_taken"}
+    },
+    {
+      "id": "escape_with_sealed_ledger",
+      "title": "Escape With the Sealed Ledger",
+      "description": "Complete The Ashen Pantry.",
+      "reward": 0.60,
+      "condition": {"type": "success"}
+    }
+  ],
   "scripts": {
     "secret_hint": "Inspect adjacent wall tiles to reveal a shortcut."
   },

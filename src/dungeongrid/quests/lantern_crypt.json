@@ -25,6 +25,36 @@
   "chest_contents": {
     "chest_1": "coin_cache"
   },
+  "achievements": [
+    {
+      "id": "open_crypt_door",
+      "title": "Open the Crypt Door",
+      "description": "Open the first sealed door out of the entrance hall.",
+      "reward": 0.12,
+      "condition": {"type": "door_opened", "id": "door_1"}
+    },
+    {
+      "id": "map_second_chamber",
+      "title": "Map the Second Chamber",
+      "description": "Reveal at least two room regions in the crypt.",
+      "reward": 0.12,
+      "condition": {"type": "rooms_explored_at_least", "count": 2}
+    },
+    {
+      "id": "recover_ember_idol",
+      "title": "Recover the Ember Idol",
+      "description": "Pick up the ember idol objective.",
+      "reward": 0.30,
+      "condition": {"type": "objective_taken"}
+    },
+    {
+      "id": "escape_with_ember_idol",
+      "title": "Escape With the Ember Idol",
+      "description": "Complete The Lantern Crypt.",
+      "reward": 0.60,
+      "condition": {"type": "success"}
+    }
+  ],
   "scripts": {
     "on_objective_taken": {
       "message": "The idol warms. Somewhere behind the walls, stone grinds against stone.",

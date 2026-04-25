@@ -1,0 +1,564 @@
+{
+  "quest_id": "lost_apprentice",
+  "title": "The Lost Apprentice",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "batch_c",
+    "quest_role": "rescue_search",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "alarm",
+      "boss",
+      "pursuit",
+      "loop_route",
+      "rescue"
+    ],
+    "hazard_profile": "moderate",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "cultists",
+      "brute"
+    ],
+    "warden_pressure": "medium",
+    "post_objective_escalation": "moderate",
+    "route_structure": "branching_loop",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": true,
+    "best_party_sizes": [
+      "duo",
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 8,
+    "global_progress_hooks": [
+      "doors",
+      "furniture",
+      "inventory",
+      "traps",
+      "combat",
+      "objective_pickup",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "alarm_control",
+      "hazard_discovery",
+      "post_objective_escalation",
+      "rescue"
+    ],
+    "primary_score_emphasis": [
+      "search",
+      "objective",
+      "survival"
+    ],
+    "reward_density": "medium",
+    "map_width": 17,
+    "map_height": 15,
+    "room_count": 7,
+    "door_count": 10,
+    "trap_count": 2,
+    "chest_count": 2,
+    "furniture_count": 4,
+    "initial_monster_count": 5,
+    "has_secret_doors": false,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true
+  },
+  "max_heroes": 4,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "elf",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "ward_circle",
+        "trace_sigils"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "quiet_step"
+      ],
+      "combat_role": "skirmisher",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#################\n#E....D.....#...#\n#.###.###D###.C.#\n#...#.#.....#...#\n#G..D.#.K...D...#\n#...#.#..T..#.###\n###.#.###D###...#\n#...#.....#.....#\n#.T.D..B..D..I..#\n#...#.....#..R..#\n#.###D#####.###.#\n#.....#...#.....#\n#.C...D.G.D.....#\n#.....#...#.....#\n#################",
+    "width": 17,
+    "height": 15
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "lost_apprentice",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "bundle",
+      "contents": [
+        "sigil_notes",
+        {
+          "type": "table",
+          "entries": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chest_2": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "weapon",
+          "item": "crossbow"
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "crossbow"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_corridor": {
+      "name": "Entry Corridor",
+      "rect": [
+        1,
+        1,
+        11,
+        2
+      ],
+      "description": "A scuffed corridor carries chalk marks from someone dragged deeper inside.",
+      "tags": [
+        "start",
+        "tracking"
+      ]
+    },
+    "left_laboratory": {
+      "name": "Left Laboratory",
+      "rect": [
+        1,
+        3,
+        4,
+        6
+      ],
+      "description": "Broken glass and skittering movement make the first lab unsafe to rush.",
+      "tags": [
+        "combat",
+        "search"
+      ]
+    },
+    "sigil_archive": {
+      "name": "Sigil Archive",
+      "rect": [
+        7,
+        3,
+        12,
+        6
+      ],
+      "description": "A trapped archive holds the sigil notes needed to understand the apprentice's route.",
+      "tags": [
+        "hazard",
+        "lore",
+        "alarm"
+      ]
+    },
+    "upper_store": {
+      "name": "Upper Store",
+      "rect": [
+        13,
+        1,
+        15,
+        5
+      ],
+      "description": "A side store offers supplies and another possible clue.",
+      "tags": [
+        "treasure",
+        "optional"
+      ]
+    },
+    "crossing_lab": {
+      "name": "Crossing Lab",
+      "rect": [
+        1,
+        7,
+        11,
+        9
+      ],
+      "description": "The center lab makes one hero scout hazards while another keeps the bone guard occupied.",
+      "tags": [
+        "hazard",
+        "combat",
+        "coordination"
+      ]
+    },
+    "apprentice_cell": {
+      "name": "Apprentice Cell",
+      "rect": [
+        12,
+        7,
+        15,
+        10
+      ],
+      "description": "The apprentice is trapped beside unstable chalk circles and a brute watcher.",
+      "tags": [
+        "objective",
+        "rescue",
+        "boss"
+      ]
+    },
+    "lower_workroom": {
+      "name": "Lower Workroom",
+      "rect": [
+        1,
+        11,
+        15,
+        13
+      ],
+      "description": "A lower workroom can become the safe return path if the party maps it first.",
+      "tags": [
+        "loop",
+        "search",
+        "combat"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "chalk_board_1",
+      "name": "Chalk Board",
+      "category": "lore",
+      "pos": [
+        9,
+        4
+      ],
+      "deck": "sigil",
+      "description": "Half-erased sigils point toward the apprentice's last experiment.",
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "spell",
+            "item": "reveal_glyph",
+            "reward": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "supply_cabinet_1",
+      "name": "Supply Cabinet",
+      "category": "supply",
+      "pos": [
+        14,
+        2
+      ],
+      "deck": "supply",
+      "description": "Bandages, ink, and sealed powder sit in a narrow cabinet."
+    },
+    {
+      "id": "apprentice_desk_1",
+      "name": "Apprentice Desk",
+      "category": "desk",
+      "pos": [
+        14,
+        8
+      ],
+      "deck": "event",
+      "description": "The desk has fingernail marks along one edge.",
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "spell",
+            "item": "ward_circle",
+            "reward": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "lower_notes_1",
+      "name": "Lower Notes",
+      "category": "lore",
+      "pos": [
+        3,
+        12
+      ],
+      "deck": "sigil",
+      "description": "Loose notes describe a stabilizing phrase in careful handwriting.",
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "spell",
+            "item": "reveal_glyph",
+            "reward": 0.1
+          }
+        ]
+      }
+    }
+  ],
+  "decks": {
+    "sigil": [
+      {
+        "id": "reveal_glyph_lesson",
+        "name": "Reveal Glyph Lesson",
+        "type": "spell",
+        "item": "reveal_glyph",
+        "reward": 0.14
+      },
+      {
+        "id": "stabilizing_phrase",
+        "name": "Stabilizing Phrase",
+        "type": "artifact",
+        "item": "stabilizing_phrase",
+        "reward": 0.12
+      },
+      {
+        "id": "bad_formula",
+        "name": "Bad Formula",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "field_bandage",
+        "name": "Field Bandage",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.08
+      },
+      {
+        "id": "warded_sigil_notes",
+        "name": "Warded Sigil Notes",
+        "type": "spell",
+        "item": "ward_circle",
+        "reward": 0.12
+      }
+    ],
+    "event": [
+      {
+        "id": "circle_flash",
+        "name": "Circle Flash",
+        "type": "event",
+        "alert": 2,
+        "reward": -0.05
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "open_lab_door",
+      "title": "Open the Lab Door",
+      "description": "Open the first door into the apprentice's workrooms.",
+      "reward": 0.12,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "read_sigil_clue",
+      "title": "Read a Sigil Clue",
+      "description": "Search a chalk or note object.",
+      "reward": 0.1,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "recover_stabilizing_phrase",
+      "title": "Recover the Stabilizing Phrase",
+      "description": "Find the phrase that helps calm the apprentice's spell.",
+      "reward": 0.16,
+      "condition": {
+        "type": "inventory_contains",
+        "item": "stabilizing_phrase"
+      }
+    },
+    {
+      "id": "reveal_sigil_trap",
+      "title": "Reveal a Sigil Trap",
+      "description": "Reveal one unstable chalk hazard.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trap_revealed"
+      }
+    },
+    {
+      "id": "defeat_cell_brute",
+      "title": "Defeat the Cell Brute",
+      "description": "Defeat the watcher guarding the apprentice.",
+      "reward": 0.22,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "crypt_brute"
+      }
+    },
+    {
+      "id": "read_the_miscast_glyphs",
+      "title": "Read the Miscast Glyphs",
+      "description": "Use reveal_glyph in the apprentice lab.",
+      "reward": 0.12,
+      "condition": {
+        "type": "spell_used",
+        "spell": "reveal_glyph"
+      }
+    },
+    {
+      "id": "find_lost_apprentice",
+      "title": "Find the Lost Apprentice",
+      "description": "Interact with the apprentice objective.",
+      "reward": 0.32,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_with_apprentice",
+      "title": "Escape With the Apprentice",
+      "description": "Return to the entry with the apprentice.",
+      "reward": 0.7,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The apprentice whispers the wrong half of a spell. Chalk marks flare behind the party.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "lantern_wight",
+          "pos": [
+            10,
+            4
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 23,
+    "alert_reinforcement_threshold": 5
+  },
+  "torch": 21,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  }
+}

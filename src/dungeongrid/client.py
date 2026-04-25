@@ -51,6 +51,16 @@ class DungeonGridClient:
         response.raise_for_status()
         return response.json()
 
+    def public_state(self) -> dict[str, Any]:
+        response = requests.get(f"{self.base_url}/public_state", timeout=self.timeout)
+        response.raise_for_status()
+        return response.json()
+
+    def private_state(self) -> dict[str, Any]:
+        response = requests.get(f"{self.base_url}/private_state", timeout=self.timeout)
+        response.raise_for_status()
+        return response.json()
+
     def trace(self) -> dict[str, Any]:
         response = requests.get(f"{self.base_url}/trace", timeout=self.timeout)
         response.raise_for_status()

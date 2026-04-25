@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dungeongrid"
-version = "0.1.0a1"
+version = "0.1.0a6"
 description = "DungeonGrid: text-first cooperative dungeon-crawl environment for multi-agent benchmarks"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -32,6 +32,15 @@ server = [
   "fastapi>=0.110",
   "uvicorn>=0.27",
 ]
+container = [
+  "fastapi>=0.110",
+  "uvicorn>=0.27",
+  "synth-containers>=0.1.0",
+]
+render = [
+  "Pillow>=10",
+  "imageio>=2.34",
+]
 dev = [
   "build>=1.2",
   "twine>=5.0",
@@ -44,6 +53,7 @@ Issues = "https://github.com/JoshuaPurtell/DungeonGrid/issues"
 
 [project.scripts]
 dungeongrid-server = "dungeongrid.server.app:main"
+dungeongrid-container = "dungeongrid.container.app:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -52,4 +62,4 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-dungeongrid = ["quests/*.json"]
+dungeongrid = ["quests/*.json", "dungeons/*/quest.json", "dungeons/*/hooks.py"]

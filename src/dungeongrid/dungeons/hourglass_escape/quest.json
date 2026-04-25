@@ -1,0 +1,522 @@
+{
+  "quest_id": "hourglass_escape",
+  "title": "Hourglass Escape",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "batch_c",
+    "quest_role": "timed_escape",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "alarm",
+      "timer",
+      "boss",
+      "pursuit",
+      "loop_route"
+    ],
+    "hazard_profile": "moderate",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "cultists",
+      "brute"
+    ],
+    "warden_pressure": "high",
+    "post_objective_escalation": "severe",
+    "route_structure": "retreat_loop",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": true,
+    "best_party_sizes": [
+      "duo",
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 7,
+    "global_progress_hooks": [
+      "doors",
+      "furniture",
+      "inventory",
+      "traps",
+      "combat",
+      "objective_pickup",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "alarm_control",
+      "hazard_discovery",
+      "post_objective_escalation",
+      "pre_objective_plan",
+      "pressure_management",
+      "speed"
+    ],
+    "primary_score_emphasis": [
+      "speed",
+      "objective",
+      "survival"
+    ],
+    "reward_density": "medium",
+    "map_width": 17,
+    "map_height": 15,
+    "room_count": 7,
+    "door_count": 11,
+    "trap_count": 2,
+    "chest_count": 2,
+    "furniture_count": 4,
+    "initial_monster_count": 6,
+    "has_secret_doors": false,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true
+  },
+  "max_heroes": 4,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "elf",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "ward_circle",
+        "slow_sand"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step"
+      ],
+      "combat_role": "skirmisher",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#################\n#E....D.........#\n#.###.###D###.C.#\n#...#.#.....#...#\n#G..D.#.K...D...#\n#...#.#..T..#.###\n###D#.###D###...#\n#...#.....#.....#\n#.T.D..B..D..I.R#\n#...#.....#.....#\n#.###D#####.###.#\n#.....#...#.....#\n#.C...D.G.D..K..#\n#.....#...#.....#\n#################",
+    "width": 17,
+    "height": 15
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "hourglass_key",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "bundle",
+      "contents": [
+        "sand_charm",
+        {
+          "type": "table",
+          "entries": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chest_2": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "weapon",
+          "item": "crossbow"
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "crossbow"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_sands": {
+      "name": "Entry Sands",
+      "rect": [
+        1,
+        1,
+        15,
+        2
+      ],
+      "description": "Fine sand trails from the entry toward the first sealed hall.",
+      "tags": [
+        "start",
+        "navigation"
+      ]
+    },
+    "left_timer_room": {
+      "name": "Left Timer Room",
+      "rect": [
+        1,
+        3,
+        5,
+        6
+      ],
+      "description": "A skitterling patrols a side room with an early route choice.",
+      "tags": [
+        "combat",
+        "navigation"
+      ]
+    },
+    "sand_archive": {
+      "name": "Sand Archive",
+      "rect": [
+        7,
+        3,
+        12,
+        6
+      ],
+      "description": "The archive has the first hourglass trap and a caller who punishes slow searches.",
+      "tags": [
+        "hazard",
+        "alarm",
+        "search"
+      ]
+    },
+    "upper_cache": {
+      "name": "Upper Cache",
+      "rect": [
+        13,
+        1,
+        15,
+        5
+      ],
+      "description": "A visible cache can help the run, but every detour costs the party time.",
+      "tags": [
+        "treasure",
+        "optional"
+      ]
+    },
+    "pinch_crossing": {
+      "name": "Pinch Crossing",
+      "rect": [
+        1,
+        7,
+        11,
+        9
+      ],
+      "description": "The crossing is narrow and trapped, making turn order and lane clearing matter.",
+      "tags": [
+        "hazard",
+        "combat",
+        "coordination"
+      ]
+    },
+    "hourglass_room": {
+      "name": "Hourglass Room",
+      "rect": [
+        12,
+        7,
+        15,
+        10
+      ],
+      "description": "The hourglass key sits beside a brute. Taking it starts the real escape.",
+      "tags": [
+        "objective",
+        "boss",
+        "timed"
+      ]
+    },
+    "lower_escape_loop": {
+      "name": "Lower Escape Loop",
+      "rect": [
+        1,
+        11,
+        15,
+        13
+      ],
+      "description": "A lower loop can shorten the exit if the party opens it before the countdown worsens.",
+      "tags": [
+        "loop",
+        "combat",
+        "escape"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "sand_table_1",
+      "name": "Sand Table",
+      "category": "lore",
+      "pos": [
+        9,
+        4
+      ],
+      "deck": "sand",
+      "description": "A table of flowing sand shows which route loses the fewest turns."
+    },
+    {
+      "id": "upper_cache_1",
+      "name": "Upper Cache",
+      "category": "supply",
+      "pos": [
+        14,
+        2
+      ],
+      "deck": "supply",
+      "description": "Small supplies are sealed inside a glass-topped cache."
+    },
+    {
+      "id": "hourglass_plinth_1",
+      "name": "Hourglass Plinth",
+      "category": "altar",
+      "pos": [
+        14,
+        8
+      ],
+      "deck": "event",
+      "description": "The plinth drips sand upward around the key."
+    },
+    {
+      "id": "escape_marker_1",
+      "name": "Escape Marker",
+      "category": "lore",
+      "pos": [
+        3,
+        12
+      ],
+      "deck": "sand",
+      "description": "A marker scratched near the lower loop names the faster way out."
+    }
+  ],
+  "decks": {
+    "sand": [
+      {
+        "id": "route_count",
+        "name": "Route Count",
+        "type": "artifact",
+        "item": "route_count",
+        "reward": 0.14
+      },
+      {
+        "id": "sand_slip",
+        "name": "Sand Slip",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "sand_charm",
+        "name": "Sand Charm",
+        "type": "artifact",
+        "item": "sand_charm",
+        "reward": 0.16
+      },
+      {
+        "id": "sealed_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.08
+      }
+    ],
+    "event": [
+      {
+        "id": "glass_crack",
+        "name": "Glass Crack",
+        "type": "event",
+        "alert": 2,
+        "reward": -0.05
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "open_sand_hall",
+      "title": "Open the Sand Hall",
+      "description": "Open the first door into the hourglass dungeon.",
+      "reward": 0.12,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "read_route_count",
+      "title": "Read the Route Count",
+      "description": "Search a timing or route object.",
+      "reward": 0.1,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "recover_sand_charm",
+      "title": "Recover the Sand Charm",
+      "description": "Find the charm that helps control the escape clock.",
+      "reward": 0.16,
+      "condition": {
+        "type": "inventory_contains",
+        "item": "sand_charm"
+      }
+    },
+    {
+      "id": "reveal_hourglass_trap",
+      "title": "Reveal an Hourglass Trap",
+      "description": "Reveal one timed hazard.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trap_revealed"
+      }
+    },
+    {
+      "id": "defeat_key_guard",
+      "title": "Defeat the Key Guard",
+      "description": "Defeat the brute guarding the hourglass key.",
+      "reward": 0.22,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "crypt_brute"
+      }
+    },
+    {
+      "id": "take_hourglass_key",
+      "title": "Take the Hourglass Key",
+      "description": "Pick up the hourglass key objective.",
+      "reward": 0.32,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_with_hourglass_key",
+      "title": "Escape With the Hourglass Key",
+      "description": "Return to the entry with the key.",
+      "reward": 0.7,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The hourglass key turns. Sand begins falling somewhere above the ceiling.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "lantern_wight",
+          "pos": [
+            10,
+            4
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 18,
+    "alert_reinforcement_threshold": 5
+  },
+  "torch": 18,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  }
+}

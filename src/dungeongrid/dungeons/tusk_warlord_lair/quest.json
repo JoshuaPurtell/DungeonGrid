@@ -1,0 +1,742 @@
+{
+  "quest_id": "tusk_warlord_lair",
+  "title": "Tusk Warlord Lair",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "batch_a",
+    "quest_role": "warlord_assault",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "alarm",
+      "boss",
+      "pursuit"
+    ],
+    "hazard_profile": "light",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "cultists",
+      "brute"
+    ],
+    "warden_pressure": "high",
+    "post_objective_escalation": "severe",
+    "route_structure": "branching_boss_lane",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": false,
+    "best_party_sizes": [
+      "duo",
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 7,
+    "global_progress_hooks": [
+      "doors",
+      "combat",
+      "furniture",
+      "inventory",
+      "objective_pickup",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "alarm_control",
+      "hazard_discovery",
+      "post_objective_escalation",
+      "pressure_management"
+    ],
+    "primary_score_emphasis": [
+      "combat",
+      "objective",
+      "survival"
+    ],
+    "reward_density": "medium",
+    "map_width": 17,
+    "map_height": 15,
+    "room_count": 7,
+    "door_count": 10,
+    "trap_count": 1,
+    "chest_count": 2,
+    "furniture_count": 4,
+    "initial_monster_count": 6,
+    "has_secret_doors": false,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true
+  },
+  "max_heroes": 4,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "elf",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "war_cleaver",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "ward_circle",
+        "hush_flame"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step"
+      ],
+      "combat_role": "skirmisher",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#################\n#E....D.........#\n#.###.#####D###.#\n#...#.#.....#C#.#\n#G..D.#.K...#.#.#\n#...#.#.....D...#\n###.#.###D#######\n#...#.....#.....#\n#.T.D..B..D..M.I#\n#...#.....#.....#\n#.###D#####.###.#\n#.....#...#...#.#\n#..C..D.G.D.K.#.#\n#.....#...#...#.#\n#################",
+    "width": 17,
+    "height": 15
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "warlord_standard",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "bundle",
+      "contents": [
+        "coin_cache",
+        {
+          "type": "armor",
+          "item": "iron_helm"
+        },
+        {
+          "type": "table",
+          "entries": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chest_2": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "weapon",
+          "item": "battle_axe"
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "shield"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_cleft": {
+      "name": "Entry Cleft",
+      "rect": [
+        1,
+        1,
+        15,
+        1
+      ],
+      "description": "A long cleft makes the party choose between speed and spacing.",
+      "tags": [
+        "start",
+        "navigation"
+      ]
+    },
+    "left_picket": {
+      "name": "Left Picket",
+      "rect": [
+        1,
+        3,
+        4,
+        6
+      ],
+      "description": "A skittering sentry watches the first side gate.",
+      "tags": [
+        "combat"
+      ]
+    },
+    "chant_room": {
+      "name": "Chant Room",
+      "rect": [
+        7,
+        3,
+        12,
+        5
+      ],
+      "description": "A cultist calls warnings from behind a bend.",
+      "tags": [
+        "alarm",
+        "ranged"
+      ]
+    },
+    "banner_vault": {
+      "name": "Banner Vault",
+      "rect": [
+        13,
+        3,
+        15,
+        5
+      ],
+      "description": "A narrow storage pocket has supplies but exposes the route south.",
+      "tags": [
+        "treasure"
+      ]
+    },
+    "bone_gate": {
+      "name": "Bone Gate",
+      "rect": [
+        1,
+        7,
+        11,
+        9
+      ],
+      "description": "The central melee turns into a traffic problem unless someone holds the rear.",
+      "tags": [
+        "combat",
+        "coordination"
+      ]
+    },
+    "warlord_den": {
+      "name": "Warlord Den",
+      "rect": [
+        13,
+        7,
+        15,
+        9
+      ],
+      "description": "The warlord standard stands beside the brute commander.",
+      "tags": [
+        "boss",
+        "objective"
+      ]
+    },
+    "lower_pens": {
+      "name": "Lower Pens",
+      "rect": [
+        1,
+        11,
+        15,
+        13
+      ],
+      "description": "Side pens hold spare treasure, scouts, and a second alarm caller.",
+      "tags": [
+        "combat",
+        "search"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "war_drum_1",
+      "name": "War Drum",
+      "category": "signal",
+      "pos": [
+        9,
+        4
+      ],
+      "deck": "event",
+      "description": "A taut hide drum can bring the whole lair down on noisy heroes.",
+      "traits": [
+        "signal",
+        "destructible",
+        "alarm",
+        "boss_counterplay"
+      ],
+      "destructible": true,
+      "hp": 4,
+      "max_hp": 4,
+      "blocks_los": true,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "set_script",
+            "key": "war_drum_understood",
+            "value": true,
+            "trace_kind": "boss_weakness_revealed"
+          },
+          {
+            "type": "emit",
+            "message": "The drum cords reveal how the lair summons reinforcements."
+          }
+        ],
+        "treasure": {
+          "type": "draw_deck",
+          "deck": "event"
+        }
+      },
+      "break_effect": [
+        {
+          "type": "set_script",
+          "key": "war_drum_broken",
+          "value": true,
+          "trace_kind": "boss_counterplay_used"
+        },
+        {
+          "type": "monster_status",
+          "role": "crypt_brute",
+          "status": "weakened"
+        },
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "The war drum splits. The commander loses the lair rhythm, but everyone hears it."
+        }
+      ]
+    },
+    {
+      "id": "banner_chest_1",
+      "name": "Banner Chest",
+      "category": "treasure",
+      "pos": [
+        14,
+        3
+      ],
+      "deck": "treasure",
+      "description": "Small trophies and stamped chips fill the chest."
+    },
+    {
+      "id": "trophy_rack_1",
+      "name": "Trophy Rack",
+      "category": "armory",
+      "pos": [
+        14,
+        8
+      ],
+      "deck": "artifact",
+      "description": "A rack of crude trophies frames the standard.",
+      "traits": [
+        "armory",
+        "destructible",
+        "boss_weakness"
+      ],
+      "destructible": true,
+      "hp": 3,
+      "max_hp": 3,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "weapon",
+            "item": "battle_axe",
+            "reward": 0.16
+          },
+          {
+            "type": "set_script",
+            "key": "warlord_trophy_rack_read",
+            "value": true,
+            "trace_kind": "boss_weakness_revealed"
+          },
+          {
+            "type": "monster_status",
+            "role": "crypt_brute",
+            "status": "vulnerable"
+          },
+          {
+            "type": "emit",
+            "message": "A battle axe and a scarred command token reveal the warlord's exposed side."
+          }
+        ],
+        "treasure": {
+          "type": "draw_deck",
+          "deck": "artifact"
+        }
+      },
+      "break_effect": [
+        {
+          "type": "weapon",
+          "item": "battle_axe",
+          "reward": 0.12
+        },
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.03
+        },
+        {
+          "type": "emit",
+          "message": "The trophy rack comes down in a crash, leaving a battle axe among the splinters."
+        }
+      ]
+    },
+    {
+      "id": "pen_cache_1",
+      "name": "Pen Cache",
+      "category": "supply",
+      "pos": [
+        3,
+        12
+      ],
+      "deck": "supply",
+      "description": "The lower pen hides useful supplies under straw."
+    }
+  ],
+  "decks": {
+    "treasure": [
+      {
+        "id": "warlord_chips",
+        "name": "Warlord Chips",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.1,
+        "rarity": "common"
+      }
+    ],
+    "artifact": [
+      {
+        "id": "horn_cutter",
+        "name": "Horn Cutter",
+        "type": "artifact",
+        "item": "horn_cutter",
+        "reward": 0.15,
+        "rarity": "rare"
+      },
+      {
+        "id": "mauler_bane_edge",
+        "name": "Mauler-Bane Edge",
+        "type": "weapon",
+        "item": "battle_axe",
+        "rarity": "rare",
+        "reward": 0.14
+      }
+    ],
+    "supply": [
+      {
+        "id": "battle_tonic",
+        "name": "Battle Tonic",
+        "type": "healing",
+        "item": "battle_tonic",
+        "reward": 0.08,
+        "rarity": "common"
+      }
+    ],
+    "event": [
+      {
+        "id": "drum_alarm",
+        "name": "Drum Alarm",
+        "type": "event",
+        "alert": 2,
+        "reward": -0.05,
+        "rarity": "danger"
+      },
+      {
+        "id": "drum_echo_patrol",
+        "name": "Drum Echo Patrol",
+        "type": "event",
+        "rarity": "danger",
+        "reward": -0.06,
+        "effects": [
+          {
+            "type": "alert",
+            "amount": 1
+          },
+          {
+            "type": "activate_monster",
+            "role": "gloom_cultist"
+          }
+        ]
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "open_lair_gate",
+      "title": "Open the Lair Gate",
+      "description": "Open the first gate into the lair.",
+      "reward": 0.12,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "silence_first_alarm",
+      "title": "Silence an Alarm Caller",
+      "description": "Defeat a gloom cultist before the lair overwhelms the party.",
+      "reward": 0.18,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "gloom_cultist"
+      }
+    },
+    {
+      "id": "search_warlord_trophy",
+      "title": "Search the Warlord Trophies",
+      "description": "Search the lair dressing.",
+      "reward": 0.1,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "find_horn_cutter",
+      "title": "Find the Horn Cutter",
+      "description": "Recover the old horn cutter artifact.",
+      "reward": 0.15,
+      "condition": {
+        "type": "inventory_contains",
+        "item": "horn_cutter"
+      }
+    },
+    {
+      "id": "defeat_tusk_warlord",
+      "title": "Defeat the Tusk Warlord",
+      "description": "Defeat the brute commander.",
+      "reward": 0.22,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "crypt_brute"
+      }
+    },
+    {
+      "id": "helm_catches_cleave",
+      "title": "Helm Catches a Cleave",
+      "description": "Use defensive gear to blunt the lair's cleave pressure.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "defensive_prevention"
+      }
+    },
+    {
+      "id": "take_warlord_standard",
+      "title": "Take the Warlord Standard",
+      "description": "Pick up the warlord standard objective.",
+      "reward": 0.3,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_with_standard",
+      "title": "Escape With the Standard",
+      "description": "Return to the entry with the warlord standard.",
+      "reward": 0.65,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The standard tears free. The war drum answers from below.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 3
+        },
+        {
+          "type": "spawn",
+          "monster": "skitterling",
+          "pos": [
+            7,
+            12
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 22,
+    "alert_reinforcement_threshold": 5
+  },
+  "torch": 20,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "deck_policies": {
+    "event": {
+      "reshuffle": true,
+      "identity": "pressure"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "finite_loot"
+    },
+    "artifact": {
+      "reshuffle": false,
+      "identity": "quest_counterplay"
+    }
+  },
+  "bosses": {
+    "tusk_mauler_1": {
+      "name": "Tusk Warlord",
+      "public_summary": "A cleaving brute whose war drum blunts heavy damage until it is smashed.",
+      "counterplay_hint": "Break the war drum or spread out before fighting the warlord.",
+      "damage_gate": {
+        "counter_flag": "war_drum_broken",
+        "max_damage_without_counter": 1,
+        "message": "The war drum's rhythm keeps the tusk warlord fighting through the blow."
+      },
+      "defeat_reward": 0.24,
+      "defeat_description": "Defeat the tusk warlord after disrupting the lair's alarm engine.",
+      "on_defeated": [
+        {
+          "type": "set_flag",
+          "key": "tusk_warlord_defeated",
+          "value": true
+        },
+        {
+          "type": "emit",
+          "message": "The tusk warlord falls; the lair loses its command voice."
+        }
+      ],
+      "phases": [
+        {
+          "id": "bellowing_charge",
+          "hp_at_or_below": 2,
+          "attack_bonus": 1,
+          "alert": 1,
+          "status": [
+            "enraged"
+          ],
+          "message": "The tusk warlord bellows and starts swinging wider.",
+          "effects": [
+            {
+              "type": "spawn_monster_near",
+              "id": "warlord_rally_pack",
+              "role": "rat_pack",
+              "anchor_id": "tusk_mauler_1",
+              "fallback_pos": [
+                12,
+                8
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "monster_overrides": {
+    "tusk_mauler_1": {
+      "equipment": {
+        "boss": true,
+        "boss_name": "Tusk Warlord",
+        "counter_flag": "war_drum_broken",
+        "max_damage_without_counter": 1,
+        "phases": [
+          {
+            "id": "bellowing_charge",
+            "hp_at_or_below": 2,
+            "attack_bonus": 1,
+            "alert": 1,
+            "status": [
+              "enraged"
+            ],
+            "message": "The tusk warlord bellows and starts swinging wider."
+          }
+        ]
+      },
+      "wake_on": "line_of_sight"
+    },
+    "gloom_cultist_1": {
+      "wake_on": "line_of_sight"
+    }
+  }
+}

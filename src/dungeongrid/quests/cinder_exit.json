@@ -44,6 +44,36 @@
   "chest_contents": {
     "chest_1": "healing_draught"
   },
+  "achievements": [
+    {
+      "id": "claim_cinder_relic",
+      "title": "Claim the Cinder Relic",
+      "description": "Pick up the fragile cinder relic.",
+      "reward": 0.30,
+      "condition": {"type": "objective_taken"}
+    },
+    {
+      "id": "keep_relic_bearer_alive",
+      "title": "Keep the Relic Bearer Alive",
+      "description": "Complete the dungeon without losing a submitted hero.",
+      "reward": 0.25,
+      "condition": {"type": "all_heroes_survive_success"}
+    },
+    {
+      "id": "open_exit_route",
+      "title": "Open the Exit Route",
+      "description": "Open any door after claiming the relic.",
+      "reward": 0.12,
+      "condition": {"type": "door_opened"}
+    },
+    {
+      "id": "escape_with_cinder_relic",
+      "title": "Escape With the Cinder Relic",
+      "description": "Complete The Cinder Exit.",
+      "reward": 0.60,
+      "condition": {"type": "success"}
+    }
+  ],
   "scripts": {
     "on_objective_taken": {
       "message": "The relic pulses; the exit flame glows brighter.",

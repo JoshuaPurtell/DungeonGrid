@@ -59,6 +59,31 @@ class GreedyHeroPolicy:
         return {"type": "end_turn"}
 
 
+class AchievementScoutPolicy(GreedyHeroPolicy):
+    """Baseline that prioritizes visible progress achievements over rushing combat."""
+
+    def act(self, observation: dict[str, Any]) -> dict[str, Any]:
+        legal = observation.get("legal_actions") or [{"type": "end_turn"}]
+        if any(action.get("type") == "message" for action in legal):
+            roster = observation.get("symbolic", {}).get("party_roster") or []
+            unlocked = set(observation.get("symbolic", {}).get("achievements_unlocked", []))
+            if len(roster) >= 2 and "coordination.message_sent" not in unlocked:
+                return {
+                    "type": "message",
+                    "target": "party",
+                    "payload": {"text": "I am scouting for doors, furniture, traps, and objective progress."},
+                }
+        for action in legal:
+            if action.get("type") == "interact":
+                target = str(action.get("target"))
+                if target.startswith(("sarcophagus", "oil_", "weapon_", "bell_", "rite_", "supply_", "spice_", "ledger_", "ash_", "cinder_", "exit_", "guard_", "north_", "west_", "south_")):
+                    return action
+        for action in legal:
+            if action.get("type") in {"open_door", "inspect_room", "inspect_tile", "disarm"}:
+                return action
+        return super().act(observation)
+
+
 class ScriptedWardenPolicy:
     """Default Warden: activate all alert/revealed monsters through the rules engine."""
 
@@ -90,6 +115,16 @@ class AgentEngine:
         rooms = self._room_regions(state)
         rooms_explored = sum(1 for room in rooms if room & state.known_tiles)
         living = len(state.living_heroes())
+        quest_achievements = [
+            achievement_id
+            for achievement_id in state.achievements_unlocked
+            if achievement_id.startswith(f"{state.quest_id}.")
+        ]
+        global_achievements = [
+            achievement_id
+            for achievement_id in state.achievements_unlocked
+            if not achievement_id.startswith(f"{state.quest_id}.")
+        ]
         return {
             "success": state.done and state.winner == "heroes",
             "winner": state.winner,
@@ -105,6 +140,11 @@ class AgentEngine:
             "room_count": len(rooms),
             "room_exploration": rooms_explored / max(1, len(rooms)),
             "scout_reward": round(state.scout_reward, 4),
+            "achievement_reward": round(state.achievement_reward, 4),
+            "achievements_unlocked": sorted(state.achievements_unlocked),
+            "achievement_count": len(state.achievements_unlocked),
+            "quest_achievement_count": len(quest_achievements),
+            "global_achievement_count": len(global_achievements),
             "rule_violations": state.violations,
             "invalid_actions": state.invalid_actions,
             "monsters_defeated": len([m for m in state.monsters.values() if not m.alive]),

@@ -25,6 +25,36 @@
   "chest_contents": {
     "chest_1": "healing_draught"
   },
+  "achievements": [
+    {
+      "id": "enter_blackwater_halls",
+      "title": "Enter the Blackwater Halls",
+      "description": "Reveal the first room beyond the entrance.",
+      "reward": 0.12,
+      "condition": {"type": "rooms_explored_at_least", "count": 2}
+    },
+    {
+      "id": "silence_a_cultist",
+      "title": "Silence a Bell Keeper",
+      "description": "Defeat a gloom cultist before the shard is recovered.",
+      "reward": 0.18,
+      "condition": {"type": "monster_defeated", "role": "gloom_cultist"}
+    },
+    {
+      "id": "recover_bell_clapper_shard",
+      "title": "Recover the Bell Clapper Shard",
+      "description": "Pick up the bell clapper shard objective.",
+      "reward": 0.30,
+      "condition": {"type": "objective_taken"}
+    },
+    {
+      "id": "escape_with_bell_clapper_shard",
+      "title": "Escape With the Bell Clapper Shard",
+      "description": "Complete Bells Under Blackwater.",
+      "reward": 0.60,
+      "condition": {"type": "success"}
+    }
+  ],
   "scripts": {
     "bell_alarm": {
       "actor": "gloom_cultist_1",

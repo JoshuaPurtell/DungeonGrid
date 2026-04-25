@@ -1,0 +1,513 @@
+{
+  "quest_id": "iron_captive",
+  "title": "The Iron Captive",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "batch_a",
+    "quest_role": "rescue",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "boss",
+      "pursuit",
+      "rescue"
+    ],
+    "hazard_profile": "light",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "cultists",
+      "brute"
+    ],
+    "warden_pressure": "medium",
+    "post_objective_escalation": "moderate",
+    "route_structure": "branching_retreat",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": false,
+    "best_party_sizes": [
+      "duo",
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 7,
+    "global_progress_hooks": [
+      "doors",
+      "inventory",
+      "combat",
+      "furniture",
+      "objective_pickup",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "hazard_discovery",
+      "post_objective_escalation",
+      "rescue"
+    ],
+    "primary_score_emphasis": [
+      "objective",
+      "survival",
+      "combat"
+    ],
+    "reward_density": "medium",
+    "map_width": 17,
+    "map_height": 15,
+    "room_count": 7,
+    "door_count": 10,
+    "trap_count": 1,
+    "chest_count": 2,
+    "furniture_count": 4,
+    "initial_monster_count": 5,
+    "has_secret_doors": false,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true
+  },
+  "max_heroes": 4,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "elf",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "ward_circle",
+        "open_sign"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "quiet_step"
+      ],
+      "combat_role": "skirmisher",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#################\n#E....#.....#...#\n###D###.###D#C..#\n#.....#.#...#...#\n#.G...D.#.K.###D#\n#.....#.#.......#\n#####.#.#####D###\n#.....#.....#...#\n#..T..D..B..D.I.#\n#.....#.....#...#\n###D#####.#####.#\n#...#.....#.....#\n#.C.D..G..D..R..#\n#...#.....#.....#\n#################",
+    "width": 17,
+    "height": 15
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "iron_captive",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "bundle",
+      "contents": [
+        "cell_key",
+        {
+          "type": "table",
+          "entries": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chest_2": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "weapon",
+          "item": "crossbow"
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "crossbow"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_stair": {
+      "name": "Entry Stair",
+      "rect": [
+        1,
+        1,
+        5,
+        1
+      ],
+      "description": "A tight stair points toward a guard room and a locked supply nook.",
+      "tags": [
+        "start"
+      ]
+    },
+    "outer_guard": {
+      "name": "Outer Guard",
+      "rect": [
+        1,
+        3,
+        6,
+        5
+      ],
+      "description": "A sentry room gives the first real lane fight.",
+      "tags": [
+        "combat"
+      ]
+    },
+    "record_office": {
+      "name": "Record Office",
+      "rect": [
+        9,
+        1,
+        15,
+        5
+      ],
+      "description": "A chest and ledger describe which captive is marked for transfer.",
+      "tags": [
+        "treasure",
+        "search"
+      ]
+    },
+    "trap_hold": {
+      "name": "Trap Hold",
+      "rect": [
+        1,
+        7,
+        5,
+        9
+      ],
+      "description": "A barred approach has a pressure trap just before the central cell block.",
+      "tags": [
+        "hazard",
+        "coordination"
+      ]
+    },
+    "cell_block": {
+      "name": "Cell Block",
+      "rect": [
+        7,
+        7,
+        12,
+        9
+      ],
+      "description": "A bone guard blocks the line between the jail door and the captive.",
+      "tags": [
+        "combat",
+        "objective"
+      ]
+    },
+    "captive_cell": {
+      "name": "Captive Cell",
+      "rect": [
+        13,
+        7,
+        15,
+        10
+      ],
+      "description": "The iron captive is chained near a narrow exit route.",
+      "tags": [
+        "objective",
+        "rescue"
+      ]
+    },
+    "lower_garrison": {
+      "name": "Lower Garrison",
+      "rect": [
+        1,
+        11,
+        15,
+        13
+      ],
+      "description": "A roaming brute and skitterlings make retreat costly unless the party keeps lanes clear.",
+      "tags": [
+        "boss",
+        "combat"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "ledger_desk_1",
+      "name": "Ledger Desk",
+      "category": "desk",
+      "pos": [
+        13,
+        2
+      ],
+      "deck": "record",
+      "description": "A transfer ledger lies open under a cracked weight."
+    },
+    {
+      "id": "jailer_rack_1",
+      "name": "Jailer Rack",
+      "category": "armory",
+      "pos": [
+        10,
+        4
+      ],
+      "deck": "artifact",
+      "description": "Hooks, spare shackles, and a preserved ring of keys line the rack."
+    },
+    {
+      "id": "cell_bench_1",
+      "name": "Cell Bench",
+      "category": "cell",
+      "pos": [
+        14,
+        8
+      ],
+      "deck": "event",
+      "description": "Marks scratched into the bench point toward the safe way out."
+    },
+    {
+      "id": "ration_box_1",
+      "name": "Ration Box",
+      "category": "supply",
+      "pos": [
+        2,
+        12
+      ],
+      "deck": "supply",
+      "description": "Prison bread and wrapped herbs sit under stale cloth."
+    }
+  ],
+  "decks": {
+    "record": [
+      {
+        "id": "transfer_ledger",
+        "name": "Transfer Ledger",
+        "type": "artifact",
+        "item": "transfer_ledger",
+        "reward": 0.12
+      },
+      {
+        "id": "false_order",
+        "name": "False Transfer Order",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "artifact": [
+      {
+        "id": "cell_key",
+        "name": "Cell Key",
+        "type": "artifact",
+        "item": "cell_key",
+        "reward": 0.16
+      }
+    ],
+    "supply": [
+      {
+        "id": "stale_rations",
+        "name": "Stale Rations",
+        "type": "healing",
+        "item": "iron_ration",
+        "reward": 0.06
+      }
+    ],
+    "event": [
+      {
+        "id": "chain_rattle",
+        "name": "Chain Rattle",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "breach_outer_guard",
+      "title": "Breach the Outer Guard",
+      "description": "Open the first guard-room door.",
+      "reward": 0.12,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "find_cell_key",
+      "title": "Find the Cell Key",
+      "description": "Recover the jailer's key.",
+      "reward": 0.16,
+      "condition": {
+        "type": "inventory_contains",
+        "item": "cell_key"
+      }
+    },
+    {
+      "id": "clear_cell_guard",
+      "title": "Clear the Cell Guard",
+      "description": "Defeat the bone guard in the cell block.",
+      "reward": 0.18,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "bone_guard"
+      }
+    },
+    {
+      "id": "search_prison_furniture",
+      "title": "Search the Prison",
+      "description": "Search any prison furniture.",
+      "reward": 0.1,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "free_iron_captive",
+      "title": "Free the Iron Captive",
+      "description": "Interact with the captive objective.",
+      "reward": 0.3,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "defeat_lower_brute",
+      "title": "Defeat the Lower Brute",
+      "description": "Defeat the brute in the lower garrison.",
+      "reward": 0.18,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "crypt_brute"
+      }
+    },
+    {
+      "id": "escape_with_captive",
+      "title": "Escape With the Captive",
+      "description": "Return the captive to the entry stair.",
+      "reward": 0.65,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The captive staggers upright. A horn sounds from the lower garrison.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "gloom_cultist",
+          "pos": [
+            10,
+            12
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 22,
+    "alert_reinforcement_threshold": 6
+  },
+  "torch": 21,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  }
+}

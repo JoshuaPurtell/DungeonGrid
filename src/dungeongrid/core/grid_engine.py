@@ -20,11 +20,13 @@ from .data import (
     Chest,
     Door,
     Entity,
+    Furniture,
     GameState,
     Objective,
     Pos,
     Trap,
 )
+from ..achievements import achievement_from_quest
 
 
 class GridEngine:
@@ -35,25 +37,36 @@ class GridEngine:
 
     def available_quests(self) -> list[str]:
         if self.quest_dir:
-            return sorted(p.stem for p in self.quest_dir.glob("*.json"))
-        quest_pkg = resources.files("dungeongrid.quests")
-        return sorted(p.name[:-5] for p in quest_pkg.iterdir() if p.name.endswith(".json"))
+            folder_quests = [p.name for p in self.quest_dir.iterdir() if (p / "quest.json").exists()]
+            flat_quests = [p.stem for p in self.quest_dir.glob("*.json")]
+            return sorted({*folder_quests, *flat_quests})
+        dungeon_pkg = resources.files("dungeongrid.dungeons")
+        folder_quests = [p.name for p in dungeon_pkg.iterdir() if p.is_dir() and p.joinpath("quest.json").is_file()]
+        try:
+            quest_pkg = resources.files("dungeongrid.quests")
+            flat_quests = [p.name[:-5] for p in quest_pkg.iterdir() if p.name.endswith(".json")]
+        except ModuleNotFoundError:
+            flat_quests = []
+        return sorted({*folder_quests, *flat_quests})
 
     def load_quest_data(self, quest_id: str) -> dict[str, Any]:
         filename = f"{quest_id}.json"
         if self.quest_dir:
-            path = self.quest_dir / filename
+            path = self.quest_dir / quest_id / "quest.json"
+            if not path.exists():
+                path = self.quest_dir / filename
             if not path.exists():
                 raise FileNotFoundError(f"Quest not found: {quest_id}")
             return json.loads(path.read_text(encoding="utf-8"))
         try:
-            text = (
-                resources.files("dungeongrid.quests")
-                .joinpath(filename)
-                .read_text(encoding="utf-8")
-            )
+            text = resources.files("dungeongrid.dungeons").joinpath(quest_id, "quest.json").read_text(encoding="utf-8")
             return json.loads(text)
-        except FileNotFoundError as exc:
+        except FileNotFoundError:
+            pass
+        try:
+            text = resources.files("dungeongrid.quests").joinpath(filename).read_text(encoding="utf-8")
+            return json.loads(text)
+        except (FileNotFoundError, ModuleNotFoundError) as exc:
             raise FileNotFoundError(f"Quest not found: {quest_id}") from exc
 
     def new_state(self, quest_id: str = "lantern_crypt", num_heroes: int = 4, seed: int | None = None) -> GameState:
@@ -79,6 +92,9 @@ class GridEngine:
 
         chest_contents = data.get("chest_contents", {})
         randomized_chests = data.get("randomized_chests")
+        monster_activation = data.get("monster_activation", {})
+        default_activation = str(monster_activation.get("default", "dormant"))
+        default_wake_on = str(monster_activation.get("wake_on", "room_revealed"))
 
         for y, line in enumerate(lines):
             row: list[str] = []
@@ -119,7 +135,7 @@ class GridEngine:
                     monster_counts[role] = monster_counts.get(role, 0) + 1
                     monster_id = f"{role}_{monster_counts[role]}"
                     spec = MONSTER_TYPES[role]
-                    monsters[monster_id] = Entity(
+                    monster = Entity(
                         id=monster_id,
                         team="dungeon",
                         role=role,
@@ -130,7 +146,19 @@ class GridEngine:
                         speed=spec["speed"],
                         behavior=spec["behavior"],
                         pos=pos,
+                        room_id=self.room_id_at(data.get("rooms", {}), pos),
+                        sight_range=int(spec.get("sight_range", 6)),
+                        activation=str(spec.get("activation", default_activation)),
+                        wake_on=str(spec.get("wake_on", default_wake_on)),
+                        equipment={
+                            key: spec[key]
+                            for key in ("attack_range",)
+                            if key in spec
+                        },
                     )
+                    self._apply_monster_override(monster, data.get("monster_overrides", {}))
+                    self._apply_boss_config(monster, data.get("bosses", {}))
+                    monsters[monster_id] = monster
                 else:
                     raise ValueError(f"Unsupported map glyph {char!r} at {pos}")
             terrain.append(row)
@@ -163,9 +191,14 @@ class GridEngine:
         else:
             starts = self._adjacent_start_positions(entry, terrain, num_heroes)
         heroes: dict[str, Entity] = {}
+        loadouts = data.get("hero_loadouts", {})
         for idx, role in enumerate(roles, start=1):
             spec = HERO_ARCHETYPES[role]
             hero_id = f"hero_{idx}"
+            loadout = dict(loadouts.get(role, {}))
+            inventory = list(loadout.get("items", []))
+            equipment = dict(loadout)
+            equipment.pop("items", None)
             heroes[hero_id] = Entity(
                 id=hero_id,
                 team="heroes",
@@ -178,8 +211,37 @@ class GridEngine:
                 focus=spec["focus"],
                 ability=spec["ability"],
                 pos=starts[idx - 1],
+                inventory=inventory,
+                equipment=equipment,
             )
 
+        furniture = {
+            item["id"]: Furniture(
+                id=item["id"],
+                pos=tuple(item["pos"]),
+                category=item.get("category", "furniture"),
+                name=item.get("name", item["id"]),
+                description=item.get("description", ""),
+                deck=item.get("deck"),
+                visible=bool(item.get("visible", True)),
+                traits=list(item.get("traits", [])),
+                hp=int(item.get("hp", item.get("max_hp", 1))),
+                max_hp=int(item.get("max_hp", item.get("hp", 1))),
+                destroyed=bool(item.get("destroyed", False)),
+                destructible=bool(item.get("destructible", False)),
+                blocks_movement=bool(item.get("blocks_movement", False)),
+                blocks_los=bool(item.get("blocks_los", False)),
+                cover=int(item.get("cover", 0)),
+                searched_categories=set(item.get("searched_categories", [])),
+                search_effects=dict(item.get("search_effects", {})),
+                break_effect=item.get("break_effect"),
+            )
+            for item in data.get("furniture", [])
+        }
+        decks = {
+            deck_id: [dict(card) for card in cards]
+            for deck_id, cards in data.get("decks", {}).items()
+        }
         objective = Objective(
             id=data["objective"].get("item_id", "objective_item"),
             pos=objective_pos,
@@ -201,13 +263,171 @@ class GridEngine:
             doors=doors,
             traps=traps,
             chests=chests,
-            scripts=data.get("scripts", {}),
+            furniture=furniture,
+            rooms=dict(data.get("rooms", {})),
+            decks=decks,
+            discards={deck_id: [] for deck_id in decks},
+            hero_loadouts=loadouts,
+            scripts={
+                **data.get("scripts", {}),
+                "mechanics": dict(data.get("mechanics", {})),
+                "metadata": dict(data.get("metadata", {})),
+                "deck_policies": dict(data.get("deck_policies", {})),
+            },
+            quest_achievement_defs=achievement_from_quest(quest_id, data),
             hero_order=list(heroes),
             ap_remaining={hero_id: 3 for hero_id in heroes},
             torch=int(data.get("torch", 20)),
         )
         state.known_tiles.update(self.visible_tiles(state, agent_id="party"))
+        self.update_revealed_rooms(state, reason="initial_visibility")
         return state
+
+    def room_id_at(self, rooms: dict[str, Any], pos: Pos) -> str | None:
+        x, y = pos
+        for room_id, room in rooms.items():
+            rect = room.get("rect") if isinstance(room, dict) else None
+            if not isinstance(rect, list) or len(rect) != 4:
+                continue
+            x1, y1, x2, y2 = [int(v) for v in rect]
+            if x1 <= x <= x2 and y1 <= y <= y2:
+                return str(room_id)
+        return None
+
+    def update_revealed_rooms(self, state: GameState, reason: str, opener_id: str | None = None) -> list[dict[str, Any]]:
+        events: list[dict[str, Any]] = []
+        visible = self.visible_tiles(state, "party")
+        for room_id, room in state.rooms.items():
+            if room_id in state.revealed_rooms or not isinstance(room, dict):
+                continue
+            rect = room.get("rect")
+            if not isinstance(rect, list) or len(rect) != 4:
+                continue
+            x1, y1, x2, y2 = [int(v) for v in rect]
+            room_tiles = {(x, y) for y in range(y1, y2 + 1) for x in range(x1, x2 + 1)}
+            if not (room_tiles & visible):
+                continue
+            state.revealed_rooms.add(str(room_id))
+            event = {
+                "kind": "room_revealed",
+                "room_id": str(room_id),
+                "room_name": room.get("name", room_id),
+                "reason": reason,
+                "opener_id": opener_id,
+            }
+            state.trace.append(event)
+            state.event_log.append(f"Room revealed: {event['room_name']}.")
+            events.append(event)
+            events.extend(self.activate_room_monsters(state, str(room_id), reason=reason))
+        return events
+
+    def activate_room_monsters(self, state: GameState, room_id: str, reason: str) -> list[dict[str, Any]]:
+        events: list[dict[str, Any]] = []
+        for monster in state.monsters.values():
+            if not monster.alive or monster.room_id != room_id or monster.activation != "dormant":
+                continue
+            if monster.wake_on in {"line_of_sight", "visible", "sighted"} and not self._monster_seen_by_party(state, monster):
+                continue
+            if monster.wake_on in {"alert", "alarm"} and state.alert <= 0:
+                continue
+            monster.activation = "alert"
+            event = {
+                "kind": "monster_activated",
+                "monster_id": monster.id,
+                "role": monster.role,
+                "room_id": room_id,
+                "reason": reason,
+            }
+            state.trace.append(event)
+            state.event_log.append(f"{monster.role} wakes in {room_id}.")
+            events.append(event)
+        return events
+
+    def update_monster_awareness(self, state: GameState, reason: str) -> list[dict[str, Any]]:
+        events: list[dict[str, Any]] = []
+        for monster in state.monsters.values():
+            if not monster.alive or monster.activation != "dormant":
+                continue
+            should_wake = False
+            if monster.wake_on in {"line_of_sight", "visible", "sighted"}:
+                should_wake = self._monster_seen_by_party(state, monster)
+            elif monster.wake_on in {"alert", "alarm"}:
+                should_wake = state.alert > 0
+            elif monster.wake_on in {"objective_taken", "objective"}:
+                should_wake = bool(state.objective.carrier)
+            if not should_wake:
+                continue
+            monster.activation = "alert"
+            event = {
+                "kind": "monster_activated",
+                "monster_id": monster.id,
+                "role": monster.role,
+                "room_id": monster.room_id,
+                "reason": reason,
+                "wake_on": monster.wake_on,
+            }
+            state.trace.append(event)
+            state.event_log.append(f"{monster.role} notices the party.")
+            events.append(event)
+        return events
+
+    def _monster_seen_by_party(self, state: GameState, monster: Entity) -> bool:
+        for hero in state.heroes.values():
+            if not hero.alive:
+                continue
+            if self.manhattan(hero.pos, monster.pos) > monster.sight_range:
+                continue
+            if self.line_clear(state, hero.pos, monster.pos):
+                return True
+        return False
+
+    def _apply_monster_override(self, monster: Entity, overrides: Any) -> None:
+        if not isinstance(overrides, dict):
+            return
+        raw = overrides.get(monster.id) or overrides.get(monster.role)
+        if not isinstance(raw, dict):
+            return
+        for attr in ("hp", "max_hp", "attack", "guard", "speed", "behavior", "activation", "wake_on", "sight_range"):
+            if attr not in raw:
+                continue
+            value = raw[attr]
+            if attr in {"hp", "max_hp", "attack", "guard", "speed", "sight_range"}:
+                value = int(value)
+            setattr(monster, attr, value)
+        if "hp" in raw and "max_hp" not in raw:
+            monster.max_hp = int(raw["hp"])
+        if isinstance(raw.get("status"), list):
+            monster.status.extend(str(item) for item in raw["status"] if str(item) not in monster.status)
+        if isinstance(raw.get("equipment"), dict):
+            monster.equipment.update(raw["equipment"])
+
+    def _apply_boss_config(self, monster: Entity, bosses: Any) -> None:
+        if not isinstance(bosses, dict):
+            return
+        raw = bosses.get(monster.id) or bosses.get(monster.role)
+        if not isinstance(raw, dict):
+            return
+        monster.equipment["boss"] = True
+        if raw.get("name"):
+            monster.equipment["boss_name"] = str(raw["name"])
+        for key in (
+            "public_summary",
+            "counterplay_hint",
+            "defeat_reward",
+            "defeat_description",
+            "on_defeated",
+        ):
+            if key in raw:
+                monster.equipment[key] = raw[key]
+        if isinstance(raw.get("damage_gate"), dict):
+            gate = dict(raw["damage_gate"])
+            monster.equipment["damage_gate"] = gate
+            if gate.get("counter_flag"):
+                monster.equipment["counter_flag"] = gate["counter_flag"]
+            if gate.get("max_damage_without_counter") is not None:
+                monster.equipment["max_damage_without_counter"] = gate["max_damage_without_counter"]
+        if isinstance(raw.get("phases"), list):
+            monster.equipment["phases"] = [dict(phase) for phase in raw["phases"] if isinstance(phase, dict)]
 
     def _adjacent_start_positions(self, entry: Pos, terrain: list[list[str]], num_heroes: int) -> list[Pos]:
         width, height = len(terrain[0]), len(terrain)
@@ -252,6 +472,9 @@ class GridEngine:
     def is_transparent(self, state: GameState, pos: Pos) -> bool:
         if self.is_wall(state, pos):
             return False
+        furniture = self.furniture_at(state, pos)
+        if furniture and not furniture.destroyed and furniture.blocks_los:
+            return False
         door = state.door_at(pos)
         return not (door and door.state == "closed")
 
@@ -261,9 +484,15 @@ class GridEngine:
         door = state.door_at(pos)
         if door and door.state == "closed":
             return False
+        furniture = self.furniture_at(state, pos)
+        if furniture and not furniture.destroyed and furniture.blocks_movement:
+            return False
         if not ignore_entities and state.entity_at(pos) is not None:
             return False
         return True
+
+    def furniture_at(self, state: GameState, pos: Pos) -> Furniture | None:
+        return next((item for item in state.furniture.values() if item.pos == pos and item.visible), None)
 
     def neighbors(self, state: GameState, pos: Pos, ignore_entities: bool = True) -> Iterable[Pos]:
         x, y = pos
@@ -383,12 +612,25 @@ class GridEngine:
         if ent:
             if ent.team == "heroes":
                 return HERO_GLYPHS.get(ent.id, ROLE_GLYPHS.get(ent.role, "@"))
+            if agent_id != "warden" and ent.activation == "dormant":
+                return "." if self.terrain_at(state, pos) == "." else "#"
             return MONSTER_RENDER_GLYPHS.get(ent.role, "m")
         if state.objective.pos == pos and state.objective.carrier is None and not state.objective.recovered:
             return "I"
         chest = state.chest_at(pos)
         if chest and not chest.opened:
             return "C"
+        furniture = self.furniture_at(state, pos)
+        if furniture and not furniture.destroyed:
+            return {
+                "armory": "A",
+                "altar": "a",
+                "signal": "d",
+                "hazard": "v",
+                "lore": "l",
+                "supply": "s",
+                "treasure": "$",
+            }.get(furniture.category, "f")
         trap = state.trap_at(pos)
         if trap and trap.revealed and trap.armed:
             return "T"
@@ -406,9 +648,22 @@ class GridEngine:
         result: list[dict[str, Any]] = []
         for entity in state.all_entities().values():
             if entity.alive and entity.pos in visible:
+                if entity.team == "dungeon" and agent_id != "warden" and entity.activation == "dormant":
+                    continue
                 if entity.team == "dungeon" and agent_id != "warden" and entity.pos not in visible:
                     continue
-                result.append(entity.to_dict())
+                data = entity.to_dict()
+                if entity.team == "dungeon" and agent_id != "warden":
+                    equipment = data.pop("equipment", {})
+                    if isinstance(equipment, dict) and equipment.get("boss"):
+                        data["boss"] = True
+                        data["boss_name"] = equipment.get("boss_name", entity.role)
+                        data["boss_phase"] = (equipment.get("triggered_phases") or ["base"])[-1]
+                        if equipment.get("public_summary"):
+                            data["boss_summary"] = equipment["public_summary"]
+                        if equipment.get("counterplay_hint"):
+                            data["boss_counterplay_hint"] = equipment["counterplay_hint"]
+                result.append(data)
         return result
 
     def visible_objects(self, state: GameState, agent_id: str) -> list[dict[str, Any]]:
@@ -422,6 +677,14 @@ class GridEngine:
                 data = {"type": "chest", "id": chest.id, "pos": list(chest.pos), "opened": chest.opened}
                 if agent_id == "warden":
                     data["contents"] = chest.contents
+                objs.append(data)
+        for furniture in state.furniture.values():
+            if furniture.visible and furniture.pos in visible and not furniture.destroyed:
+                data = {"type": "furniture", **furniture.to_dict()}
+                if agent_id != "warden":
+                    data.pop("deck", None)
+                    data.pop("search_effects", None)
+                    data.pop("break_effect", None)
                 objs.append(data)
         for trap in state.traps.values():
             if trap.pos in visible and (agent_id == "warden" or trap.revealed):

@@ -29,6 +29,36 @@
       "ambush"
     ]
   },
+  "achievements": [
+    {
+      "id": "open_first_shrine_cache",
+      "title": "Open a Shrine Cache",
+      "description": "Open any chest in the low shrine.",
+      "reward": 0.12,
+      "condition": {"type": "chest_opened"}
+    },
+    {
+      "id": "find_shrine_token",
+      "title": "Find a Shrine Token",
+      "description": "Add a shrine token to a hero inventory.",
+      "reward": 0.18,
+      "condition": {"type": "inventory_contains", "item": "shrine_token"}
+    },
+    {
+      "id": "recover_low_shrine_emblem",
+      "title": "Recover the Low Shrine Emblem",
+      "description": "Pick up the low shrine emblem objective.",
+      "reward": 0.30,
+      "condition": {"type": "objective_taken"}
+    },
+    {
+      "id": "escape_with_low_shrine_emblem",
+      "title": "Escape With the Low Shrine Emblem",
+      "description": "Complete Three Locks of the Low Shrine.",
+      "reward": 0.60,
+      "condition": {"type": "success"}
+    }
+  ],
   "scripts": {
     "token_requirement": 2,
     "locked_shrine_door": [

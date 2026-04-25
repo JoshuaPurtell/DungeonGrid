@@ -70,6 +70,16 @@ def state(visibility: str = "omniscient") -> dict[str, Any]:
     return _env.state_json(visibility=visibility)
 
 
+@app.get("/public_state")
+def public_state() -> dict[str, Any]:
+    return _env.public_state_json()
+
+
+@app.get("/private_state")
+def private_state() -> dict[str, Any]:
+    return _env.private_state_json()
+
+
 @app.get("/trace")
 def trace() -> dict[str, Any]:
     return _env.export_trace()
