@@ -240,6 +240,7 @@ class MessageEffect(Effect):
     actor_id: str = ""
     target: str = "party"
     text: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(slots=True)

@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from .message_protocol import MessageEnvelope, MessageProtocol, _increment_nested_metric
+from .message_protocol import (
+    MessageEnvelope,
+    MessageProtocol,
+    _increment_message_metric,
+    _increment_nested_metric,
+    initial_message_leader,
+)
 
 
 class PureDecentralizedProtocol(MessageProtocol):
@@ -57,17 +63,10 @@ class MasterToSlavesProtocol(MessageProtocol):
         return data
 
     def _leader_id(self, state: Any) -> str:
-        explicit = self.config.get("leader")
-        if explicit in state.heroes:
-            return str(explicit)
-        if self.config.get("leader_policy") == "role":
-            role = str(self.config.get("leader_role") or "")
-            for hero_id, hero in state.heroes.items():
-                if hero.role == role:
-                    return hero_id
-        if state.hero_order:
-            return state.hero_order[0]
-        return next(iter(state.heroes), "hero_1")
+        leader = state.message_metrics.get("current_leader")
+        if leader in state.heroes:
+            return str(leader)
+        return initial_message_leader(state, self.config) or next(iter(state.heroes), "hero_1")
 
     def _record_leader_turn(self, state: Any, leader_id: str) -> None:
         previous = state.message_metrics.get("current_leader")
@@ -82,54 +81,63 @@ class MasterToSlavesProtocol(MessageProtocol):
 class SituationalLeadTakingProtocol(MasterToSlavesProtocol):
     mode = "situational_lead_taking"
 
-    def _leader_id(self, state: Any) -> str:
-        carrier = state.objective.carrier
-        if carrier in state.heroes and state.heroes[carrier].alive:
-            return carrier
-        revealer = state.scripts.get("last_room_revealer")
-        revealer_round = int(state.scripts.get("last_room_revealer_round", -999) or -999)
-        revealer_duration = int(self.config.get("room_revealer_rounds", 1) or 1)
-        if (
-            revealer in state.heroes
-            and state.heroes[revealer].alive
-            and state.round - revealer_round <= revealer_duration
-        ):
-            return str(revealer)
-        specialist = self._visible_specialist_leader(state)
-        if specialist:
-            return specialist
-        wounded = self._wounded_leader(state)
-        if wounded:
-            return wounded
-        if state.hero_order:
-            return state.hero_order[(max(1, state.round) - 1) % len(state.hero_order)]
-        return next(iter(state.heroes), "hero_1")
+    def submit(self, state: Any, actor_id: str, action: dict[str, Any]):
+        leader_id = self._leader_id(state)
+        result = MessageProtocol.submit(self, state, actor_id, action)
+        if result.delivered and actor_id == leader_id:
+            self._record_leader_turn(state, leader_id)
+            handoff_target = result.envelope.metadata.get("handoff_lead_to") if result.envelope else None
+            if handoff_target:
+                self._handoff_lead(state, leader_id, str(handoff_target), result.envelope)
+        return result
+
+    def validate(
+        self, state: Any, actor_id: str, envelope: MessageEnvelope
+    ) -> tuple[str, str] | None:
+        base_failure = MessageProtocol.validate(self, state, actor_id, envelope)
+        if base_failure is not None:
+            return base_failure
+        leader_id = self._leader_id(state)
+        if actor_id != leader_id:
+            return (
+                "not_current_leader",
+                f"{actor_id} cannot send under situational_lead_taking; current leader is {leader_id}.",
+            )
+        handoff_target = envelope.metadata.get("handoff_lead_to")
+        if handoff_target is not None:
+            target_id = str(handoff_target)
+            if target_id not in state.heroes:
+                return "unknown_lead_handoff_target", f"{target_id} is not a known hero."
+            if not state.heroes[target_id].alive:
+                return "lead_handoff_target_down", f"{target_id} cannot receive lead while down."
+        return None
 
     def public_config(self) -> dict[str, Any]:
         data = MessageProtocol.public_config(self)
-        data["leader_policy"] = "objective_carrier_then_room_revealer_then_specialist_then_wounded_then_round_robin"
+        data["leader_policy"] = self.config.get("leader_policy", "first_hero")
+        data["leadership"] = "baton_handoff"
         return data
 
-    def _visible_specialist_leader(self, state: Any) -> str | None:
-        required = state.scripts.get("role_requirements", {})
-        roles = required.get("required_roles") if isinstance(required, dict) else None
-        if not isinstance(roles, list):
-            return None
-        for role in roles:
-            for hero_id, hero in state.heroes.items():
-                if hero.alive and hero.role == str(role):
-                    return hero_id
-        return None
-
-    def _wounded_leader(self, state: Any) -> str | None:
-        wounded = [
-            hero
-            for hero in state.heroes.values()
-            if hero.alive and hero.hp <= max(1, hero.max_hp // 2)
-        ]
-        if not wounded:
-            return None
-        return min(wounded, key=lambda hero: hero.hp).id
+    def _handoff_lead(
+        self, state: Any, leader_id: str, target_id: str, envelope: MessageEnvelope
+    ) -> None:
+        previous = state.message_metrics.get("current_leader")
+        state.message_metrics["current_leader"] = target_id
+        _increment_message_metric(state, "leader_changes")
+        _increment_message_metric(state, "leadership_handoff_count")
+        handoff = {
+            "kind": "leadership_handoff",
+            "round": state.round,
+            "from": leader_id,
+            "to": target_id,
+            "message_id": envelope.message_id,
+            "protocol": self.mode,
+            "reason": envelope.metadata.get("handoff_reason", ""),
+            "previous_leader": previous,
+        }
+        state.message_metrics.setdefault("leadership_handoffs", []).append(handoff)
+        state.message_events.append(handoff)
+        state.trace.append(handoff)
 
 
 def message_protocol_from_config(config: dict[str, Any] | None) -> MessageProtocol:

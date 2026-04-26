@@ -395,7 +395,11 @@ class EffectResolver:
             result = protocol_from_state(ctx.state).submit(
                 ctx.state,
                 effect.actor_id,
-                {"type": "message", "target": effect.target, "payload": {"text": effect.text}},
+                {
+                    "type": "message",
+                    "target": effect.target,
+                    "payload": {"text": effect.text, **dict(effect.metadata)},
+                },
             )
             if result.delivered and result.envelope:
                 hero = ctx.state.heroes.get(effect.actor_id)
@@ -2057,15 +2061,23 @@ class ActionTranslator:
                 )
             )
         elif action_type == "message":
+            payload = action.get("payload") if isinstance(action.get("payload"), dict) else {}
             text = str(
-                (action.get("payload") or {}).get("text")
-                or (action.get("payload") or {}).get("message")
+                payload.get("text")
+                or payload.get("message")
                 or ""
             ).strip()
             text = " ".join(text.split())[:240] or "(no message)"
             effects.append(
                 MessageEffect(
-                    actor_id=hero.id, target=str(action.get("target") or "party"), text=text
+                    actor_id=hero.id,
+                    target=str(action.get("target") or "party"),
+                    text=text,
+                    metadata={
+                        key: payload[key]
+                        for key in ("handoff_lead_to", "handoff_reason", "leadership_intent")
+                        if key in payload
+                    },
                 )
             )
         elif action_type == "guard":

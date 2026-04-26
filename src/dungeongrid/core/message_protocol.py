@@ -10,6 +10,7 @@ DEFAULT_MESSAGE_PROTOCOL = {
     "mode": "pure_decentralized",
     "max_chars": 240,
     "delivery": "immediate",
+    "leader_policy": "first_hero",
 }
 
 
@@ -37,6 +38,7 @@ class MessageEnvelope:
             "to": self.recipient,
             "text": self.text,
             "protocol": self.protocol,
+            **({"metadata": dict(self.metadata)} if self.metadata else {}),
             **({"channel": self.channel} if self.channel != "party" else {}),
         }
 
@@ -213,12 +215,20 @@ class MessageProtocol:
             protocol=str(self.config.get("mode") or self.mode),
             channel="party" if target == "party" else "direct",
             delivery_turn=state.round,
+            metadata=self._metadata_from_payload(payload),
         )
 
     def _next_message_id(self, state: Any) -> str:
         index = int(state.message_metrics.get("next_message_index", 1) or 1)
         state.message_metrics["next_message_index"] = index + 1
         return f"msg_{index}"
+
+    def _metadata_from_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
+        metadata: dict[str, Any] = {}
+        for key in ("handoff_lead_to", "handoff_reason", "leadership_intent"):
+            if payload.get(key) is not None:
+                metadata[key] = payload[key]
+        return metadata
 
 
 def normalize_protocol_config(config: dict[str, Any] | None) -> dict[str, Any]:
@@ -228,6 +238,7 @@ def normalize_protocol_config(config: dict[str, Any] | None) -> dict[str, Any]:
     raw["mode"] = str(raw.get("mode") or "pure_decentralized")
     raw["max_chars"] = int(raw.get("max_chars", 240) or 240)
     raw["delivery"] = str(raw.get("delivery") or "immediate")
+    raw["leader_policy"] = str(raw.get("leader_policy") or "first_hero")
     return raw
 
 
@@ -243,6 +254,9 @@ def configure_message_state(state: Any, config: dict[str, Any] | None = None) ->
     state.message_events = []
     state.message_metrics = default_message_metrics(state.heroes)
     state.message_metrics["protocol"] = state.communication_protocol.get("mode", "pure_decentralized")
+    state.message_metrics["current_leader"] = initial_message_leader(
+        state, state.communication_protocol
+    )
 
 
 def default_message_metrics(heroes: dict[str, Any]) -> dict[str, Any]:
@@ -260,8 +274,24 @@ def default_message_metrics(heroes: dict[str, Any]) -> dict[str, Any]:
         "leader_changes": 0,
         "leader_turns_by_hero": {hero_id: 0 for hero_id in heroes},
         "current_leader": None,
+        "leadership_handoffs": [],
+        "leadership_handoff_count": 0,
         "rejections_by_reason": {},
     }
+
+
+def initial_message_leader(state: Any, config: dict[str, Any]) -> str | None:
+    explicit = config.get("leader")
+    if explicit in state.heroes:
+        return str(explicit)
+    if config.get("leader_policy") == "role":
+        role = str(config.get("leader_role") or "")
+        for hero_id, hero in state.heroes.items():
+            if hero.role == role:
+                return hero_id
+    if state.hero_order:
+        return state.hero_order[0]
+    return next(iter(state.heroes), None)
 
 
 def _increment_message_metric(state: Any, metric: str, amount: int = 1) -> None:
