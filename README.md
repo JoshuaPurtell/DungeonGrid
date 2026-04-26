@@ -83,6 +83,8 @@ restored.act_plan([{"type": "end_turn"}])
 
 The container runtime exposes the same snapshot through checkpoint descriptors. `checkpoint_data_base64` can be passed to a fresh runtime process to resume or branch a rollout. For durable local services, instantiate the container runtime with `store_path="dungeongrid.sqlite"`; checkpoint descriptors and blobs will be indexed in SQLite and can be resumed by checkpoint id after process restart.
 
+Container rollouts support blocking and async modes. Use `submission_mode="async"` to queue a rollout and poll `get_execution()`, or call `submit_rollout_batch([...], max_parallel=10)` to run benchmark slices concurrently with `asyncio.gather`.
+
 ## Dungeons
 
 Bundled dungeons use a folder-per-dungeon schema:

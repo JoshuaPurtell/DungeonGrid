@@ -7,6 +7,7 @@ trace, checkpoint, and resume routes through synth_containers.http_adapter.
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import pickle
 import uuid
@@ -53,6 +54,7 @@ from synth_containers.tool_runtime import (
     ToolRuntimeCapabilities,
     ToolRuntimeKind,
 )
+from synth_containers.wire import RolloutState, SubmissionMode, lifecycle_projection, resolve_submission_mode
 
 from dungeongrid import DungeonGridEnvironment
 from dungeongrid import __version__ as DUNGEONGRID_VERSION
@@ -139,6 +141,8 @@ class DungeonGridContainerRuntime:
         self._envs: dict[str, DungeonGridEnvironment] = {}
         self._checkpoints: dict[str, CheckpointDescriptor] = {}
         self._checkpoint_data: dict[str, str] = {}
+        self._tasks: dict[str, asyncio.Task[ExecutionRecord]] = {}
+        self._lock = asyncio.Lock()
         self._store = SQLiteDungeonGridCheckpointStore(store_path) if store_path else None
 
     def metadata(self) -> RuntimeMetadata:
@@ -301,6 +305,45 @@ class DungeonGridContainerRuntime:
         )
 
     async def submit_rollout(self, request: Mapping[str, Any]) -> ExecutionRecord:
+        payload = dict(request)
+        rollout_id = str(
+            payload.get("rollout_id") or f"dungeongrid_rollout_{uuid.uuid4().hex[:10]}"
+        )
+        payload["rollout_id"] = rollout_id
+        trace_correlation_id = str(payload.get("trace_correlation_id") or rollout_id)
+        payload["trace_correlation_id"] = trace_correlation_id
+        mode = resolve_submission_mode(payload)
+        if mode is SubmissionMode.ASYNC:
+            execution = self._queued_execution(payload, rollout_id, trace_correlation_id)
+            async with self._lock:
+                self._executions[rollout_id] = execution
+                task = asyncio.create_task(self._run_rollout_background(payload, rollout_id))
+                self._tasks[rollout_id] = task
+            return execution
+        return await asyncio.to_thread(self._run_submission_blocking, payload)
+
+    async def submit_rollout_batch(
+        self, requests: list[Mapping[str, Any]], *, max_parallel: int | None = None
+    ) -> list[ExecutionRecord]:
+        """Run a batch of rollout requests concurrently and return final records."""
+
+        limit = max(1, int(max_parallel or len(requests) or 1))
+        semaphore = asyncio.Semaphore(limit)
+
+        async def run_one(index: int, request: Mapping[str, Any]) -> ExecutionRecord:
+            payload = dict(request)
+            payload.setdefault("rollout_id", f"dungeongrid_batch_{index}_{uuid.uuid4().hex[:8]}")
+            payload["submission_mode"] = "sync"
+            async with semaphore:
+                return await asyncio.to_thread(self._run_submission_blocking, payload)
+
+        return await asyncio.gather(
+            *(run_one(index, request) for index, request in enumerate(requests, start=1))
+        )
+
+    def _run_submission_blocking(
+        self, request: Mapping[str, Any], *, store_execution: bool = True
+    ) -> ExecutionRecord:
         rollout_id = str(
             request.get("rollout_id") or f"dungeongrid_rollout_{uuid.uuid4().hex[:10]}"
         )
@@ -329,11 +372,48 @@ class DungeonGridContainerRuntime:
             parent_checkpoint_id=parent_checkpoint_id,
             trial_id=str(request.get("trial_id") or "") or None,
         )
-        self._executions[rollout_id] = execution
+        if store_execution:
+            self._executions[rollout_id] = execution
         self._envs[rollout_id] = env
         return execution
 
+    async def _run_rollout_background(
+        self, request: Mapping[str, Any], rollout_id: str
+    ) -> ExecutionRecord:
+        async with self._lock:
+            queued = self._executions.get(rollout_id)
+            if queued is not None and queued.status == RolloutState.QUEUED.value:
+                queued.status = RolloutState.RUNNING.value
+                queued.success_status = lifecycle_projection(RolloutState.RUNNING)["success_status"]
+                queued.updated_at = _utc_now_iso()
+                queued.metadata["status_detail"] = "rollout_started"
+        try:
+            payload = dict(request)
+            payload["submission_mode"] = "sync"
+            execution = await asyncio.to_thread(
+                self._run_submission_blocking, payload, store_execution=False
+            )
+        except Exception as exc:
+            execution = self._failed_execution(request, rollout_id, exc)
+        async with self._lock:
+            current = self._executions.get(rollout_id)
+            if current is not None and current.status in {"paused", "terminated"}:
+                execution = current
+            else:
+                self._executions[rollout_id] = execution
+            self._tasks.pop(rollout_id, None)
+        return execution
+
     async def get_execution(self, rollout_id: str) -> ExecutionRecord | None:
+        task = self._tasks.get(rollout_id)
+        if task is not None and task.done():
+            try:
+                execution = task.result()
+            except Exception as exc:
+                execution = self._failed_execution({}, rollout_id, exc)
+            async with self._lock:
+                self._executions[rollout_id] = execution
+                self._tasks.pop(rollout_id, None)
         return self._executions.get(rollout_id)
 
     async def get_execution_state(self, rollout_id: str) -> ExecutionRecord | None:
@@ -348,6 +428,7 @@ class DungeonGridContainerRuntime:
         execution.status = "terminated"
         execution.success_status = "terminated"
         execution.updated_at = _utc_now_iso()
+        execution.metadata["termination_requested"] = True
         execution.metadata["terminate_reason"] = str(request.get("reason") or "")
         return execution
 
@@ -359,6 +440,7 @@ class DungeonGridContainerRuntime:
             return None
         execution.status = "paused"
         execution.updated_at = _utc_now_iso()
+        execution.metadata["pause_requested"] = True
         execution.metadata["pause_reason"] = str(request.get("reason") or "")
         return execution
 
@@ -494,6 +576,86 @@ class DungeonGridContainerRuntime:
         self._executions[target_rollout_id] = execution
         self._envs[target_rollout_id] = env
         return execution
+
+    def _queued_execution(
+        self, request: Mapping[str, Any], rollout_id: str, trace_correlation_id: str
+    ) -> ExecutionRecord:
+        task_instance_id = str(request.get("task_instance_id") or "").strip() or None
+        seed = _coerce_int(
+            (request.get("env") or {}).get("seed")
+            if isinstance(request.get("env"), Mapping)
+            else None
+        )
+        entry = entry_by_id(task_instance_id, seed=seed)
+        created = _utc_now_iso()
+        task = TaskDefinition(
+            task_id=entry.task_id,
+            task_name=f"DungeonGrid {entry.quest_id} {entry.player_mode}",
+            task_family="dungeongrid",
+            benchmark="dungeongrid",
+            version=DUNGEONGRID_VERSION,
+        )
+        instance = TaskInstance(
+            task_instance_id=entry.task_instance_id,
+            task_id=entry.task_id,
+            split=entry.split,
+            seed=entry.seed,
+            input_payload=entry.input_payload(),
+            tags=entry.tags(),
+        )
+        return ExecutionRecord(
+            execution_id=rollout_id,
+            trace_correlation_id=trace_correlation_id,
+            status=RolloutState.QUEUED.value,
+            success_status=lifecycle_projection(RolloutState.QUEUED)["success_status"],
+            created_at=created,
+            updated_at=created,
+            runtime_kind=RuntimeKind.ENVIRONMENT,
+            task=task,
+            task_instance=instance,
+            summary={
+                "quest_id": entry.quest_id,
+                "player_mode": entry.player_mode,
+                "num_heroes": entry.num_heroes,
+                "step_count": 0,
+                "segment_step_count": 0,
+                "success": False,
+            },
+            usage={"env_steps": 0, "model_calls": 0},
+            metadata={
+                "status_detail": "queued_for_execution",
+                "env_config": {
+                    "task_instance_id": entry.task_instance_id,
+                    "task_id": entry.task_id,
+                    "quest_id": entry.quest_id,
+                    "player_mode": entry.player_mode,
+                    "num_heroes": entry.num_heroes,
+                    "seed": entry.seed,
+                },
+            },
+        )
+
+    def _failed_execution(
+        self, request: Mapping[str, Any], rollout_id: str, exc: BaseException
+    ) -> ExecutionRecord:
+        now = _utc_now_iso()
+        trace_correlation_id = str(request.get("trace_correlation_id") or rollout_id)
+        return ExecutionRecord(
+            execution_id=rollout_id,
+            trace_correlation_id=trace_correlation_id,
+            status=RolloutState.FAILED.value,
+            success_status=lifecycle_projection(RolloutState.FAILED)["success_status"],
+            created_at=now,
+            updated_at=now,
+            runtime_kind=RuntimeKind.ENVIRONMENT,
+            summary={"success": False, "error": str(exc)},
+            usage={"env_steps": 0, "model_calls": 0},
+            metadata={
+                "status_detail": "rollout_failed",
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+            },
+        )
 
     def _env_from_request(
         self, request: Mapping[str, Any], entry: Any
