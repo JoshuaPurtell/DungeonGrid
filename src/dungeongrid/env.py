@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import base64
+import copy
+import pickle
 import random
+from pathlib import Path
 from typing import Any
 
 from .achievements import AchievementEngine
@@ -21,6 +25,8 @@ from .models import (
 )
 from .warden import WARDEN_REASONING_FIELDS, build_warden_observation
 
+CHECKPOINT_VERSION = "dungeongrid.environment_checkpoint.v1"
+
 
 class _OpenEnvEnvironment:
     """Minimal base class for the local OpenEnv-style API."""
@@ -36,6 +42,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
     """
 
     def __init__(self, quest_dir: str | None = None) -> None:
+        self.quest_dir = str(quest_dir) if quest_dir is not None else None
         self.grid = GridEngine(quest_dir=quest_dir)
         self.hooks = HookEngine(dungeon_dir=quest_dir)
         self.rng = random.Random()
@@ -74,6 +81,96 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         runtime.rng = self.rng
         runtime.phase.start_hero_turn(self.state, self.state.active_agent())
         return self.observe(self.state.active_agent())
+
+    def checkpoint_payload(self, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Return a true environment checkpoint payload.
+
+        The payload is intentionally Python-native and pickle-backed by the helper
+        methods below. It preserves full hidden state and RNG state, so restoring
+        from it can continue the exact same trajectory after a process restart.
+        """
+
+        state = self._require_state()
+        return {
+            "version": CHECKPOINT_VERSION,
+            "quest_dir": self.quest_dir,
+            "observation_mode": self.observation_mode,
+            "state": copy.deepcopy(state),
+            "rng_state": self.rng.getstate(),
+            "metadata": dict(metadata or {}),
+        }
+
+    def checkpoint_bytes(self, metadata: dict[str, Any] | None = None) -> bytes:
+        return pickle.dumps(self.checkpoint_payload(metadata), protocol=pickle.HIGHEST_PROTOCOL)
+
+    def checkpoint_base64(self, metadata: dict[str, Any] | None = None) -> str:
+        return base64.b64encode(self.checkpoint_bytes(metadata)).decode("ascii")
+
+    def save_checkpoint(
+        self, path: str | Path, metadata: dict[str, Any] | None = None
+    ) -> Path:
+        checkpoint_path = Path(path)
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        checkpoint_path.write_bytes(self.checkpoint_bytes(metadata))
+        return checkpoint_path
+
+    def restore_checkpoint(self, checkpoint: bytes | str | dict[str, Any]) -> DungeonGridObservation:
+        payload = self._decode_checkpoint(checkpoint)
+        if payload.get("version") != CHECKPOINT_VERSION:
+            raise ValueError("unsupported DungeonGrid checkpoint payload")
+        checkpoint_quest_dir = (
+            str(payload["quest_dir"]) if payload.get("quest_dir") is not None else None
+        )
+        if self.quest_dir != checkpoint_quest_dir:
+            self.quest_dir = checkpoint_quest_dir
+            self.grid = GridEngine(quest_dir=self.quest_dir)
+            self.hooks = HookEngine(dungeon_dir=self.quest_dir)
+            self.rules = RulesEngine(self.grid, self.rng)
+            self.rules.hooks = self.hooks
+            self.agent_engine = AgentEngine(self.grid, self.rules)
+        self.state = copy.deepcopy(payload["state"])
+        self.observation_mode = str(payload.get("observation_mode") or "mixed")
+        self.rng.setstate(payload["rng_state"])
+        self.rules.rng = self.rng
+        self.rules.hooks = self.hooks
+        from .core.engine_runtime import EngineRuntime
+
+        runtime = EngineRuntime(self.rules)
+        runtime.rng = self.rng
+        self.rules._runtime = runtime
+        return self.observe(self.state.active_agent())
+
+    @classmethod
+    def load_checkpoint(
+        cls, path: str | Path, quest_dir: str | None = None
+    ) -> DungeonGridEnvironment:
+        env = cls(quest_dir=quest_dir)
+        env.restore_checkpoint(Path(path).read_bytes())
+        return env
+
+    @classmethod
+    def from_checkpoint(
+        cls, checkpoint: bytes | str | dict[str, Any], quest_dir: str | None = None
+    ) -> DungeonGridEnvironment:
+        env = cls(quest_dir=quest_dir)
+        env.restore_checkpoint(checkpoint)
+        return env
+
+    def _decode_checkpoint(self, checkpoint: bytes | str | dict[str, Any]) -> dict[str, Any]:
+        if isinstance(checkpoint, dict):
+            return checkpoint
+        if isinstance(checkpoint, bytes):
+            payload = pickle.loads(checkpoint)
+        elif isinstance(checkpoint, str):
+            try:
+                payload = pickle.loads(base64.b64decode(checkpoint.encode("ascii")))
+            except Exception:
+                payload = pickle.loads(Path(checkpoint).read_bytes())
+        else:
+            raise TypeError(f"Unsupported checkpoint type: {type(checkpoint)!r}")
+        if not isinstance(payload, dict):
+            raise ValueError("DungeonGrid checkpoint did not decode to a payload")
+        return payload
 
     def observe(self, agent_id: str | None = None) -> DungeonGridObservation:
         state = self._require_state()
@@ -332,6 +429,9 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 )
             if hero.status:
                 lines.append(f"Active statuses: {hero.status}.")
+        lines.append("")
+        lines.append(self._quest_brief())
+        lines.append(self._objective_instruction())
         roster = self._party_roster()
         if roster:
             lines.append("\nParty roster:")
@@ -400,11 +500,15 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 distance = (
                     f", distance {obj['distance']}" if obj.get("distance") is not None else ""
                 )
-                lines.append(f"- {obj['type']} {label} at {obj.get('pos')}{distance}{detail}")
+                hint = f" Hint: {obj['action_hint']}" if obj.get("action_hint") else ""
+                lines.append(
+                    f"- {obj['type']} {label} at {obj.get('pos')}{distance}{detail}.{hint}"
+                )
         carrier = state.objective.carrier or "not carried"
         lines.append(
             f"\nObjective: recover {state.objective.id} and reach {list(state.escape_tile)}. Carrier: {carrier}."
         )
+        lines.append(self._escape_instruction())
         if state.ruleset and state.ruleset.get("extraction", {}).get("enabled"):
             extracted = sorted(state.extracted_heroes)
             lines.append(
@@ -508,6 +612,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 for deck_id, cards in state.discards.items()
             }
             data["recent_card_draws"] = self._recent_card_draws()
+            data["objective"] = self._public_objective_state(visible_tiles=visible)
             data["ruleset"] = {"enabled": bool(state.ruleset)}
             data["dread"] = None
             data["social_metrics"] = {
@@ -755,8 +860,12 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "adjacent_tiles": self._adjacent_tiles(agent_id),
             "visible_map": visible_map,
             "visible_map_coordinates": self._coordinate_map(visible_map),
-            "objective": state.objective.to_dict(),
+            "quest_title": state.title,
+            "quest_brief": self._quest_brief(),
+            "objective": self._public_objective_state(visible_tiles=visible_tiles),
             "known_objective": f"recover_{state.objective.id}_and_escape",
+            "objective_instruction": self._objective_instruction(),
+            "escape_instruction": self._escape_instruction(),
             "party_messages": list(state.party_messages[-10:]),
             "invalid_feedback": self._invalid_feedback_for_agent(agent_id)[-5:],
             "recent_card_draws": self._recent_card_draws(),
@@ -785,6 +894,61 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "torch": state.torch,
         }
 
+    def _quest_brief(self) -> str:
+        state = self._require_state()
+        item_name = self._humanize_id(state.objective.id)
+        return (
+            f"Quest brief: recover the {item_name} from the dungeon, then bring the "
+            f"carrier back to the escape tile at {list(state.escape_tile)}. Explore "
+            "unopened doors and unrevealed rooms until the objective glyph I is visible."
+        )
+
+    def _objective_instruction(self) -> str:
+        state = self._require_state()
+        return (
+            f"Objective action: when adjacent to the objective glyph I, use "
+            f'{{"type":"interact","target":"{state.objective.id}"}} to pick it up.'
+        )
+
+    def _escape_instruction(self) -> str:
+        state = self._require_state()
+        return (
+            f"Escape action: when the carrier is on {list(state.escape_tile)}, use "
+            '{"type":"interact","target":"escape"}. If that succeeds, the episode ends '
+            "immediately and no further hero or Warden steps run."
+        )
+
+    def _public_objective_state(
+        self, visible_tiles: set[tuple[int, int]] | None = None
+    ) -> dict[str, Any]:
+        state = self._require_state()
+        objective = state.objective
+        data: dict[str, Any] = {
+            "id": objective.id,
+            "carrier": objective.carrier,
+            "recovered": objective.recovered,
+            "fragile": objective.fragile,
+            "visible": False,
+            "location_known": bool(objective.carrier or objective.recovered),
+        }
+        if objective.recovered:
+            data["location_state"] = "recovered"
+            return data
+        if objective.carrier:
+            data["location_state"] = "carried"
+            return data
+        if objective.pos is not None and visible_tiles is not None and objective.pos in visible_tiles:
+            data["pos"] = list(objective.pos)
+            data["visible"] = True
+            data["location_known"] = True
+            data["location_state"] = "visible_on_map"
+            return data
+        data["location_state"] = "hidden_or_unseen"
+        return data
+
+    def _humanize_id(self, value: str) -> str:
+        return str(value).replace("_", " ").strip().title() or "Objective"
+
     def _visible_objects(self, agent_id: str) -> list[dict[str, Any]]:
         state = self._require_state()
         objects = self.grid.visible_objects(state, agent_id)
@@ -802,6 +966,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             row["distance"] = distance
             row["adjacent"] = distance is not None and distance <= 1
             row["affordance"] = self._object_affordance(row, adjacent=bool(row["adjacent"]))
+            row["action_hint"] = self._object_action_hint(row)
             enriched.append(row)
         return enriched
 
@@ -854,9 +1019,13 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         if obj_type == "door":
             state = str(obj.get("state") or "")
             if state == "closed":
-                return "open_door_available" if adjacent else "visible_closed_door_not_adjacent"
+                return (
+                    "open_door_available: use open_door target id"
+                    if adjacent
+                    else "visible_closed_door_not_adjacent: move adjacent before open_door"
+                )
             if state == "open":
-                return "already_open_passage"
+                return "already_open_passage: move through clear adjacent floor tiles"
             return f"door_state_{state or 'unknown'}"
         if obj_type == "furniture":
             if obj.get("destroyed"):
@@ -872,16 +1041,55 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             return (
                 "+".join(options)
                 if options
-                else ("visible_furniture_searched" if adjacent else "visible_not_adjacent")
+                else (
+                    "visible_furniture_searched: no remaining obvious search"
+                    if adjacent
+                    else "visible_not_adjacent: move adjacent before search/interact"
+                )
             )
         if obj_type == "chest":
-            return "search_treasure_available" if adjacent else "visible_not_adjacent"
+            return (
+                "search_treasure_available: use search_treasure target id"
+                if adjacent
+                else "visible_not_adjacent: move adjacent before search_treasure"
+            )
         if obj_type == "objective":
-            return "interact_available" if adjacent else "visible_not_adjacent"
+            return (
+                "interact_available: use interact target objective id now"
+                if adjacent
+                else "visible_not_adjacent: move adjacent before interact"
+            )
         if obj_type == "trap":
             armed = bool(obj.get("armed"))
-            return "disarm_available" if armed and adjacent else "visible_trap"
+            return (
+                "disarm_available: use disarm target id"
+                if armed and adjacent
+                else "visible_trap: avoid or move adjacent to disarm"
+            )
         return "visible"
+
+    def _object_action_hint(self, obj: dict[str, Any]) -> str:
+        obj_type = str(obj.get("type") or "")
+        target = obj.get("id", obj_type)
+        if obj_type == "objective":
+            if obj.get("adjacent"):
+                return f'Now legal: {{"type":"interact","target":"{target}"}}.'
+            return "Not adjacent yet: move onto a neighboring open tile before interacting."
+        if obj_type == "door":
+            if obj.get("state") == "closed" and obj.get("adjacent"):
+                return f'Now legal: {{"type":"open_door","target":"{target}"}}.'
+            if obj.get("state") == "closed":
+                return "Not adjacent yet: move next to the door before opening it."
+            return "Door is open: move through the passage, do not open it again."
+        if obj_type in {"furniture", "chest"}:
+            if obj.get("adjacent"):
+                return f"Adjacent: search or interact using target {target} if the affordance says available."
+            return "Not adjacent yet: move next to it before search/interact actions."
+        if obj_type == "trap":
+            if obj.get("armed") and obj.get("adjacent"):
+                return f'Now legal: {{"type":"disarm","target":"{target}"}}.'
+            return "Visible trap: avoid stepping on it; move adjacent before disarming."
+        return ""
 
     def _invalid_feedback_for_agent(self, agent_id: str) -> list[dict[str, Any]]:
         state = self._require_state()

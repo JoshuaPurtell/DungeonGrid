@@ -1,8 +1,13 @@
 """DungeonGrid OpenEnv package."""
 
 from .action_contracts import DungeonGridActionType, DungeonGridDirection, DungeonGridTargetKind
-from .contracts import dungeongrid_act_schema, dungeongrid_rules, dungeongrid_rules_schema
-from .env import DungeonGridEnvironment
+from .contracts import (
+    dungeongrid_act_schema,
+    dungeongrid_rules,
+    dungeongrid_rules_schema,
+    dungeongrid_warden_act_schema,
+)
+from .env import CHECKPOINT_VERSION, DungeonGridEnvironment
 from .factory import SUPPORTED_ENV_NAMES, make_dungeongrid_env_from_name
 from .models import (
     DungeonGridAction,
@@ -30,9 +35,11 @@ __all__ = [
     "WardenDecision",
     "WardenPolicy",
     "WardenReActAdapter",
+    "CHECKPOINT_VERSION",
     "__version__",
     "dungeongrid_act_schema",
     "dungeongrid_rules",
     "dungeongrid_rules_schema",
+    "dungeongrid_warden_act_schema",
     "make_dungeongrid_env_from_name",
 ]

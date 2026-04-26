@@ -64,6 +64,25 @@ Tool-call shape:
 
 Reveal boundaries stop queued execution so the agent can replan after meaningful new board state appears: opened doors, revealed traps, opened chests, objective changes, turn end, or episode end.
 
+## Checkpoint And Resume
+
+DungeonGrid checkpoints are true environment snapshots: hidden state, public state, trace, turn state, and RNG state are preserved.
+
+```python
+from dungeongrid import DungeonGridEnvironment
+
+env = DungeonGridEnvironment()
+env.reset(quest_id="lantern_crypt", num_heroes=4, seed=11)
+env.act_plan([{"type": "move", "direction": "east"}])
+
+env.save_checkpoint("lantern_crypt.ckpt", metadata={"label": "after_first_move"})
+
+restored = DungeonGridEnvironment.load_checkpoint("lantern_crypt.ckpt")
+restored.act_plan([{"type": "end_turn"}])
+```
+
+The container runtime exposes the same snapshot through checkpoint descriptors. `checkpoint_data_base64` can be passed to a fresh runtime process to resume or branch a rollout.
+
 ## Dungeons
 
 Bundled dungeons use a folder-per-dungeon schema:
@@ -87,5 +106,6 @@ DungeonGrid includes default AP-mode suites plus the opt-in `classic_dynamic` su
 | `DG-Lite-20` | 20 lite diagnostics | default or `classic_dynamic` | short MARL probes |
 | `DG-ClassicDynamic-20` | 20 full dungeons | `ruleset="classic_dynamic"` | roll-to-move, major actions, dread, extraction, role requirements |
 | `DG-OpenEnv-ReAct` | full or lite | selected by config | queued JSON plans with reveal-boundary replanning |
+| `DG-ReAct-Warden` | full or lite | selected by config | hero ReAct plus private bounded ReAct Warden |
 
 See `docs/benchmark_protocol.md`, `docs/action_contract.md`, and `docs/observation_contract.md` for the stable benchmark contract.

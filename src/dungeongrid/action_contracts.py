@@ -117,6 +117,16 @@ SPELL_PAYLOAD_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+WARDEN_SPEND_DREAD_PAYLOAD_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "effect": {"type": "string", "minLength": 1},
+        "cost": {"type": "integer", "minimum": 0},
+    },
+    "required": ["effect"],
+    "additionalProperties": False,
+}
+
 ACTION_CONTRACTS: tuple[DungeonGridActionContract, ...] = (
     DungeonGridActionContract(
         DungeonGridActionType.MOVE,
@@ -258,6 +268,7 @@ ACTION_CONTRACTS: tuple[DungeonGridActionContract, ...] = (
         DungeonGridTargetKind.ENTITY_ID,
         0,
         "Environment-only Warden dread spend. Target is a hero id; payload.effect names a bounded Warden pressure move.",
+        payload_schema=WARDEN_SPEND_DREAD_PAYLOAD_SCHEMA,
     ),
 )
 
@@ -273,20 +284,43 @@ def direction_values() -> list[str]:
 
 
 def action_contract_tool_items_schema(*, include_warden: bool = False) -> dict[str, Any]:
+    warden_actions = {
+        DungeonGridActionType.WARDEN_AUTO,
+        DungeonGridActionType.ACTIVATE_MONSTER,
+        DungeonGridActionType.WARDEN_SPEND_DREAD,
+    }
     contracts = [
         contract
         for contract in ACTION_CONTRACTS
-        if include_warden
-        or contract.action_type
-        not in {DungeonGridActionType.WARDEN_AUTO, DungeonGridActionType.ACTIVATE_MONSTER}
+        if include_warden or contract.action_type not in warden_actions
     ]
     return {"oneOf": [contract.tool_schema() for contract in contracts]}
 
 
+def warden_action_contract_tool_items_schema() -> dict[str, Any]:
+    warden_actions = {
+        DungeonGridActionType.WARDEN_AUTO,
+        DungeonGridActionType.ACTIVATE_MONSTER,
+        DungeonGridActionType.WARDEN_SPEND_DREAD,
+        DungeonGridActionType.END_TURN,
+    }
+    return {
+        "oneOf": [
+            contract.tool_schema()
+            for contract in ACTION_CONTRACTS
+            if contract.action_type in warden_actions
+        ]
+    }
+
+
 def action_contract_summary() -> str:
+    warden_actions = {
+        DungeonGridActionType.WARDEN_AUTO,
+        DungeonGridActionType.ACTIVATE_MONSTER,
+        DungeonGridActionType.WARDEN_SPEND_DREAD,
+    }
     return " ".join(
         f"{contract.action_type.value} costs {contract.ap_cost} AP; target={contract.target_kind.value}."
         for contract in ACTION_CONTRACTS
-        if contract.action_type
-        not in {DungeonGridActionType.WARDEN_AUTO, DungeonGridActionType.ACTIVATE_MONSTER}
+        if contract.action_type not in warden_actions
     )

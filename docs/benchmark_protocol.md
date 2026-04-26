@@ -48,6 +48,15 @@ This document defines the stable benchmark surfaces for DungeonGrid.
 - Seeds: 0-9.
 - Interface: OpenEnv/ReAct-style queued JSON plans.
 - Ruleset: declared by the benchmark config; default/AP and `classic_dynamic` scores are not aggregated.
+- Warden: deterministic for offline/reproducible suites, or first-class ReAct Warden when the config declares `warden_policy.kind=dungeongrid_warden_react`.
+
+### DG-ReAct-Warden
+
+- Quests: full or lite suite variants.
+- Heroes: 1-4 controlled by hero policies.
+- Warden: private/eval ReAct policy using `dungeongrid_warden_act`.
+- Interface: heroes submit queued JSON plans; Warden chooses one bounded Warden action per Warden turn.
+- Required reporting: separate hero LLM usage, Warden LLM usage, Warden fallback count, Warden action counts, and Warden fairness metadata.
 
 ## Migration Note
 

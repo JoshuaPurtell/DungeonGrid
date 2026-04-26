@@ -7,9 +7,6 @@ trace, checkpoint, and resume routes through synth_containers.http_adapter.
 
 from __future__ import annotations
 
-import base64
-import copy
-import pickle
 import uuid
 from collections.abc import Mapping
 from datetime import datetime, timezone
@@ -58,12 +55,12 @@ from synth_containers.tool_runtime import (
 from dungeongrid import DungeonGridEnvironment
 from dungeongrid import __version__ as DUNGEONGRID_VERSION
 from dungeongrid.core.agent_engine import AchievementScoutPolicy, GreedyHeroPolicy
+from dungeongrid.env import CHECKPOINT_VERSION
 from dungeongrid.models import model_to_dict
 
 from .task_sets import PLAYER_MODES, default_task_entries, entry_by_id
 
 DEFAULT_MAX_STEPS = 40
-CHECKPOINT_VERSION = "dungeongrid.true_env_snapshot.v1"
 
 
 def _utc_now_iso() -> str:
@@ -71,18 +68,17 @@ def _utc_now_iso() -> str:
 
 
 def _dump_checkpoint_payload(env: DungeonGridEnvironment, config: dict[str, Any]) -> str:
-    payload = {
-        "version": CHECKPOINT_VERSION,
-        "dungeongrid_version": DUNGEONGRID_VERSION,
-        "config": dict(config),
-        "state": copy.deepcopy(env.state),
-        "observation_mode": env.observation_mode,
-    }
-    return base64.b64encode(pickle.dumps(payload)).decode("ascii")
+    return env.checkpoint_base64(
+        {
+            "dungeongrid_version": DUNGEONGRID_VERSION,
+            "config": dict(config),
+            "checkpoint_semantics": "true_environment_snapshot",
+        }
+    )
 
 
 def _load_checkpoint_payload(data: str) -> dict[str, Any]:
-    payload = pickle.loads(base64.b64decode(data.encode("ascii")))
+    payload = DungeonGridEnvironment()._decode_checkpoint(data)
     if not isinstance(payload, dict) or payload.get("version") != CHECKPOINT_VERSION:
         raise ValueError("unsupported DungeonGrid checkpoint payload")
     return payload
@@ -373,14 +369,22 @@ class DungeonGridContainerRuntime:
             source_execution = self._executions.get(rollout_id)
             if source_execution and source_execution.checkpoint:
                 checkpoint_id = source_execution.checkpoint.checkpoint_id
-        if not checkpoint_id or checkpoint_id not in self._checkpoint_data:
+        checkpoint_ref = (
+            request.get("checkpoint") if isinstance(request.get("checkpoint"), Mapping) else None
+        )
+        checkpoint_data = self._checkpoint_data.get(checkpoint_id)
+        if checkpoint_data is None:
+            checkpoint_data = self._checkpoint_data_from_ref(checkpoint_ref)
+        if not checkpoint_id and checkpoint_ref:
+            checkpoint_id = str(checkpoint_ref.get("checkpoint_id") or "").strip()
+        if not checkpoint_id or checkpoint_data is None:
             return None
-        checkpoint = self._checkpoints[checkpoint_id]
-        payload = _load_checkpoint_payload(self._checkpoint_data[checkpoint_id])
+        checkpoint = self._checkpoints.get(checkpoint_id)
+        payload = _load_checkpoint_payload(checkpoint_data)
         env = DungeonGridEnvironment()
-        env.state = copy.deepcopy(payload["state"])
-        env.observation_mode = str(payload.get("observation_mode") or "mixed")
-        config = dict(payload.get("config") or {})
+        env.restore_checkpoint(payload)
+        metadata = dict(payload.get("metadata") or {})
+        config = dict(metadata.get("config") or {})
         overrides = (
             request.get("overrides") if isinstance(request.get("overrides"), Mapping) else {}
         )
@@ -404,7 +408,11 @@ class DungeonGridContainerRuntime:
             policy_kind=str((overrides.get("policy") or {}).get("kind") or "achievement_scout")
             if isinstance(overrides.get("policy"), Mapping)
             else "achievement_scout",
-            parent_rollout_id=checkpoint.rollout_id,
+            parent_rollout_id=(
+                checkpoint.rollout_id
+                if checkpoint
+                else str((checkpoint_ref or {}).get("rollout_id") or "") or None
+            ),
             parent_checkpoint_id=checkpoint_id,
             trial_id=None,
         )
@@ -419,12 +427,15 @@ class DungeonGridContainerRuntime:
         checkpoint_id = checkpoint_ref if isinstance(checkpoint_ref, str) else None
         if isinstance(checkpoint_ref, Mapping):
             checkpoint_id = str(checkpoint_ref.get("checkpoint_id") or "").strip() or None
-        if checkpoint_id and checkpoint_id in self._checkpoint_data:
-            payload = _load_checkpoint_payload(self._checkpoint_data[checkpoint_id])
+        checkpoint_data = self._checkpoint_data.get(checkpoint_id or "")
+        if checkpoint_data is None and isinstance(checkpoint_ref, Mapping):
+            checkpoint_data = self._checkpoint_data_from_ref(checkpoint_ref)
+        if checkpoint_data is not None:
+            payload = _load_checkpoint_payload(checkpoint_data)
             env = DungeonGridEnvironment()
-            env.state = copy.deepcopy(payload["state"])
-            env.observation_mode = str(payload.get("observation_mode") or "mixed")
-            return env, dict(payload.get("config") or {}), checkpoint_id
+            env.restore_checkpoint(payload)
+            metadata = dict(payload.get("metadata") or {})
+            return env, dict(metadata.get("config") or {}), checkpoint_id
 
         env_config = request.get("env") if isinstance(request.get("env"), Mapping) else {}
         raw_config = (
@@ -665,6 +676,19 @@ class DungeonGridContainerRuntime:
         )
         self._checkpoints[cid] = descriptor
         return descriptor
+
+    def _checkpoint_data_from_ref(self, checkpoint_ref: Mapping[str, Any] | None) -> str | None:
+        if not checkpoint_ref:
+            return None
+        metadata = checkpoint_ref.get("metadata")
+        if isinstance(metadata, Mapping):
+            data = metadata.get("checkpoint_data_base64")
+            if isinstance(data, str) and data:
+                return data
+        data = checkpoint_ref.get("checkpoint_data_base64")
+        if isinstance(data, str) and data:
+            return data
+        return None
 
     def _cell_key(self, env: DungeonGridEnvironment) -> str:
         state = env.state

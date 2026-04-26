@@ -35,3 +35,17 @@ Environment-controlled Warden actions are internal/eval actions, not player acti
 
 Optional Warden ReAct harnesses must choose from bounded Warden candidates and route the result
 through normal environment validation.
+
+First-class ReAct-Warden runs use:
+
+```json
+{
+  "name": "dungeongrid_warden_act",
+  "arguments": {
+    "intent": "Activate revealed pressure on the overextended party.",
+    "axis_pressure": "formation",
+    "fairness_check": "The monster is revealed and activation is a bounded candidate.",
+    "action": {"type": "warden_auto"}
+  }
+}
+```

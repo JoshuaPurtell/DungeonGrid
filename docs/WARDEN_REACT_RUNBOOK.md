@@ -4,9 +4,28 @@ Warden is the dungeon-side ReAct agent. He should be adversarial, legible, and b
 
 Warden is not a random encounter table and not an omniscient killer. His job is to expose the intended multi-agent failure mode while preserving fair counterplay.
 
-The core package remains deterministic and network-free. A ReAct Warden is an optional evaluation
-harness: it consumes `env.observe_warden()`, chooses one bounded legal Warden action through
-`WardenReActAdapter`, and records intent/fairness metadata in the transcript.
+The core package remains deterministic and network-free, but NanoCoop supports first-class
+ReAct-Warden evaluation runs. The Warden consumes `env.observe_warden()`, chooses one bounded
+legal Warden action through `WardenReActAdapter`, and records intent/fairness metadata in the
+transcript. Deterministic Warden remains the offline/fallback mode.
+
+## Tool contract
+
+```json
+{
+  "name": "dungeongrid_warden_act",
+  "arguments": {
+    "intent": "Pressure the carrier route because the party split.",
+    "axis_pressure": "formation and extraction planning",
+    "fairness_check": "The pressure follows a revealed door and uses a bounded candidate.",
+    "action": {"type": "warden_auto"}
+  }
+}
+```
+
+The action must match one bounded Warden candidate: `warden_auto`, `warden_spend_dread`,
+`activate_monster`, or `end_turn`. Invalid choices should fall back to deterministic Warden
+control.
 
 ## Global loop
 

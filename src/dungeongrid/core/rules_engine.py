@@ -413,10 +413,82 @@ class RulesEngine:
             and action.get("target") is None
         ):
             return "missing_target", f"{action_type} requires a target."
+        if hero and action_type in {"interact", "open_door", "search_treasure", "search_furniture", "disarm"}:
+            guidance = self._proximity_guidance(state, hero, str(action_type), action.get("target"))
+            if guidance:
+                return guidance
         matching_type = [candidate for candidate in legal if candidate.get("type") == action_type]
         if matching_type:
             return "illegal_target", f"{action_type} target or fields are not currently legal."
         return "illegal_action", f"{action_type} is not currently legal."
+
+    def _proximity_guidance(
+        self,
+        state: GameState,
+        hero: Entity,
+        action_type: str,
+        target: Any,
+    ) -> tuple[str, str] | None:
+        target_id = str(target)
+        target_pos = None
+        visible_tiles = self.grid.visible_tiles(state, hero.id)
+        if action_type == "open_door" and target_id in state.doors:
+            door = state.doors[target_id]
+            if door.pos not in visible_tiles or (door.secret and not door.discovered):
+                return None
+            target_pos = door.pos
+        elif action_type in {"search_treasure", "search_furniture"}:
+            if target_id in state.chests:
+                chest = state.chests[target_id]
+                if chest.pos not in visible_tiles:
+                    return None
+                target_pos = chest.pos
+            elif target_id in state.furniture:
+                furniture = state.furniture[target_id]
+                if not furniture.visible or furniture.pos not in visible_tiles:
+                    return None
+                target_pos = furniture.pos
+        elif action_type == "disarm" and target_id in state.traps:
+            trap = state.traps[target_id]
+            if not trap.revealed or trap.pos not in visible_tiles:
+                return None
+            target_pos = trap.pos
+        elif action_type == "interact":
+            if target_id == state.objective.id and state.objective.pos is not None:
+                if state.objective.pos not in visible_tiles:
+                    return None
+                target_pos = state.objective.pos
+            elif target_id in state.chests:
+                chest = state.chests[target_id]
+                if chest.pos not in visible_tiles:
+                    return None
+                target_pos = chest.pos
+            elif target_id in state.furniture:
+                furniture = state.furniture[target_id]
+                if not furniture.visible or furniture.pos not in visible_tiles:
+                    return None
+                target_pos = furniture.pos
+            elif target_id == "escape":
+                if hero.pos != state.escape_tile:
+                    return (
+                        "not_at_escape",
+                        f"{hero.id} must stand on escape tile {list(state.escape_tile)} before interacting with escape.",
+                    )
+                if state.objective.carrier != hero.id and not state.objective.recovered:
+                    return (
+                        "objective_not_carried",
+                        f"{hero.id} must carry {state.objective.id} before escaping with the objective.",
+                    )
+        if target_pos is None:
+            return None
+        distance = self.grid.manhattan(hero.pos, target_pos)
+        if distance > 1:
+            return (
+                "not_adjacent",
+                f"{action_type} target {target_id} is visible/referenced but not adjacent "
+                f"(distance {distance}); move to a neighboring open tile before using {action_type}.",
+            )
+        return None
 
     def _action_is_legal(self, action: dict[str, Any], legal: list[dict[str, Any]]) -> bool:
         atype = action.get("type")
