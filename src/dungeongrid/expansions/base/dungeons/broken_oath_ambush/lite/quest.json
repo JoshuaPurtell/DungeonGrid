@@ -1,0 +1,434 @@
+{
+  "quest_id": "base:broken_oath_ambush:lite",
+  "title": "Broken Oath Ambush Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "broken_oath_ambush",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "II",
+    "marl_axis": "ambush recovery and mutual support",
+    "coordination_type": "bait-cover-fallback protocol",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "contingency",
+      "fallback",
+      "hidden_information"
+    ],
+    "challenge_summary": "Agents must create a fallback plan before triggering the obvious route, then communicate when the ambush has started.",
+    "dilemmas": [
+      "The direct route is fastest but exposed",
+      "Pre-searching costs tempo",
+      "The frontline can bait safely only if support is positioned"
+    ],
+    "coordination_problems": [
+      "Ambush protocol",
+      "Reserve positioning",
+      "Trap specialist timing",
+      "Fallback route agreement"
+    ],
+    "warden_runbook": [
+      "Spring pressure after overextension",
+      "Do not punish teams that actually scout",
+      "Try to split bait from support",
+      "Keep ambush consequences readable"
+    ],
+    "lite_focus": "A short oath hall with one trap and one guard: the whole test is whether the pair scouts before stepping into the lane.",
+    "monster_profile": [
+      "bone_guards"
+    ],
+    "room_count": 3,
+    "map_width": 11,
+    "map_height": 7,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "probe ambush cues while preserving a fallback lane",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: contingency planning under hidden threat",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured",
+    "size_tier": "lite",
+    "intended_num_heroes": 2,
+    "variant_family": "broken_oath_ambush",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "call ambush direction immediately",
+      "collapse isolated heroes toward a defensible lane",
+      "prioritize rescue over private damage turns"
+    ],
+    "pressure_sources": [
+      "surprise flankers",
+      "split starts",
+      "cultist alarms",
+      "short time-to-contact"
+    ],
+    "review_metrics": [
+      "rounds isolated after ambush",
+      "messages on reveal",
+      "rescue/guard actions",
+      "damage before regroup"
+    ],
+    "tier_test_focus": "Small two-hero diagnostic for communication and first-order ambush recovery and mutual support coordination.",
+    "coordination_demands": [
+      "call ambush direction immediately",
+      "collapse isolated heroes toward a defensible lane",
+      "prioritize rescue over private damage turns"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "###########\n#E..D.....#\n#...#..I..#\n#...#..B..#\n###D#######\n#..T.C....#\n###########",
+    "width": 11,
+    "height": 7
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "broken_oath_tablet",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      2
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "healing",
+              "item": "healing_draught"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Broken Oath Ambush is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "objective_room": {
+      "name": "Objective Room",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "The core object of the lite challenge is visible here; taking it should trigger extraction thinking, not exhaustive exploration.",
+      "tags": [
+        "objective",
+        "pressure"
+      ]
+    },
+    "side_cache": {
+      "name": "Side Cache",
+      "rect": [
+        1,
+        5,
+        9,
+        5
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "broken_oath_ambush_focus_1",
+      "name": "Oath Scratchings",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for contingency planning under hidden threat. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "contingency",
+        "fallback"
+      ]
+    },
+    {
+      "id": "broken_oath_ambush_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        8,
+        5
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "broken_oath_ambush_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "broken_oath_ambush_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "broken_oath_ambush_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "broken_oath_ambush_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "broken_oath_ambush_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "broken_oath_ambush_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains contingency planning under hidden threat.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "broken_oath_ambush_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up broken_oath_tablet.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Broken Oath Ambush Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "A short oath hall with one trap and one guard: the whole test is whether the pair scouts before stepping into the lane.",
+    "warden_style": "bait-cover-fallback protocol",
+    "marl_axis": "ambush recovery and mutual support",
+    "family": "broken_oath_ambush",
+    "tier": "lite"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "contingency planning under hidden threat",
+      "tags": [
+        "contingency",
+        "fallback",
+        "hidden_information",
+        "trapcraft"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "ambush_trigger": "objective_room_entry",
+      "safe_if_scouted": true
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Spring pressure after overextension",
+        "Do not punish teams that actually scout",
+        "Try to split bait from support",
+        "pressure the declared MARL axis: contingency planning under hidden threat"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "torch": 10,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ]
+  }
+}

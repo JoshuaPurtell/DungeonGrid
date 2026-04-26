@@ -1,0 +1,192 @@
+{
+  "id": "cinder_exit",
+  "title": "Cinder Exit",
+  "metadata": {
+    "campaign_group": "base",
+    "maturity": "migration_draft",
+    "validation_status": "tier_migration_pending_review",
+    "objective_type": "escort_relic_to_exit",
+    "marl_axis": "extraction under pursuit",
+    "marl_purpose": "Tests whether the team can switch from exploration to exit execution while pressure pursues the carrier.",
+    "coordination_skills": [
+      "pre-plan the return route before taking the objective",
+      "hand off or escort the carrier under pursuit",
+      "use guards, doors, and messages to maintain extraction tempo"
+    ],
+    "pressure_sources": [
+      "pursuit spawn",
+      "long return path",
+      "door choke points",
+      "partial extraction risk"
+    ],
+    "review_metrics": [
+      "rounds from objective taken to escape",
+      "carrier protection actions",
+      "doors controlled on return",
+      "unused actions after reveal stop"
+    ],
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_hero_attribution"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 18,
+    "recommended_heroes": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "wizard"
+      ],
+      "2": [
+        "barbarian",
+        "wizard"
+      ],
+      "3": [
+        "barbarian",
+        "wizard",
+        "dwarf"
+      ]
+    },
+    "hero_loadouts": {
+      "barbarian": {
+        "weapon": "broad_sword",
+        "armor": "cinder_hide",
+        "combat_role": "escort_guard",
+        "items": [
+          "iron_ration"
+        ]
+      },
+      "wizard": {
+        "weapon": "ash_staff",
+        "spell_cards": [
+          "spark_lance",
+          "ward_circle",
+          "reveal_glyph"
+        ],
+        "combat_role": "route_control",
+        "items": []
+      },
+      "elf": {
+        "weapon": "short_bow",
+        "spell_cards": [
+          "mend_wounds",
+          "blink_step"
+        ],
+        "combat_role": "scout",
+        "items": []
+      },
+      "dwarf": {
+        "weapon": "hand_axe",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "chalk_marks"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed",
+      "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+    },
+    "decks": {
+      "supply": [
+        {
+          "id": "cooling_salve",
+          "name": "Cooling Salve",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08
+        },
+        {
+          "id": "carrier_wrap",
+          "name": "Carrier Wrap",
+          "type": "artifact",
+          "item": "carrier_wrap",
+          "reward": 0.12
+        }
+      ],
+      "event": [
+        {
+          "id": "flame_surge",
+          "name": "Flame Surge",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03
+        }
+      ],
+      "artifact": [
+        {
+          "id": "oath_shield",
+          "name": "Oath Shield",
+          "type": "artifact",
+          "item": "oath_shield",
+          "reward": 0.14
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic_available": true
+    },
+    "mechanics": {
+      "marl_contract": {
+        "axis": "cooperative extraction under pursuit",
+        "tags": [
+          "carrier_escort_and_rear-guard_handoff"
+        ],
+        "core_failure_modes": [
+          "silent independent play",
+          "unclear role assignment",
+          "late extraction planning"
+        ]
+      },
+      "warden_policy": {
+        "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+        "pressure_budget_per_round": 1,
+        "preferred_tactics": [
+          "pressure the declared MARL axis: cooperative extraction under pursuit"
+        ],
+        "forbidden_tactics": [
+          "spawn pressure without a visible or scripted cue",
+          "use unrevealed map geometry for perfect counterplay",
+          "erase the dungeon-specific lesson with generic monster spam"
+        ]
+      }
+    }
+  },
+  "warden_runbook": {
+    "axis_pressure": "pursuit spawn, long return path, door choke points, partial extraction risk",
+    "fairness_notes": [
+      "Escalate pressure only after the relevant cue has been observable or communicated.",
+      "Preserve a counterplay route so failures identify coordination rather than impossible state."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "barbarian": [
+      "frontline",
+      "body_block",
+      "lane_hold"
+    ],
+    "wizard": [
+      "ranged_magic",
+      "rule_clues",
+      "warding"
+    ],
+    "elf": [
+      "scouting",
+      "ranged_cover",
+      "healing_support"
+    ],
+    "dwarf": [
+      "trap_disarm",
+      "secret_search",
+      "route_marking"
+    ]
+  },
+  "scripts": {
+    "family": "cinder_exit"
+  }
+}

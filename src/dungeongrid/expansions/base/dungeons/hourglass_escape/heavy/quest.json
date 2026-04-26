@@ -1,0 +1,277 @@
+{
+  "quest_id": "base:hourglass_escape:heavy",
+  "title": "Hourglass Escape Heavy",
+  "max_heroes": 4,
+  "metadata": {
+    "size_tier": "heavy",
+    "intended_num_heroes": 4,
+    "supported_hero_range": [
+      1,
+      4
+    ],
+    "variant_family": "hourglass_escape",
+    "maturity": "migration_draft",
+    "marl_axis": "deadline-aware planning",
+    "coordination_skills": [
+      "state deadline and remaining route length",
+      "prune optional actions when schedule is tight",
+      "stage heroes near exit before final pickup"
+    ],
+    "pressure_sources": [
+      "turn clock",
+      "long return path",
+      "optional branches",
+      "pursuit after pickup"
+    ],
+    "review_metrics": [
+      "turns to objective",
+      "turns objective-to-exit",
+      "optional actions after deadline warnings",
+      "messages about remaining time"
+    ],
+    "tier_test_focus": "Expanded four-hero stress test with extra lanes, optional pressure, and stricter deadline-aware planning failure modes."
+  },
+  "map": {
+    "ascii": "#######################\n#E....#.....#.........#\n#.....D..C..D....P....#\n###D###.....#####D#####\n#.....#.........#.....#\n#..T..D....P....D..G..#\n#.....#.........#.....#\n###D#######D#####D#####\n#.....#.....#.........#\n#..G..D..S..D....C....#\n#.....#.....#.........#\n#####D#####D#####D#####\n#.........#.....#.....#\n#....P....D..I..D..R..#\n#.........#.....#.....#\n#######################",
+    "width": 23,
+    "height": 16
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      4,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "hourglass_key",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      13,
+      13
+    ]
+  },
+  "rooms": {
+    "entry_hall": {
+      "name": "Entry Hall",
+      "rect": [
+        1,
+        1,
+        5,
+        2
+      ],
+      "description": "The team starts in a narrow hall that forces marching-order and role assignment.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "upper_cache": {
+      "name": "Upper Cache",
+      "rect": [
+        7,
+        1,
+        11,
+        3
+      ],
+      "description": "A preparation branch with treasure/gear temptation before the main route opens.",
+      "tags": [
+        "optional",
+        "prep"
+      ]
+    },
+    "pressure_lane": {
+      "name": "Pressure Lane",
+      "rect": [
+        13,
+        1,
+        21,
+        3
+      ],
+      "description": "A visible pressure lane tuned for deadline-aware planning.",
+      "tags": [
+        "combat",
+        "lane"
+      ]
+    },
+    "axis_crossing": {
+      "name": "Axis Crossing",
+      "rect": [
+        1,
+        4,
+        15,
+        6
+      ],
+      "description": "The central crossing is where deadline-aware planning becomes a team problem.",
+      "tags": [
+        "marl_axis",
+        "hazard"
+      ]
+    },
+    "side_pressure": {
+      "name": "Side Pressure",
+      "rect": [
+        17,
+        4,
+        21,
+        6
+      ],
+      "description": "A side pocket punishes unsupported splits and unannounced detours.",
+      "tags": [
+        "split_party",
+        "pressure"
+      ]
+    },
+    "specialist_route": {
+      "name": "Specialist Route",
+      "rect": [
+        1,
+        8,
+        11,
+        10
+      ],
+      "description": "A lower route rewards role-aware scouting, secret checks, or hazard management.",
+      "tags": [
+        "specialist",
+        "route"
+      ]
+    },
+    "optional_cache": {
+      "name": "Optional Cache",
+      "rect": [
+        13,
+        8,
+        21,
+        10
+      ],
+      "description": "Optional reward is placed far enough from the objective to expose greedy or uncoordinated plans.",
+      "tags": [
+        "optional",
+        "greed"
+      ]
+    },
+    "objective_lane": {
+      "name": "Objective Lane",
+      "rect": [
+        1,
+        12,
+        21,
+        14
+      ],
+      "description": "The final lane combines pickup, protection, and extraction under full-party pressure.",
+      "tags": [
+        "objective",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "axis_marker_1",
+      "name": "Hourglass Escape Marker",
+      "category": "marker",
+      "pos": [
+        11,
+        5
+      ],
+      "deck": "event",
+      "description": "A review marker for the deadline-aware planning decision point.",
+      "traits": [
+        "marl_axis",
+        "extraction"
+      ],
+      "visible": true,
+      "destructible": false,
+      "blocks_movement": false,
+      "blocks_los": false,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The marker highlights the task axis: deadline-aware planning."
+          }
+        ]
+      }
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The hourglass key turns. Sand begins falling somewhere above the ceiling.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "lantern_wight",
+          "pos": [
+            10,
+            4
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 18,
+    "alert_reinforcement_threshold": 5,
+    "family": "hourglass_escape",
+    "tier": "heavy",
+    "marl_axis": "deadline-aware planning"
+  },
+  "achievements": [
+    {
+      "id": "heavy_hourglass_escape_axis_probe",
+      "title": "Heavy Axis Probe",
+      "description": "Make progress in the heavy Hourglass Escape variant while preserving the deadline-aware planning signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "4": [
+      "barbarian",
+      "wizard",
+      "elf",
+      "dwarf"
+    ]
+  },
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "elf",
+    "dwarf"
+  ]
+}

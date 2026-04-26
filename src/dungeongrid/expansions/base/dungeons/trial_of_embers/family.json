@@ -1,0 +1,193 @@
+{
+  "id": "trial_of_embers",
+  "title": "Trial of Embers",
+  "metadata": {
+    "campaign_group": "base",
+    "maturity": "migration_draft",
+    "validation_status": "tier_migration_pending_review",
+    "objective_type": "retrieve_and_escape",
+    "marl_axis": "hazard timing and shared risk budgeting",
+    "marl_purpose": "Tests whether heroes time hazardous crossings and spend shared risk deliberately rather than independently.",
+    "coordination_skills": [
+      "stage before crossing hazard lanes",
+      "communicate when traps or ember pulses are safe/unsafe",
+      "assign one hero to clear or mark hazards before the carrier moves"
+    ],
+    "pressure_sources": [
+      "traps",
+      "ember pulses",
+      "torch pressure",
+      "monsters that force movement"
+    ],
+    "review_metrics": [
+      "trap searches/disarms before crossings",
+      "hazard damage",
+      "messages about safe timing",
+      "carrier hazard exposure"
+    ],
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_hero_attribution"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 19,
+    "recommended_heroes": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "wizard"
+      ],
+      "2": [
+        "barbarian",
+        "wizard"
+      ],
+      "3": [
+        "barbarian",
+        "wizard",
+        "dwarf"
+      ]
+    },
+    "hero_loadouts": {
+      "barbarian": {
+        "weapon": "cleaver_sword",
+        "armor": "hide_guard",
+        "combat_role": "frontline",
+        "items": [
+          "iron_ration"
+        ]
+      },
+      "wizard": {
+        "weapon": "ash_staff",
+        "spell_cards": [
+          "spark_lance",
+          "ward_circle",
+          "ember_reading"
+        ],
+        "combat_role": "caster",
+        "items": []
+      },
+      "elf": {
+        "weapon": "short_bow",
+        "spell_cards": [
+          "mend_wounds",
+          "blink_step"
+        ],
+        "combat_role": "skirmisher",
+        "items": []
+      },
+      "dwarf": {
+        "weapon": "hand_axe",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "chalk_marks"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed",
+      "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+    },
+    "decks": {
+      "supply": [
+        {
+          "id": "cooling_salve",
+          "name": "Cooling Salve",
+          "type": "healing",
+          "item": "binding_salve",
+          "reward": 0.08
+        },
+        {
+          "id": "trial_scrip",
+          "name": "Trial Scrip",
+          "type": "treasure",
+          "item": "trial_scrip",
+          "treasure": 1,
+          "reward": 0.1
+        }
+      ],
+      "artifact": [
+        {
+          "id": "ember_charm",
+          "name": "Ember Charm",
+          "type": "artifact",
+          "item": "ember_charm",
+          "reward": 0.15
+        }
+      ],
+      "event": [
+        {
+          "id": "watcher_flare",
+          "name": "Watcher Flare",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic_available": true
+    },
+    "mechanics": {
+      "marl_contract": {
+        "axis": "multi-objective sequencing with non-dominant strategies",
+        "tags": [
+          "proof_selection_and_resource_preservation"
+        ],
+        "core_failure_modes": [
+          "silent independent play",
+          "unclear role assignment",
+          "late extraction planning"
+        ]
+      },
+      "warden_policy": {
+        "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+        "pressure_budget_per_round": 1,
+        "preferred_tactics": [
+          "pressure the declared MARL axis: multi-objective sequencing with non-dominant strategies"
+        ],
+        "forbidden_tactics": [
+          "spawn pressure without a visible or scripted cue",
+          "use unrevealed map geometry for perfect counterplay",
+          "erase the dungeon-specific lesson with generic monster spam"
+        ]
+      }
+    }
+  },
+  "warden_runbook": {
+    "axis_pressure": "traps, ember pulses, torch pressure, monsters that force movement",
+    "fairness_notes": [
+      "Escalate pressure only after the relevant cue has been observable or communicated.",
+      "Preserve a counterplay route so failures identify coordination rather than impossible state."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "barbarian": [
+      "frontline",
+      "body_block",
+      "lane_hold"
+    ],
+    "wizard": [
+      "ranged_magic",
+      "rule_clues",
+      "warding"
+    ],
+    "elf": [
+      "scouting",
+      "ranged_cover",
+      "healing_support"
+    ],
+    "dwarf": [
+      "trap_disarm",
+      "secret_search",
+      "route_marking"
+    ]
+  },
+  "scripts": {
+    "family": "trial_of_embers"
+  }
+}

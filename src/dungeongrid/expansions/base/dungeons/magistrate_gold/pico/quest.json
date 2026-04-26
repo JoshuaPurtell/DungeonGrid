@@ -1,0 +1,119 @@
+{
+  "quest_id": "base:magistrate_gold:pico",
+  "title": "Magistrate Gold Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "magistrate_gold",
+    "maturity": "migration_draft",
+    "marl_axis": "mixed-motive social dilemma",
+    "coordination_skills": [
+      "negotiate when optional treasure is worth the tempo cost",
+      "share healing and safety resources after risky searches",
+      "stop searching once team extraction becomes the dominant objective"
+    ],
+    "pressure_sources": [
+      "optional chests",
+      "greed-triggered threat",
+      "shared torch/alert budget",
+      "exit timing"
+    ],
+    "review_metrics": [
+      "treasure searches by hero",
+      "items given",
+      "objective delay after chest opens",
+      "messages about risk"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the mixed-motive social dilemma signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..C..D.I#\n#..#...#..#\n#..C.K.C..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "magistrate_receipt_roll",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      9,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first mixed-motive social dilemma choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on mixed-motive social dilemma without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught",
+    "chest_3": "old_cache"
+  },
+  "scripts": {
+    "lite_design_note": "A three-room accounting test: one chest, one objective, one optional stash, and explicit need to communicate inventory.",
+    "warden_style": "shared inventory accounting",
+    "marl_axis": "mixed-motive social dilemma",
+    "family": "magistrate_gold",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_magistrate_gold_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Magistrate Gold variant while preserving the mixed-motive social dilemma signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

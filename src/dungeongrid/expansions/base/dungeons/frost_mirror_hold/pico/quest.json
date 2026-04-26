@@ -1,0 +1,117 @@
+{
+  "quest_id": "base:frost_mirror_hold:pico",
+  "title": "Frost Mirror Hold Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "frost_mirror_hold",
+    "maturity": "migration_draft",
+    "marl_axis": "decoy discrimination and role confirmation",
+    "coordination_skills": [
+      "compare observations before attacking or opening",
+      "assign one scout to verify mirror rooms",
+      "hold resources until target identity is confirmed"
+    ],
+    "pressure_sources": [
+      "mirror adepts",
+      "decoy lanes",
+      "split observation",
+      "cold tempo pressure"
+    ],
+    "review_metrics": [
+      "verification messages",
+      "attacks on decoys",
+      "wrong-lane commitment",
+      "resource use before confirmation"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the decoy discrimination and role confirmation signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..S..I..#\n#.#.#.#.#.#\n#..C.Y.G..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "frosted_mirror_shard",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first decoy discrimination and role confirmation choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on decoy discrimination and role confirmation without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache"
+  },
+  "scripts": {
+    "lite_design_note": "Four-room mirror hold with one mirror adept and one ordinary guard; the lesson is to verify before committing.",
+    "warden_style": "shared observation and verification",
+    "marl_axis": "decoy discrimination and role confirmation",
+    "family": "frost_mirror_hold",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_frost_mirror_hold_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Frost Mirror Hold variant while preserving the decoy discrimination and role confirmation signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

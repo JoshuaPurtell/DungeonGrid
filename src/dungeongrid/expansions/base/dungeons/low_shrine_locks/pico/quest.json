@@ -1,0 +1,118 @@
+{
+  "quest_id": "base:low_shrine_locks:pico",
+  "title": "Low Shrine Locks Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "low_shrine_locks",
+    "maturity": "migration_draft",
+    "marl_axis": "joint-action synchronization",
+    "coordination_skills": [
+      "announce lock/door intent before spending AP",
+      "hold positions until paired progress is possible",
+      "sequence search, open, and carry actions across separated lanes"
+    ],
+    "pressure_sources": [
+      "paired locks",
+      "separated lanes",
+      "door timing",
+      "minor sentries"
+    ],
+    "review_metrics": [
+      "same-round lock progress",
+      "messages before opens",
+      "doorway waits",
+      "split-party delay"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the joint-action synchronization signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E.D...D.I#\n#..#...#..#\n#..C.B.C..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "low_shrine_token",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      9,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first joint-action synchronization choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on joint-action synchronization without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "lite_design_note": "A duo-first two-plinth shrine: two side rooms, center objective, and explicit ready-check pressure.",
+    "warden_style": "ready-check and simultaneous activation",
+    "marl_axis": "joint-action synchronization",
+    "family": "low_shrine_locks",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_low_shrine_locks_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Low Shrine Locks variant while preserving the joint-action synchronization signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

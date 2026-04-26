@@ -1,0 +1,115 @@
+{
+  "quest_id": "base:lost_apprentice:pico",
+  "title": "Lost Apprentice Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "lost_apprentice",
+    "maturity": "migration_draft",
+    "marl_axis": "rescue search and information sharing",
+    "coordination_skills": [
+      "divide search lanes and report negative findings",
+      "keep a rescuer within support distance",
+      "switch from search to escort once the target is found"
+    ],
+    "pressure_sources": [
+      "uncertain target location",
+      "minor wandering threats",
+      "hazards near rescue target",
+      "return escort"
+    ],
+    "review_metrics": [
+      "unique rooms searched",
+      "duplicate searches",
+      "messages with search results",
+      "distance to rescuer after target found"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the rescue search and information sharing signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..I..D..#\n#..#...#..#\n#..B...G..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "apprentice_token",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      4,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first rescue search and information sharing choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on rescue search and information sharing without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {},
+  "scripts": {
+    "lite_design_note": "A small rescue: one clue object, one apprentice objective, and a short route where guide/support spacing matters.",
+    "warden_style": "find-calm-guide extraction",
+    "marl_axis": "rescue search and information sharing",
+    "family": "lost_apprentice",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_lost_apprentice_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Lost Apprentice variant while preserving the rescue search and information sharing signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

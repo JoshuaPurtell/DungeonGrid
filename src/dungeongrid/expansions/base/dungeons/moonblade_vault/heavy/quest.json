@@ -1,0 +1,278 @@
+{
+  "quest_id": "base:moonblade_vault:heavy",
+  "title": "Moonblade Vault Heavy",
+  "max_heroes": 4,
+  "metadata": {
+    "size_tier": "heavy",
+    "intended_num_heroes": 4,
+    "supported_hero_range": [
+      1,
+      4
+    ],
+    "variant_family": "moonblade_vault",
+    "maturity": "migration_draft",
+    "marl_axis": "specialist sequencing and greed control",
+    "coordination_skills": [
+      "wait for the specialist before opening vault hazards",
+      "announce optional loot before taking it",
+      "protect the key or blade carrier on exit"
+    ],
+    "pressure_sources": [
+      "vault locks",
+      "secret routes",
+      "optional treasure",
+      "carrier pursuit"
+    ],
+    "review_metrics": [
+      "specialist actions before vault open",
+      "treasure detours",
+      "carrier protection",
+      "messages before cache interactions"
+    ],
+    "tier_test_focus": "Expanded four-hero stress test with extra lanes, optional pressure, and stricter specialist sequencing and greed control failure modes."
+  },
+  "map": {
+    "ascii": "#######################\n#E....#.....#.........#\n#.....S..C..D....K....#\n###D###.....#####S#####\n#.....#.........#.....#\n#..T..D....Y....D..K..#\n#.....#.........#.....#\n###S#######D#####D#####\n#.....#.....#.........#\n#..C..D..S..D....C....#\n#.....#.....#.........#\n#####D#####S#####D#####\n#.........#.....#.....#\n#....Y....D..I..D..R..#\n#.........#.....#.....#\n#######################",
+    "width": 23,
+    "height": 16
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      4,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "moonblade",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      13,
+      13
+    ]
+  },
+  "rooms": {
+    "entry_hall": {
+      "name": "Entry Hall",
+      "rect": [
+        1,
+        1,
+        5,
+        2
+      ],
+      "description": "The team starts in a narrow hall that forces marching-order and role assignment.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "upper_cache": {
+      "name": "Upper Cache",
+      "rect": [
+        7,
+        1,
+        11,
+        3
+      ],
+      "description": "A preparation branch with treasure/gear temptation before the main route opens.",
+      "tags": [
+        "optional",
+        "prep"
+      ]
+    },
+    "pressure_lane": {
+      "name": "Pressure Lane",
+      "rect": [
+        13,
+        1,
+        21,
+        3
+      ],
+      "description": "A visible pressure lane tuned for specialist sequencing and greed control.",
+      "tags": [
+        "combat",
+        "lane"
+      ]
+    },
+    "axis_crossing": {
+      "name": "Axis Crossing",
+      "rect": [
+        1,
+        4,
+        15,
+        6
+      ],
+      "description": "The central crossing is where specialist sequencing and greed control becomes a team problem.",
+      "tags": [
+        "marl_axis",
+        "hazard"
+      ]
+    },
+    "side_pressure": {
+      "name": "Side Pressure",
+      "rect": [
+        17,
+        4,
+        21,
+        6
+      ],
+      "description": "A side pocket punishes unsupported splits and unannounced detours.",
+      "tags": [
+        "split_party",
+        "pressure"
+      ]
+    },
+    "specialist_route": {
+      "name": "Specialist Route",
+      "rect": [
+        1,
+        8,
+        11,
+        10
+      ],
+      "description": "A lower route rewards role-aware scouting, secret checks, or hazard management.",
+      "tags": [
+        "specialist",
+        "route"
+      ]
+    },
+    "optional_cache": {
+      "name": "Optional Cache",
+      "rect": [
+        13,
+        8,
+        21,
+        10
+      ],
+      "description": "Optional reward is placed far enough from the objective to expose greedy or uncoordinated plans.",
+      "tags": [
+        "optional",
+        "greed"
+      ]
+    },
+    "objective_lane": {
+      "name": "Objective Lane",
+      "rect": [
+        1,
+        12,
+        21,
+        14
+      ],
+      "description": "The final lane combines pickup, protection, and extraction under full-party pressure.",
+      "tags": [
+        "objective",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "axis_marker_1",
+      "name": "Moonblade Vault Marker",
+      "category": "marker",
+      "pos": [
+        11,
+        5
+      ],
+      "deck": "event",
+      "description": "A review marker for the specialist sequencing and greed control decision point.",
+      "traits": [
+        "marl_axis",
+        "stealth"
+      ],
+      "visible": true,
+      "destructible": false,
+      "blocks_movement": false,
+      "blocks_los": false,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The marker highlights the task axis: specialist sequencing and greed control."
+          }
+        ]
+      }
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught",
+    "chest_3": "old_cache"
+  },
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The moonblade sings once. Every guardian hears the chosen bearer.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 3
+        },
+        {
+          "type": "spawn",
+          "monster": "lantern_wight",
+          "pos": [
+            10,
+            4
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 24,
+    "alert_reinforcement_threshold": 5,
+    "family": "moonblade_vault",
+    "tier": "heavy",
+    "marl_axis": "specialist sequencing and greed control"
+  },
+  "achievements": [
+    {
+      "id": "heavy_moonblade_vault_axis_probe",
+      "title": "Heavy Axis Probe",
+      "description": "Make progress in the heavy Moonblade Vault variant while preserving the specialist sequencing and greed control signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "4": [
+      "barbarian",
+      "wizard",
+      "elf",
+      "dwarf"
+    ]
+  },
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "elf",
+    "dwarf"
+  ]
+}

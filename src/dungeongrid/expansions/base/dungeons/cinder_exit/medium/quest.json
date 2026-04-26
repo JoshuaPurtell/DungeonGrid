@@ -1,0 +1,525 @@
+{
+  "quest_id": "base:cinder_exit:medium",
+  "title": "The Cinder Exit",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "original_5",
+    "quest_role": "carrier_escape",
+    "objective_type": "escort_relic_to_exit",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "boss",
+      "pursuit",
+      "loop_route"
+    ],
+    "hazard_profile": "moderate",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "brute"
+    ],
+    "warden_pressure": "medium",
+    "post_objective_escalation": "severe",
+    "route_structure": "retreat_loop",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": true,
+    "best_party_sizes": [
+      "duo",
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 6,
+    "global_progress_hooks": [
+      "objective_pickup",
+      "survival",
+      "doors",
+      "furniture",
+      "inventory",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "hazard_discovery",
+      "post_objective_escalation",
+      "pre_objective_plan"
+    ],
+    "primary_score_emphasis": [
+      "objective",
+      "speed",
+      "survival"
+    ],
+    "reward_density": "medium",
+    "map_width": 19,
+    "map_height": 15,
+    "room_count": 6,
+    "door_count": 5,
+    "trap_count": 1,
+    "chest_count": 1,
+    "furniture_count": 3,
+    "initial_monster_count": 3,
+    "has_secret_doors": false,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true,
+    "marl_axis": "extraction under pursuit",
+    "coordination_type": "carrier escort and rear-guard handoff",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "assign carrier, escort, and rear guard before pursuit pressure peaks",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: cooperative extraction under pursuit",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured",
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      1,
+      3
+    ],
+    "variant_family": "cinder_exit",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "pre-plan the return route before taking the objective",
+      "hand off or escort the carrier under pursuit",
+      "use guards, doors, and messages to maintain extraction tempo"
+    ],
+    "pressure_sources": [
+      "pursuit spawn",
+      "long return path",
+      "door choke points",
+      "partial extraction risk"
+    ],
+    "review_metrics": [
+      "rounds from objective taken to escape",
+      "carrier protection actions",
+      "doors controlled on return",
+      "unused actions after reveal stop"
+    ],
+    "tier_test_focus": "Legacy full task geometry preserved as the canonical medium benchmark variant.",
+    "coordination_demands": [
+      "pre-plan the return route before taking the objective",
+      "hand off or escort the carrier under pursuit",
+      "use guards, doors, and messages to maintain extraction tempo"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 3,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "cinder_hide",
+      "combat_role": "escort_guard",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "ward_circle",
+        "reveal_glyph"
+      ],
+      "combat_role": "route_control",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "###################\n#.......#.......E.#\n#.#####.#.#######.#\n#.#...#.#.....#...#\n#.#.G.D.###D###.###\n#.#...#.....#.....#\n#.###.#####.#..C..#\n#.....#...#.#.....#\n###D###.T.#.#######\n#.....#...#.......#\n#..B..D...###D###.#\n#.....#.......#...#\n#####.#######.#.I.#\n#.............#R..#\n###################",
+    "width": 19,
+    "height": 15
+  },
+  "objective": {
+    "type": "escort_relic_to_exit",
+    "item_id": "cinder_relic",
+    "escape_tile": [
+      16,
+      1
+    ],
+    "fragile": true
+  },
+  "hero_starts": [
+    [
+      15,
+      13
+    ],
+    [
+      14,
+      13
+    ],
+    [
+      13,
+      13
+    ]
+  ],
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "ember_blade"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "ember_blade"
+            },
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "relic_chamber": {
+      "name": "Relic Chamber",
+      "rect": [
+        14,
+        12,
+        17,
+        13
+      ],
+      "description": "The fragile relic starts near a brute. The carrier should not be abandoned.",
+      "tags": [
+        "start",
+        "objective",
+        "escort"
+      ]
+    },
+    "cinder_lane": {
+      "name": "Cinder Lane",
+      "rect": [
+        9,
+        9,
+        17,
+        11
+      ],
+      "description": "A long lane links the relic chamber to the exit route but exposes the carrier.",
+      "tags": [
+        "escort",
+        "combat"
+      ]
+    },
+    "trap_room": {
+      "name": "Trap Room",
+      "rect": [
+        7,
+        7,
+        9,
+        10
+      ],
+      "description": "A pressure plate blocks a short route; a dwarf scout can save time.",
+      "tags": [
+        "hazard"
+      ]
+    },
+    "western_guard": {
+      "name": "Western Guard Room",
+      "rect": [
+        1,
+        9,
+        6,
+        11
+      ],
+      "description": "A bone guard anchors the safer but longer route.",
+      "tags": [
+        "combat"
+      ]
+    },
+    "exit_gallery": {
+      "name": "Exit Gallery",
+      "rect": [
+        13,
+        1,
+        17,
+        3
+      ],
+      "description": "The exit flame can be reached if the group keeps the relic bearer moving.",
+      "tags": [
+        "escape"
+      ]
+    },
+    "supply_room": {
+      "name": "Cinder Supply Room",
+      "rect": [
+        13,
+        5,
+        17,
+        7
+      ],
+      "description": "A chest and broken fire shelves offer emergency help.",
+      "tags": [
+        "supply"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "cinder_shelf_1",
+      "name": "Cinder Shelf",
+      "category": "supply",
+      "pos": [
+        15,
+        6
+      ],
+      "deck": "supply",
+      "description": "Ash-covered supplies may help the relic carrier survive."
+    },
+    {
+      "id": "exit_brazier_1",
+      "name": "Exit Brazier",
+      "category": "escape",
+      "pos": [
+        15,
+        1
+      ],
+      "deck": "event",
+      "description": "The flame bends toward the relic when the carrier approaches."
+    },
+    {
+      "id": "guard_cache_1",
+      "name": "Guard Cache",
+      "category": "armory",
+      "pos": [
+        3,
+        10
+      ],
+      "deck": "artifact",
+      "description": "A cracked cache rests behind the western guard post."
+    }
+  ],
+  "decks": {
+    "supply": [
+      {
+        "id": "cooling_salve",
+        "name": "Cooling Salve",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.08
+      },
+      {
+        "id": "carrier_wrap",
+        "name": "Carrier Wrap",
+        "type": "artifact",
+        "item": "carrier_wrap",
+        "reward": 0.12
+      }
+    ],
+    "event": [
+      {
+        "id": "flame_surge",
+        "name": "Flame Surge",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "artifact": [
+      {
+        "id": "oath_shield",
+        "name": "Oath Shield",
+        "type": "artifact",
+        "item": "oath_shield",
+        "reward": 0.14
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "claim_cinder_relic",
+      "title": "Claim the Cinder Relic",
+      "description": "Pick up the fragile cinder relic.",
+      "reward": 0.3,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "keep_relic_bearer_alive",
+      "title": "Keep the Relic Bearer Alive",
+      "description": "Complete the dungeon without losing a submitted hero.",
+      "reward": 0.25,
+      "condition": {
+        "type": "all_heroes_survive_success"
+      }
+    },
+    {
+      "id": "open_exit_route",
+      "title": "Open the Exit Route",
+      "description": "Open any door after claiming the relic.",
+      "reward": 0.12,
+      "condition": {
+        "type": "door_opened"
+      }
+    },
+    {
+      "id": "search_cinder_supply",
+      "title": "Search Cinder Supplies",
+      "description": "Search an escort-support object.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "stabilize_carrier",
+      "title": "Stabilize the Carrier",
+      "description": "Find equipment that helps protect the relic bearer.",
+      "reward": 0.16,
+      "condition": {
+        "type": "inventory_contains",
+        "item": "carrier_wrap"
+      }
+    },
+    {
+      "id": "escape_with_cinder_relic",
+      "title": "Escape With the Cinder Relic",
+      "description": "Complete The Cinder Exit.",
+      "reward": 0.6,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The relic pulses; the exit flame glows brighter.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 2
+        }
+      ]
+    },
+    "family": "cinder_exit",
+    "tier": "medium",
+    "marl_axis": "extraction under pursuit"
+  },
+  "torch": 18,
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "cooperative extraction under pursuit",
+      "tags": [
+        "carrier_escort_and_rear-guard_handoff"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "pressure the declared MARL axis: cooperative extraction under pursuit"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ]
+  }
+}

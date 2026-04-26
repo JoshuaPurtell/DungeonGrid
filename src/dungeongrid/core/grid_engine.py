@@ -33,6 +33,9 @@ from .data import (
 )
 from .message_protocol import configure_message_state, normalize_protocol_config
 
+TIER_ORDER = ("pico", "lite", "medium", "heavy")
+TIER_BY_PARTY_SIZE = {1: "pico", 2: "lite", 3: "medium", 4: "heavy"}
+
 
 class GridEngine:
     """Loads quests, parses ASCII grids, computes visibility, and renders maps."""
@@ -40,22 +43,57 @@ class GridEngine:
     def __init__(self, quest_dir: str | Path | None = None) -> None:
         self.quest_dir = Path(quest_dir) if quest_dir else None
 
-    def available_quests(self) -> list[str]:
+    def available_quests(self, *, include_tiered: bool = False) -> list[str]:
         if self.quest_dir:
             return sorted(p.name for p in self.quest_dir.iterdir() if (p / "quest.json").exists())
         dungeon_pkg = resources.files("dungeongrid.dungeons")
-        return sorted(
+        quest_ids = sorted(
             p.name
             for p in dungeon_pkg.iterdir()
             if p.is_dir() and p.joinpath("quest.json").is_file()
         )
+        if include_tiered:
+            quest_ids = sorted({*quest_ids, *self.available_tiered_quests()})
+        return quest_ids
+
+    def available_tiered_quests(self) -> list[str]:
+        """Return bundled tiered base expansion quest ids."""
+        if self.quest_dir:
+            return []
+        base = resources.files("dungeongrid").joinpath("expansions", "base", "dungeons")
+        try:
+            if not base.is_dir():
+                return []
+            return sorted(
+                f"base:{family.name}:{tier}"
+                for family in base.iterdir()
+                if family.is_dir()
+                for tier in TIER_ORDER
+                if family.joinpath(tier, "quest.json").is_file()
+            )
+        except (FileNotFoundError, ModuleNotFoundError):
+            return []
 
     def load_quest_data(self, quest_id: str) -> dict[str, Any]:
+        quest_id = self._canonical_quest_id(quest_id)
         if self.quest_dir:
             path = self.quest_dir / quest_id / "quest.json"
             if not path.exists():
                 raise FileNotFoundError(f"Quest not found: {quest_id}")
             return json.loads(path.read_text(encoding="utf-8"))
+        if self._is_tiered_quest_id(quest_id):
+            _, family, tier = quest_id.split(":", 2)
+            try:
+                text = (
+                    resources.files("dungeongrid")
+                    .joinpath("expansions", "base", "dungeons", family, tier, "quest.json")
+                    .read_text(encoding="utf-8")
+                )
+                data = json.loads(text)
+                data["quest_id"] = quest_id
+                return data
+            except FileNotFoundError as exc:
+                raise FileNotFoundError(f"Quest not found: {quest_id}") from exc
         try:
             text = (
                 resources.files("dungeongrid.dungeons")
@@ -76,6 +114,7 @@ class GridEngine:
         communication_protocol: dict[str, Any] | None = None,
     ) -> GameState:
         rng = random.Random(seed)
+        quest_id = self._canonical_quest_id(quest_id, num_heroes=num_heroes)
         data = self.load_quest_data(quest_id)
         resolved_ruleset = self._resolve_ruleset(data, ruleset)
         ascii_map = data["map"]["ascii"]
@@ -317,6 +356,32 @@ class GridEngine:
         state.known_tiles.update(self.visible_tiles(state, agent_id="party"))
         self.update_revealed_rooms(state, reason="initial_visibility")
         return state
+
+    def _canonical_quest_id(self, quest_id: str, num_heroes: int | None = None) -> str:
+        if self.quest_dir:
+            return quest_id
+        if self._is_tiered_quest_id(quest_id):
+            return quest_id
+        tiered_families = self._tiered_families()
+        if quest_id.count(":") == 1:
+            family, tier = quest_id.split(":", 1)
+            if family in tiered_families and tier in TIER_ORDER:
+                return f"base:{family}:{tier}"
+        if quest_id.endswith("_lite"):
+            family = quest_id.removesuffix("_lite")
+            if family in tiered_families:
+                return f"base:{family}:lite"
+        if quest_id in tiered_families and num_heroes in TIER_BY_PARTY_SIZE:
+            return f"base:{quest_id}:{TIER_BY_PARTY_SIZE[int(num_heroes)]}"
+        return quest_id
+
+    def _tiered_families(self) -> set[str]:
+        return {quest_id.split(":", 2)[1] for quest_id in self.available_tiered_quests()}
+
+    @staticmethod
+    def _is_tiered_quest_id(quest_id: str) -> bool:
+        parts = quest_id.split(":")
+        return len(parts) == 3 and parts[0] == "base" and parts[2] in TIER_ORDER
 
     def _resolve_ruleset(
         self, data: dict[str, Any], ruleset: str | dict[str, Any] | None

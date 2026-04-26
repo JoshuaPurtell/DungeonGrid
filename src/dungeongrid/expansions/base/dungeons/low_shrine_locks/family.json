@@ -1,0 +1,251 @@
+{
+  "id": "low_shrine_locks",
+  "title": "Low Shrine Locks",
+  "metadata": {
+    "campaign_group": "base",
+    "maturity": "migration_draft",
+    "validation_status": "tier_migration_pending_review",
+    "objective_type": "retrieve_and_escape",
+    "marl_axis": "joint-action synchronization",
+    "marl_purpose": "Tests whether independently acting heroes can synchronize door, lock, and objective timing instead of greedily advancing alone.",
+    "coordination_skills": [
+      "announce lock/door intent before spending AP",
+      "hold positions until paired progress is possible",
+      "sequence search, open, and carry actions across separated lanes"
+    ],
+    "pressure_sources": [
+      "paired locks",
+      "separated lanes",
+      "door timing",
+      "minor sentries"
+    ],
+    "review_metrics": [
+      "same-round lock progress",
+      "messages before opens",
+      "doorway waits",
+      "split-party delay"
+    ],
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_hero_attribution"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 22,
+    "recommended_heroes": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "wizard"
+      ],
+      "2": [
+        "barbarian",
+        "wizard"
+      ],
+      "3": [
+        "barbarian",
+        "wizard",
+        "dwarf"
+      ]
+    },
+    "hero_loadouts": {
+      "barbarian": {
+        "weapon": "broad_sword",
+        "armor": "shrine_hide",
+        "combat_role": "frontline",
+        "items": [
+          "iron_ration"
+        ]
+      },
+      "wizard": {
+        "weapon": "rune_staff",
+        "spell_cards": [
+          "spark_lance",
+          "ward_circle",
+          "reveal_glyph"
+        ],
+        "combat_role": "caster",
+        "items": []
+      },
+      "elf": {
+        "weapon": "short_bow",
+        "spell_cards": [
+          "mend_wounds",
+          "blink_step"
+        ],
+        "combat_role": "runner",
+        "items": []
+      },
+      "dwarf": {
+        "weapon": "hand_axe",
+        "tool": "trap_kit",
+        "combat_role": "lock_specialist",
+        "items": [
+          "chalk_marks"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed",
+      "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+    },
+    "decks": {
+      "token": [
+        {
+          "id": "loose_shrine_token",
+          "name": "Loose Shrine Token",
+          "type": "artifact",
+          "item": "shrine_token",
+          "reward": 0.12
+        },
+        {
+          "id": "dusty_tally",
+          "name": "Dusty Tally",
+          "type": "treasure",
+          "item": "coin_cache",
+          "treasure": 1,
+          "reward": 0.08
+        },
+        {
+          "id": "ward_snap",
+          "name": "Ward Snap",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic_available": true,
+      "treasure_risk": {
+        "enabled": true,
+        "default_treasure_deck": true
+      },
+      "extraction": {
+        "enabled": true,
+        "allow_partial": true
+      },
+      "warden_dread": {
+        "enabled": true,
+        "max": 6
+      }
+    },
+    "role_selection": {
+      "required_roles_by_party_size": {
+        "1": [
+          "dwarf"
+        ],
+        "2": [
+          "dwarf"
+        ],
+        "3": [
+          "dwarf"
+        ]
+      }
+    },
+    "mechanics": {
+      "marl_contract": {
+        "axis": "joint-action synchronization",
+        "tags": [
+          "ready-check_and_simultaneous_activation"
+        ],
+        "core_failure_modes": [
+          "silent independent play",
+          "unclear role assignment",
+          "late extraction planning"
+        ]
+      },
+      "warden_policy": {
+        "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+        "pressure_budget_per_round": 1,
+        "preferred_tactics": [
+          "pressure unsynchronized lock attempts and exposed non-specialists"
+        ],
+        "forbidden_tactics": [
+          "spawn pressure without a visible or scripted cue",
+          "use unrevealed map geometry for perfect counterplay",
+          "erase the dungeon-specific lesson with generic monster spam"
+        ]
+      },
+      "classic_dynamic": {
+        "warden": "pressure unsynchronized lock attempts and exposed non-specialists",
+        "metric": "specialist_actions.dwarf_disarm",
+        "extraction": "partial extraction is allowed once the shrine objective is secured"
+      }
+    },
+    "randomized_chests": {
+      "contents": [
+        {
+          "type": "bundle",
+          "contents": [
+            "shrine_token",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "chain_mail"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "shield"
+            },
+            {
+              "type": "ambush"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "warden_runbook": {
+    "axis_pressure": "paired locks, separated lanes, door timing, minor sentries",
+    "fairness_notes": [
+      "Escalate pressure only after the relevant cue has been observable or communicated.",
+      "Preserve a counterplay route so failures identify coordination rather than impossible state."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "barbarian": [
+      "frontline",
+      "body_block",
+      "lane_hold"
+    ],
+    "wizard": [
+      "ranged_magic",
+      "rule_clues",
+      "warding"
+    ],
+    "elf": [
+      "scouting",
+      "ranged_cover",
+      "healing_support"
+    ],
+    "dwarf": [
+      "trap_disarm",
+      "secret_search",
+      "route_marking"
+    ]
+  },
+  "scripts": {
+    "family": "low_shrine_locks"
+  }
+}

@@ -1,0 +1,480 @@
+{
+  "quest_id": "base:iron_captive:lite",
+  "title": "Iron Captive Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "iron_captive",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "II",
+    "marl_axis": "escort/protection",
+    "coordination_type": "front-guard rear-guard rescue formation",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "escort",
+      "constraint_satisfaction",
+      "protect_specialist"
+    ],
+    "challenge_summary": "The objective behaves like a fragile dependency: rescue is not enough; extraction with formation matters.",
+    "dilemmas": [
+      "Breaking chains is fast but noisy",
+      "Picking the lock is safer but exposes the dwarf",
+      "The barbarian can guard or carry, not both"
+    ],
+    "coordination_problems": [
+      "Protect-the-specialist",
+      "Escort formation",
+      "Unlock timing",
+      "Rear-guard withdrawal"
+    ],
+    "warden_runbook": [
+      "Pressure the route and the unlocker",
+      "Do not cheaply kill the captive",
+      "Reward pre-clearing",
+      "Use the sentinel to force formation decisions"
+    ],
+    "lite_focus": "A four-room rescue with one captive marker, one lock/trap, and a sentinel guarding the return route.",
+    "monster_profile": [
+      "iron_sentinels"
+    ],
+    "room_count": 4,
+    "map_width": 11,
+    "map_height": 9,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "protect the specialist and captive while opening the route",
+    "classic_dynamic_warden_pressure": "pressure the rescue route and punish abandoning the specialist/captive lane",
+    "classic_dynamic_extraction_hook": "successful extraction should keep the rescue formation intact",
+    "size_tier": "lite",
+    "intended_num_heroes": 2,
+    "variant_family": "iron_captive",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "assign scout, escort, and rear-guard roles",
+      "body-block enemies without trapping the escorted unit",
+      "time objective movement with lane control"
+    ],
+    "pressure_sources": [
+      "fragile objective",
+      "intercepting guards",
+      "narrow corridors",
+      "rear pursuit"
+    ],
+    "review_metrics": [
+      "guard actions near carrier",
+      "distance from escort to carrier",
+      "damage absorbed before carrier",
+      "unsafe carrier moves"
+    ],
+    "tier_test_focus": "Small two-hero diagnostic for communication and first-order escort/protection coordination.",
+    "coordination_demands": [
+      "assign scout, escort, and rear-guard roles",
+      "body-block enemies without trapping the escorted unit",
+      "time objective movement with lane control"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "###########\n#E..D.....#\n#...#..C..#\n#...#.....#\n###D#D#####\n#..T#..I..#\n#..N#..N..#\n#...#.....#\n###########",
+    "width": 11,
+    "height": 9
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "iron_captive_keyring",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      5
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "healing",
+              "item": "healing_draught"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Iron Captive is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "upper_right": {
+      "name": "Upper Right",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "A compact pressure room isolates the challenge: escort and protection of constrained third-party state.",
+      "tags": [
+        "pressure"
+      ]
+    },
+    "lower_left": {
+      "name": "Lower Left",
+      "rect": [
+        1,
+        5,
+        3,
+        7
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    },
+    "lower_right": {
+      "name": "Lower Right",
+      "rect": [
+        5,
+        5,
+        9,
+        7
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "iron_captive_focus_1",
+      "name": "Iron Chain Lock",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for escort and protection of constrained third-party state. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "escort",
+        "constraint_satisfaction"
+      ]
+    },
+    {
+      "id": "iron_captive_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        8,
+        3
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    },
+    {
+      "id": "iron_captive_support_1",
+      "name": "Support Marker",
+      "category": "supply",
+      "pos": [
+        8,
+        7
+      ],
+      "deck": "supply",
+      "description": "A small support object that makes the non-damaging coordination action visible in transcript review.",
+      "traits": [
+        "support",
+        "coordination"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "iron_captive_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "iron_captive_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "iron_captive_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "iron_captive_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "iron_captive_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "iron_captive_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains escort and protection of constrained third-party state.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "iron_captive_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up iron_captive_keyring.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Iron Captive Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "A four-room rescue with one captive marker, one lock/trap, and a sentinel guarding the return route.",
+    "warden_style": "front-guard rear-guard rescue formation",
+    "marl_axis": "escort/protection",
+    "family": "iron_captive",
+    "tier": "lite"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "escort and protection of constrained third-party state",
+      "tags": [
+        "escort",
+        "constraint_satisfaction",
+        "protect_specialist",
+        "formation"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "captive_mode": "described",
+      "unlock_options": [
+        "disarm",
+        "attack_object",
+        "interact"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Pressure the route and the unlocker",
+        "Do not cheaply kill the captive",
+        "Reward pre-clearing",
+        "pressure the rescue route and punish abandoning the specialist/captive lane"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    },
+    "classic_dynamic": {
+      "warden": "pressure the rescue route and punish abandoning the specialist/captive lane",
+      "metric": "rescue_actions and specialist_actions",
+      "extraction": "successful extraction should keep the rescue formation intact"
+    }
+  },
+  "torch": 12,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "bosses": {
+    "iron_sentinel_1": {
+      "name": "Chain Sentinel",
+      "public_summary": "Lite boss for escort and protection of constrained third-party state; it should test coordination before raw damage.",
+      "counterplay_hint": "Search the focus object and coordinate roles before committing to damage.",
+      "defeat_reward": 0.16,
+      "defeat_description": "Defeat Chain Sentinel after using the lite challenge's coordination lesson."
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ]
+  }
+}

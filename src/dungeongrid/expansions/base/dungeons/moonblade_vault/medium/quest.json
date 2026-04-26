@@ -1,0 +1,602 @@
+{
+  "quest_id": "base:moonblade_vault:medium",
+  "title": "Moonblade Vault",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "batch_d",
+    "quest_role": "artifact_retrieval",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "alarm",
+      "boss",
+      "pursuit",
+      "loop_route"
+    ],
+    "hazard_profile": "moderate",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "cultists",
+      "brute",
+      "wight"
+    ],
+    "warden_pressure": "high",
+    "post_objective_escalation": "severe",
+    "route_structure": "retreat_loop",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": true,
+    "best_party_sizes": [
+      "duo",
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 7,
+    "global_progress_hooks": [
+      "doors",
+      "furniture",
+      "inventory",
+      "traps",
+      "combat",
+      "objective_pickup",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "alarm_control",
+      "hazard_discovery",
+      "post_objective_escalation",
+      "pre_objective_plan",
+      "pressure_management"
+    ],
+    "primary_score_emphasis": [
+      "objective",
+      "survival",
+      "artifact"
+    ],
+    "reward_density": "medium",
+    "map_width": 17,
+    "map_height": 15,
+    "room_count": 7,
+    "door_count": 11,
+    "trap_count": 2,
+    "chest_count": 2,
+    "furniture_count": 4,
+    "initial_monster_count": 6,
+    "has_secret_doors": false,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true,
+    "marl_axis": "specialist sequencing and greed control",
+    "coordination_type": "scout-disarm-handoff",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "assign scout, disarm, and handoff roles before taking the vault item",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: heterogeneous role-task assignment",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured",
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      1,
+      3
+    ],
+    "variant_family": "moonblade_vault",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "wait for the specialist before opening vault hazards",
+      "announce optional loot before taking it",
+      "protect the key or blade carrier on exit"
+    ],
+    "pressure_sources": [
+      "vault locks",
+      "secret routes",
+      "optional treasure",
+      "carrier pursuit"
+    ],
+    "review_metrics": [
+      "specialist actions before vault open",
+      "treasure detours",
+      "carrier protection",
+      "messages before cache interactions"
+    ],
+    "tier_test_focus": "Legacy full task geometry preserved as the canonical medium benchmark variant.",
+    "coordination_demands": [
+      "wait for the specialist before opening vault hazards",
+      "announce optional loot before taking it",
+      "protect the key or blade carrier on exit"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 3,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "ward_circle",
+        "moon_reading"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "quiet_step"
+      ],
+      "combat_role": "skirmisher",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#################\n#E....D.........#\n#.###.###D###.C.#\n#...#.#..K..#...#\n#G..D.#.....D...#\n#...#.#..T..#.###\n###D#.###D###...#\n#...#.....#.....#\n#.T.D..B..D..I.R#\n#...#.....#.....#\n#.###D#####.###.#\n#.....#...#.....#\n#.C...D.G.D..L..#\n#.....#...#.....#\n#################",
+    "width": 17,
+    "height": 15
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "moonblade",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "bundle",
+      "contents": [
+        "moon_key",
+        {
+          "type": "table",
+          "entries": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chest_2": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "weapon",
+          "item": "ember_blade"
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "ember_blade"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "vault_entry": {
+      "name": "Vault Entry",
+      "rect": [
+        1,
+        1,
+        15,
+        2
+      ],
+      "description": "The entry stones are pale and clean, as if the vault has no patience for footprints.",
+      "tags": [
+        "start",
+        "artifact"
+      ]
+    },
+    "left_blade_niche": {
+      "name": "Left Blade Niche",
+      "rect": [
+        1,
+        3,
+        5,
+        6
+      ],
+      "description": "A skitterling patrols old practice niches along the first vault wall.",
+      "tags": [
+        "combat",
+        "search"
+      ]
+    },
+    "moon_archive": {
+      "name": "Moon Archive",
+      "rect": [
+        7,
+        3,
+        12,
+        6
+      ],
+      "description": "A cultist guards moon-phase notes and a trapped reading floor.",
+      "tags": [
+        "lore",
+        "hazard",
+        "alarm"
+      ]
+    },
+    "upper_reliquary": {
+      "name": "Upper Reliquary",
+      "rect": [
+        13,
+        1,
+        15,
+        5
+      ],
+      "description": "A small reliquary holds the moon key and tempting decoys.",
+      "tags": [
+        "treasure",
+        "optional"
+      ]
+    },
+    "silver_crossing": {
+      "name": "Silver Crossing",
+      "rect": [
+        1,
+        7,
+        11,
+        9
+      ],
+      "description": "The central crossing is trapped and guarded, making carrier planning matter early.",
+      "tags": [
+        "hazard",
+        "combat",
+        "coordination"
+      ]
+    },
+    "moonblade_chapel": {
+      "name": "Moonblade Chapel",
+      "rect": [
+        12,
+        7,
+        15,
+        10
+      ],
+      "description": "The moonblade waits beside a brute and a pale watcher in the lower vault.",
+      "tags": [
+        "objective",
+        "boss",
+        "artifact"
+      ]
+    },
+    "lower_silver_loop": {
+      "name": "Lower Silver Loop",
+      "rect": [
+        1,
+        11,
+        15,
+        13
+      ],
+      "description": "The lower loop offers a guarded retreat path for whoever carries the blade.",
+      "tags": [
+        "loop",
+        "escape",
+        "combat"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "moon_phase_table_1",
+      "name": "Moon Phase Table",
+      "category": "lore",
+      "pos": [
+        9,
+        4
+      ],
+      "deck": "moon",
+      "description": "A phase table lists which bearer can safely lift the blade."
+    },
+    {
+      "id": "reliquary_case_1",
+      "name": "Reliquary Case",
+      "category": "treasure",
+      "pos": [
+        14,
+        2
+      ],
+      "deck": "reliquary",
+      "description": "A white case contains a moon key and several dull replicas."
+    },
+    {
+      "id": "blade_plinth_1",
+      "name": "Blade Plinth",
+      "category": "altar",
+      "pos": [
+        14,
+        8
+      ],
+      "deck": "event",
+      "description": "Moonlight pools around the blade without any window overhead."
+    },
+    {
+      "id": "silver_route_marker_1",
+      "name": "Silver Route Marker",
+      "category": "lore",
+      "pos": [
+        3,
+        12
+      ],
+      "deck": "moon",
+      "description": "A route marker describes how the old guardians escorted the blade."
+    }
+  ],
+  "decks": {
+    "moon": [
+      {
+        "id": "bearer_oath",
+        "name": "Bearer Oath",
+        "type": "artifact",
+        "item": "bearer_oath",
+        "reward": 0.16
+      },
+      {
+        "id": "wrong_phase",
+        "name": "Wrong Phase",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "reliquary": [
+      {
+        "id": "moon_key",
+        "name": "Moon Key",
+        "type": "artifact",
+        "item": "moon_key",
+        "reward": 0.15
+      },
+      {
+        "id": "silver_chips",
+        "name": "Silver Chips",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.1
+      }
+    ],
+    "event": [
+      {
+        "id": "blade_ring",
+        "name": "Blade Ring",
+        "type": "event",
+        "alert": 2,
+        "reward": -0.05
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "open_moon_vault",
+      "title": "Open the Moon Vault",
+      "description": "Open the first moon-vault gate.",
+      "reward": 0.12,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "read_bearer_oath",
+      "title": "Read the Bearer Oath",
+      "description": "Search a moon-vault lore object.",
+      "reward": 0.1,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "recover_moon_key",
+      "title": "Recover the Moon Key",
+      "description": "Find the moon key.",
+      "reward": 0.16,
+      "condition": {
+        "type": "inventory_contains",
+        "item": "moon_key"
+      }
+    },
+    {
+      "id": "reveal_silver_trap",
+      "title": "Reveal a Silver Trap",
+      "description": "Reveal one vault hazard.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trap_revealed"
+      }
+    },
+    {
+      "id": "defeat_blade_guard",
+      "title": "Defeat the Blade Guard",
+      "description": "Defeat the brute guarding the moonblade.",
+      "reward": 0.22,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "crypt_brute"
+      }
+    },
+    {
+      "id": "take_moonblade",
+      "title": "Take the Moonblade",
+      "description": "Pick up the moonblade.",
+      "reward": 0.36,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_with_moonblade",
+      "title": "Escape With the Moonblade",
+      "description": "Return to the entry with the moonblade.",
+      "reward": 0.74,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The moonblade sings once. Every guardian hears the chosen bearer.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 3
+        },
+        {
+          "type": "spawn",
+          "monster": "lantern_wight",
+          "pos": [
+            10,
+            4
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 24,
+    "alert_reinforcement_threshold": 5,
+    "family": "moonblade_vault",
+    "tier": "medium",
+    "marl_axis": "specialist sequencing and greed control"
+  },
+  "torch": 21,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "heterogeneous role-task assignment",
+      "tags": [
+        "scout-disarm-handoff"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "pressure the declared MARL axis: heterogeneous role-task assignment"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ]
+  }
+}

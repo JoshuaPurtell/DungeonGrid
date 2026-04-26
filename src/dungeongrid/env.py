@@ -319,7 +319,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 reveal_reason = "turn_ended"
                 break
 
-            before = self._reveal_snapshot()
+            before = self._reveal_snapshot(resolved_agent)
             step = self.step(action, agent_id=resolved_agent, _record_action_stats=False)
             total_reward += step.reward
             plan_new_achievements.extend(step.info.get("new_achievements", []))
@@ -336,7 +336,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 continue
 
             executed_actions.append(dict(action))
-            after = self._reveal_snapshot()
+            after = self._reveal_snapshot(resolved_agent)
             reveal_reason = self._reveal_reason(action, before, after)
             if reveal_reason:
                 unused_actions.extend(submitted_actions[index + 1 :])
@@ -893,6 +893,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "objective_instruction": self._objective_instruction(),
             "escape_instruction": self._escape_instruction(),
             "party_messages": protocol_from_state(state).visible_messages(state, agent_id)[-10:],
+            "party_message_history": protocol_from_state(state).visible_messages(state, agent_id),
             "communication_protocol": dict(state.communication_protocol),
             "message_metrics": self._public_message_metrics(state.message_metrics),
             "invalid_feedback": self._invalid_feedback_for_agent(agent_id)[-5:],
@@ -1276,12 +1277,33 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             tiles.append(row)
         return tiles
 
-    def _reveal_snapshot(self) -> dict[str, Any]:
+    def _reveal_snapshot(self, agent_id: str | None = None) -> dict[str, Any]:
         state = self._require_state()
+        visible_tiles = self.grid.visible_tiles(state, agent_id) if agent_id else set()
+        visible_enemies = {
+            monster_id
+            for monster_id, monster in state.monsters.items()
+            if monster.alive and (not agent_id or monster.pos in visible_tiles)
+        }
+        visible_traps = {
+            trap_id
+            for trap_id, trap in state.traps.items()
+            if trap.revealed and trap.armed and (not agent_id or trap.pos in visible_tiles)
+        }
+        visible_objective = (
+            state.objective.pos is not None
+            and bool(visible_tiles)
+            and state.objective.pos in visible_tiles
+            and state.objective.carrier is None
+            and not state.objective.recovered
+        )
         return {
             "active_agent": state.active_agent(),
             "phase": state.phase,
             "done": state.done,
+            "visible_enemies": sorted(visible_enemies),
+            "visible_traps": sorted(visible_traps),
+            "visible_objective": visible_objective,
             "doors": {
                 door_id: {"state": door.state, "discovered": door.discovered}
                 for door_id, door in state.doors.items()
@@ -1352,10 +1374,14 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
     ) -> str | None:
         if after["done"] and not before["done"]:
             return "episode_done"
+        if set(before.get("visible_enemies", [])) != set(after.get("visible_enemies", [])):
+            return "enemy_visibility_changed"
+        if set(before.get("visible_traps", [])) != set(after.get("visible_traps", [])):
+            return "trap_visibility_changed"
+        if before.get("visible_objective") != after.get("visible_objective"):
+            return "objective_visibility_changed"
         for door_id, before_door in before["doors"].items():
             after_door = after["doors"].get(door_id, {})
-            if before_door.get("state") == "closed" and after_door.get("state") == "open":
-                return "door_opened"
             if not before_door.get("discovered") and after_door.get("discovered"):
                 return "secret_revealed"
         for trap_id, before_trap in before["traps"].items():

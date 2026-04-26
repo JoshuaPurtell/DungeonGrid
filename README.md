@@ -97,6 +97,17 @@ dungeons/<dungeon_id>/
 
 `quest.json` defines the map, rooms, objective, decks, furniture, monsters, bosses, scripts, and achievements. `hooks.py` is optional Python for bespoke trigger/effect behavior.
 
+The bundled base expansion also exposes each dungeon family at four size tiers:
+
+```text
+base:<family>:pico    # 1 hero
+base:<family>:lite    # 2 heroes
+base:<family>:medium  # 3 heroes
+base:<family>:heavy   # 4 heroes
+```
+
+Legacy family IDs auto-select a tier by party size during `reset`, so `quest_id="lantern_crypt", num_heroes=1` runs `base:lantern_crypt:pico`, while `num_heroes=4` runs `base:lantern_crypt:heavy`. Legacy `_lite` IDs resolve to the `lite` tier.
+
 ## Benchmark Protocol
 
 DungeonGrid includes default AP-mode suites plus the opt-in `classic_dynamic` suite:
@@ -106,6 +117,7 @@ DungeonGrid includes default AP-mode suites plus the opt-in `classic_dynamic` su
 | `DG-Solo-20` | 20 full dungeons | default AP mode | one hero, no specialist hard gates |
 | `DG-Coop-20` | 20 full dungeons | default AP mode | two to four heroes |
 | `DG-Lite-20` | 20 lite diagnostics | default or `classic_dynamic` | short MARL probes |
+| `DG-Tiered-80` | 20 families x pico/lite/medium/heavy | default or `classic_dynamic` | explicit size-tier probes |
 | `DG-ClassicDynamic-20` | 20 full dungeons | `ruleset="classic_dynamic"` | roll-to-move, major actions, dread, extraction, role requirements |
 | `DG-OpenEnv-ReAct` | full or lite | selected by config | queued JSON plans with reveal-boundary replanning |
 | `DG-ReAct-Warden` | full or lite | selected by config | hero ReAct plus private bounded ReAct Warden |

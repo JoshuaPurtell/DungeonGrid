@@ -1,0 +1,206 @@
+{
+  "id": "bells_under_blackwater",
+  "title": "Bells Under Blackwater",
+  "metadata": {
+    "campaign_group": "base",
+    "maturity": "migration_draft",
+    "validation_status": "tier_migration_pending_review",
+    "objective_type": "retrieve_and_escape",
+    "marl_axis": "shared global externality",
+    "marl_purpose": "Tests whether individual local actions account for a global shared cost such as ringing bells, alert, or flood pressure.",
+    "coordination_skills": [
+      "announce actions that raise shared danger",
+      "budget global alert/flood risk across the team",
+      "choose collective safety over local action value"
+    ],
+    "pressure_sources": [
+      "shared alert budget",
+      "bell/flood triggers",
+      "remote consequences",
+      "optional loot"
+    ],
+    "review_metrics": [
+      "global alert increments",
+      "warnings before risky actions",
+      "risk-causing hero distribution",
+      "route changes after externality"
+    ],
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_hero_attribution"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 18,
+    "recommended_heroes": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "wizard"
+      ],
+      "2": [
+        "barbarian",
+        "wizard"
+      ],
+      "3": [
+        "barbarian",
+        "wizard",
+        "dwarf"
+      ]
+    },
+    "hero_loadouts": {
+      "barbarian": {
+        "weapon": "notched_sword",
+        "armor": "river_hide",
+        "combat_role": "frontline",
+        "items": [
+          "iron_ration"
+        ]
+      },
+      "wizard": {
+        "weapon": "reed_staff",
+        "spell_cards": [
+          "spark_lance",
+          "silence",
+          "ward_circle"
+        ],
+        "combat_role": "caster",
+        "items": []
+      },
+      "elf": {
+        "weapon": "short_bow",
+        "spell_cards": [
+          "mend_wounds",
+          "blink_step"
+        ],
+        "combat_role": "scout",
+        "items": []
+      },
+      "dwarf": {
+        "weapon": "hand_axe",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "chalk_marks"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed",
+      "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+    },
+    "decks": {
+      "event": [
+        {
+          "id": "bell_misstrike",
+          "name": "Bell Misstrike",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03
+        },
+        {
+          "id": "quiet_rope",
+          "name": "Quiet Rope",
+          "type": "spell",
+          "item": "quiet_step",
+          "reward": 0.12
+        },
+        {
+          "id": "hush_notation",
+          "name": "Hush Notation",
+          "type": "spell",
+          "item": "silence",
+          "reward": 0.1
+        }
+      ],
+      "artifact": [
+        {
+          "id": "muted_clapper",
+          "name": "Muted Clapper",
+          "type": "artifact",
+          "item": "muted_clapper",
+          "reward": 0.14
+        },
+        {
+          "id": "bell_hush_phrase",
+          "name": "Bell Hush Phrase",
+          "type": "spell",
+          "item": "quiet_step",
+          "reward": 0.12
+        }
+      ],
+      "supply": [
+        {
+          "id": "dry_draught",
+          "name": "Dry Healing Draught",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic_available": true
+    },
+    "mechanics": {
+      "marl_contract": {
+        "axis": "shared global externality management",
+        "tags": [
+          "team_alert-budget_discipline"
+        ],
+        "core_failure_modes": [
+          "silent independent play",
+          "unclear role assignment",
+          "late extraction planning"
+        ]
+      },
+      "warden_policy": {
+        "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+        "pressure_budget_per_round": 1,
+        "preferred_tactics": [
+          "pressure the declared MARL axis: shared global externality management"
+        ],
+        "forbidden_tactics": [
+          "spawn pressure without a visible or scripted cue",
+          "use unrevealed map geometry for perfect counterplay",
+          "erase the dungeon-specific lesson with generic monster spam"
+        ]
+      }
+    }
+  },
+  "warden_runbook": {
+    "axis_pressure": "shared alert budget, bell/flood triggers, remote consequences, optional loot",
+    "fairness_notes": [
+      "Escalate pressure only after the relevant cue has been observable or communicated.",
+      "Preserve a counterplay route so failures identify coordination rather than impossible state."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "barbarian": [
+      "frontline",
+      "body_block",
+      "lane_hold"
+    ],
+    "wizard": [
+      "ranged_magic",
+      "rule_clues",
+      "warding"
+    ],
+    "elf": [
+      "scouting",
+      "ranged_cover",
+      "healing_support"
+    ],
+    "dwarf": [
+      "trap_disarm",
+      "secret_search",
+      "route_marking"
+    ]
+  },
+  "scripts": {
+    "family": "bells_under_blackwater"
+  }
+}

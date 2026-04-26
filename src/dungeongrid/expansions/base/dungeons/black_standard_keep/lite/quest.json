@@ -1,0 +1,478 @@
+{
+  "quest_id": "base:black_standard_keep:lite",
+  "title": "Black Standard Keep Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "black_standard_keep",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "III",
+    "marl_axis": "lane assignment under fortress pressure",
+    "coordination_type": "threshold control against a tactical defender",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "opponent_modeling",
+      "nonstationarity",
+      "formation"
+    ],
+    "challenge_summary": "The heroes must coordinate door timing and target priority against Warden as a tactical ReAct defender.",
+    "dilemmas": [
+      "Waiting gives defenders time to form a line",
+      "Rushing creates crossfire",
+      "The standard can be searched for reward or destroyed for tempo"
+    ],
+    "coordination_problems": [
+      "Breach order",
+      "Frontline/backline spacing",
+      "Shared target focus",
+      "Adversarial tempo control"
+    ],
+    "warden_runbook": [
+      "Hold thresholds",
+      "Retreat wounded guards behind the sentinel",
+      "Punish multiple open fronts",
+      "Do not suicide defenders into obvious kill zones"
+    ],
+    "lite_focus": "Four-room keep: two doors, one rally object, one sentinel, and a clear test of whether agents avoid opening both fronts.",
+    "monster_profile": [
+      "iron_sentinels"
+    ],
+    "room_count": 4,
+    "map_width": 11,
+    "map_height": 9,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "hold doors and avoid feeding the Warden multiple open fronts",
+    "classic_dynamic_warden_pressure": "use thresholds, guards, and dread to punish bad breach order",
+    "classic_dynamic_extraction_hook": "objective extraction tests whether the breach lane stays open",
+    "size_tier": "lite",
+    "intended_num_heroes": 2,
+    "variant_family": "black_standard_keep",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "assign lanes before opening fortress doors",
+      "collapse to a rally point when pressure spikes",
+      "share status updates across separated rooms"
+    ],
+    "pressure_sources": [
+      "fortress doors",
+      "multi-lane guards",
+      "alarm cultists",
+      "optional cache detours"
+    ],
+    "review_metrics": [
+      "lane coverage",
+      "messages after new room reveal",
+      "turns isolated",
+      "alarm/alert growth"
+    ],
+    "tier_test_focus": "Small two-hero diagnostic for communication and first-order lane assignment under fortress pressure coordination.",
+    "coordination_demands": [
+      "assign lanes before opening fortress doors",
+      "collapse to a rally point when pressure spikes",
+      "share status updates across separated rooms"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step",
+        "quiet_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    }
+  },
+  "map": {
+    "ascii": "###########\n#E..D.....#\n#...#..C..#\n#...#.....#\n###D#D#####\n#..T#..I..#\n#..N#..N..#\n#...#.....#\n###########",
+    "width": 11,
+    "height": 9
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "black_standard_token",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      5
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "healing",
+              "item": "healing_draught"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Black Standard Keep is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "upper_right": {
+      "name": "Upper Right",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "A compact pressure room isolates the challenge: opponent-aware breach sequencing.",
+      "tags": [
+        "pressure"
+      ]
+    },
+    "lower_left": {
+      "name": "Lower Left",
+      "rect": [
+        1,
+        5,
+        3,
+        7
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    },
+    "lower_right": {
+      "name": "Lower Right",
+      "rect": [
+        5,
+        5,
+        9,
+        7
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "black_standard_keep_focus_1",
+      "name": "Black Standard",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for opponent-aware breach sequencing. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "opponent_modeling",
+        "nonstationarity"
+      ]
+    },
+    {
+      "id": "black_standard_keep_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        8,
+        3
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    },
+    {
+      "id": "black_standard_keep_support_1",
+      "name": "Support Marker",
+      "category": "supply",
+      "pos": [
+        8,
+        7
+      ],
+      "deck": "supply",
+      "description": "A small support object that makes the non-damaging coordination action visible in transcript review.",
+      "traits": [
+        "support",
+        "coordination"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "black_standard_keep_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "black_standard_keep_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "black_standard_keep_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "black_standard_keep_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "black_standard_keep_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "black_standard_keep_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains opponent-aware breach sequencing.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "black_standard_keep_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up black_standard_token.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Black Standard Keep Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "Four-room keep: two doors, one rally object, one sentinel, and a clear test of whether agents avoid opening both fronts.",
+    "warden_style": "threshold control against a tactical defender",
+    "marl_axis": "lane assignment under fortress pressure",
+    "family": "black_standard_keep",
+    "tier": "lite"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "opponent-aware breach sequencing",
+      "tags": [
+        "opponent_modeling",
+        "nonstationarity",
+        "formation",
+        "breach"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "rally_anchor": "black_standard_1",
+      "warden_style": "threshold_defender"
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Hold thresholds",
+        "Retreat wounded guards behind the sentinel",
+        "Punish multiple open fronts",
+        "use thresholds, guards, and dread to punish bad breach order"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    },
+    "classic_dynamic": {
+      "warden": "use thresholds, guards, and dread to punish bad breach order",
+      "metric": "doorway_hold_turns and split_party_rounds",
+      "extraction": "objective extraction tests whether the breach lane stays open"
+    }
+  },
+  "torch": 12,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "bosses": {
+    "iron_sentinel_1": {
+      "name": "Standard Sentinel",
+      "public_summary": "Lite boss for opponent-aware breach sequencing; it should test coordination before raw damage.",
+      "counterplay_hint": "Search the focus object and coordinate roles before committing to damage.",
+      "defeat_reward": 0.16,
+      "defeat_description": "Defeat Standard Sentinel after using the lite challenge's coordination lesson."
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ]
+  }
+}

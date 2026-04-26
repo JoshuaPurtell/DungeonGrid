@@ -31,6 +31,15 @@ This document defines the stable benchmark surfaces for DungeonGrid.
 - Interface: structured JSON action plans with reveal-boundary interruption.
 - Ruleset: default AP mode unless the run name explicitly includes `classic_dynamic`.
 
+### DG-Tiered-80
+
+- Quests: `base:<family>:pico`, `base:<family>:lite`, `base:<family>:medium`, and `base:<family>:heavy` for all 20 bundled families.
+- Heroes: 1 for `pico`, 2 for `lite`, 3 for `medium`, and 4 for `heavy`.
+- Seeds: 0-9.
+- Step limit: 120 for `pico`/`lite`, 300 for `medium`/`heavy`.
+- Interface: structured JSON action plans with reveal-boundary interruption.
+- Ruleset: default AP mode unless the run name explicitly includes `classic_dynamic`.
+
 ### DG-ClassicDynamic-20
 
 - Quests: the 20 bundled full dungeons.

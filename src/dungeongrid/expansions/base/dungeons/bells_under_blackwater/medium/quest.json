@@ -1,0 +1,589 @@
+{
+  "quest_id": "base:bells_under_blackwater:medium",
+  "title": "Bells Under Blackwater",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "original_5",
+    "quest_role": "alarm_assault",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "alarm",
+      "pursuit"
+    ],
+    "hazard_profile": "light",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "cultists"
+    ],
+    "warden_pressure": "high",
+    "post_objective_escalation": "moderate",
+    "route_structure": "branching_corridors",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": false,
+    "best_party_sizes": [
+      "duo",
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 7,
+    "global_progress_hooks": [
+      "rooms",
+      "combat",
+      "objective_pickup",
+      "furniture",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "alarm_control",
+      "hazard_discovery",
+      "post_objective_escalation",
+      "pressure_management"
+    ],
+    "primary_score_emphasis": [
+      "objective",
+      "alarm_management",
+      "combat"
+    ],
+    "reward_density": "medium",
+    "map_width": 19,
+    "map_height": 15,
+    "room_count": 6,
+    "door_count": 6,
+    "trap_count": 1,
+    "chest_count": 1,
+    "furniture_count": 3,
+    "initial_monster_count": 4,
+    "has_secret_doors": false,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true,
+    "marl_axis": "shared global externality",
+    "coordination_type": "team alert-budget discipline",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "coordinate quiet actions before bell pressure escalates",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: shared global externality management",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured",
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      1,
+      3
+    ],
+    "variant_family": "bells_under_blackwater",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "announce actions that raise shared danger",
+      "budget global alert/flood risk across the team",
+      "choose collective safety over local action value"
+    ],
+    "pressure_sources": [
+      "shared alert budget",
+      "bell/flood triggers",
+      "remote consequences",
+      "optional loot"
+    ],
+    "review_metrics": [
+      "global alert increments",
+      "warnings before risky actions",
+      "risk-causing hero distribution",
+      "route changes after externality"
+    ],
+    "tier_test_focus": "Legacy full task geometry preserved as the canonical medium benchmark variant.",
+    "coordination_demands": [
+      "announce actions that raise shared danger",
+      "budget global alert/flood risk across the team",
+      "choose collective safety over local action value"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 3,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "notched_sword",
+      "armor": "river_hide",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "reed_staff",
+      "spell_cards": [
+        "spark_lance",
+        "silence",
+        "ward_circle"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "###################\n#E......#.........#\n###D#####.#######.#\n#.......#.#.....#.#\n#..G....D.#..K..#.#\n#.......#.#..I..#.#\n#####.###.###D###.#\n#...#.....#.......#\n#...#..T..D..B....#\n#...#.....#.......#\n#...###D#########.#\n#.....#...........#\n#..C..D.....G.....#\n#.....#...........#\n###################",
+    "width": 19,
+    "height": 15
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "bell_clapper_shard",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "crossbow"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "crossbow"
+            },
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "landing": {
+      "name": "Blackwater Landing",
+      "rect": [
+        1,
+        1,
+        7,
+        1
+      ],
+      "description": "Wet stone steps lead into a hall where distant bells pulse through the floor.",
+      "tags": [
+        "start"
+      ]
+    },
+    "flooded_watch": {
+      "name": "Flooded Watch Room",
+      "rect": [
+        1,
+        3,
+        7,
+        5
+      ],
+      "description": "A skitterling patrol circles a half-submerged bell rope.",
+      "tags": [
+        "combat",
+        "alarm"
+      ]
+    },
+    "bell_rite": {
+      "name": "Bell Rite Cell",
+      "rect": [
+        11,
+        3,
+        15,
+        5
+      ],
+      "description": "A gloom cultist tends the shard. If left alone, the alarm will call reinforcements.",
+      "tags": [
+        "objective",
+        "alarm"
+      ]
+    },
+    "sump_crossing": {
+      "name": "Sump Crossing",
+      "rect": [
+        11,
+        7,
+        17,
+        9
+      ],
+      "description": "A trap and a bone guard make this crossing safer with a scout report and dwarf support.",
+      "tags": [
+        "hazard",
+        "combat"
+      ]
+    },
+    "supply_cove": {
+      "name": "Supply Cove",
+      "rect": [
+        1,
+        11,
+        6,
+        13
+      ],
+      "description": "A sealed locker sits above the waterline, likely holding emergency supplies.",
+      "tags": [
+        "treasure",
+        "healing"
+      ]
+    },
+    "lower_channel": {
+      "name": "Lower Channel",
+      "rect": [
+        7,
+        11,
+        17,
+        13
+      ],
+      "description": "The channel echoes loudly; splitting the party here risks isolated fights.",
+      "tags": [
+        "coordination"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "bell_rope_1",
+      "name": "Frayed Bell Rope",
+      "category": "alarm",
+      "pos": [
+        4,
+        4
+      ],
+      "deck": "event",
+      "description": "The rope hums with the same rhythm as the distant bell.",
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "spell",
+            "item": "quiet_step",
+            "reward": 0.1
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ]
+      }
+    },
+    {
+      "id": "rite_table_1",
+      "name": "Rite Table",
+      "category": "ritual",
+      "pos": [
+        13,
+        5
+      ],
+      "deck": "artifact",
+      "description": "Waterproof notes and a shard clamp cover the table.",
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "spell",
+            "item": "silence",
+            "reward": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "supply_locker_1",
+      "name": "Supply Locker",
+      "category": "supply",
+      "pos": [
+        3,
+        12
+      ],
+      "deck": "supply",
+      "description": "A rusted locker is wedged above the blackwater line."
+    }
+  ],
+  "decks": {
+    "event": [
+      {
+        "id": "bell_misstrike",
+        "name": "Bell Misstrike",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      },
+      {
+        "id": "quiet_rope",
+        "name": "Quiet Rope",
+        "type": "spell",
+        "item": "quiet_step",
+        "reward": 0.12
+      },
+      {
+        "id": "hush_notation",
+        "name": "Hush Notation",
+        "type": "spell",
+        "item": "silence",
+        "reward": 0.1
+      }
+    ],
+    "artifact": [
+      {
+        "id": "muted_clapper",
+        "name": "Muted Clapper",
+        "type": "artifact",
+        "item": "muted_clapper",
+        "reward": 0.14
+      },
+      {
+        "id": "bell_hush_phrase",
+        "name": "Bell Hush Phrase",
+        "type": "spell",
+        "item": "quiet_step",
+        "reward": 0.12
+      }
+    ],
+    "supply": [
+      {
+        "id": "dry_draught",
+        "name": "Dry Healing Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.08
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "enter_blackwater_halls",
+      "title": "Enter the Blackwater Halls",
+      "description": "Reveal the first room beyond the entrance.",
+      "reward": 0.12,
+      "condition": {
+        "type": "rooms_explored_at_least",
+        "count": 2
+      }
+    },
+    {
+      "id": "silence_a_cultist",
+      "title": "Silence a Bell Keeper",
+      "description": "Defeat a gloom cultist before the shard is recovered.",
+      "reward": 0.18,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "gloom_cultist"
+      }
+    },
+    {
+      "id": "recover_bell_clapper_shard",
+      "title": "Recover the Bell Clapper Shard",
+      "description": "Pick up the bell clapper shard objective.",
+      "reward": 0.3,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "step_under_the_bells",
+      "title": "Step Under the Bells",
+      "description": "Use quiet_step to avoid bell pressure.",
+      "reward": 0.12,
+      "condition": {
+        "type": "spell_used",
+        "spell": "quiet_step"
+      }
+    },
+    {
+      "id": "silence_blackwater_bell",
+      "title": "Silence the Blackwater Bell",
+      "description": "Use silence in the bell halls.",
+      "reward": 0.1,
+      "condition": {
+        "type": "spell_used",
+        "spell": "silence"
+      }
+    },
+    {
+      "id": "search_alarm_fixture",
+      "title": "Search an Alarm Fixture",
+      "description": "Inspect the bell machinery or ritual table.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "category": "alarm"
+      }
+    },
+    {
+      "id": "escape_with_bell_clapper_shard",
+      "title": "Escape With the Bell Clapper Shard",
+      "description": "Complete Bells Under Blackwater.",
+      "reward": 0.6,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "bell_alarm": {
+      "actor": "gloom_cultist_1",
+      "timer": 2,
+      "on_trigger": {
+        "spawn": [
+          {
+            "monster": "bone_guard",
+            "pos": [
+              16,
+              8
+            ]
+          },
+          {
+            "monster": "skitterling",
+            "pos": [
+              14,
+              12
+            ]
+          }
+        ],
+        "alert": 5
+      }
+    },
+    "family": "bells_under_blackwater",
+    "tier": "medium",
+    "marl_axis": "shared global externality"
+  },
+  "torch": 18,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "shared global externality management",
+      "tags": [
+        "team_alert-budget_discipline"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "pressure the declared MARL axis: shared global externality management"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ]
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "quest_id": "base:bells_under_blackwater:pico",
+  "title": "Bells Under Blackwater Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "bells_under_blackwater",
+    "maturity": "migration_draft",
+    "marl_axis": "shared global externality",
+    "coordination_skills": [
+      "announce actions that raise shared danger",
+      "budget global alert/flood risk across the team",
+      "choose collective safety over local action value"
+    ],
+    "pressure_sources": [
+      "shared alert budget",
+      "bell/flood triggers",
+      "remote consequences",
+      "optional loot"
+    ],
+    "review_metrics": [
+      "global alert increments",
+      "warnings before risky actions",
+      "risk-causing hero distribution",
+      "route changes after externality"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the shared global externality signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..D..I..#\n#..K...K..#\n#..C.P.C..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "blackwater_clapper",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first shared global externality choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on shared global externality without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "lite_design_note": "A compact bell room with one cultist and one rat-pack alarm runner; agents must intercept without raising noise.",
+    "warden_style": "team alert-budget discipline",
+    "marl_axis": "shared global externality",
+    "family": "bells_under_blackwater",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_bells_under_blackwater_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Bells Under Blackwater variant while preserving the shared global externality signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

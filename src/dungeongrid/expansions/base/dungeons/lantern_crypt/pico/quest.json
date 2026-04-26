@@ -1,0 +1,342 @@
+{
+  "quest_id": "base:lantern_crypt:pico",
+  "title": "Lantern Crypt Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "lantern_crypt",
+    "maturity": "migration_draft",
+    "marl_axis": "role-specialized causal counterplay",
+    "coordination_skills": [
+      "assign a clue reader or altar breaker before the boss engage",
+      "screen the support hero while counterplay is prepared",
+      "communicate when the guardian has been weakened enough to commit"
+    ],
+    "pressure_sources": [
+      "lantern altar",
+      "boss guardian",
+      "support tempo cost",
+      "alert from counterplay"
+    ],
+    "review_metrics": [
+      "counterplay before boss damage",
+      "messages about altar rules",
+      "frontline screens",
+      "support isolation turns"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the role-specialized causal counterplay signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..D..I..#\n#..#..L...#\n#..#......#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "hero_loadouts": {
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "reveal_glyph",
+        "ward_circle"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    }
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "little_ember_idol",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_altar": {
+      "name": "Entry Altar",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The solo hero begins beside the altar clue, so skipping it is an observable policy choice.",
+      "tags": [
+        "start",
+        "counterplay_clue"
+      ]
+    },
+    "idol_cell": {
+      "name": "Idol Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "A tiny idol room with one wight: enough pressure to punish blind pickup, not enough branches to hide the lesson.",
+      "tags": [
+        "objective",
+        "guardian"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "ember_altar_1",
+      "name": "Ember Altar",
+      "category": "lore",
+      "pos": [
+        2,
+        1
+      ],
+      "deck": "clue",
+      "description": "A hot lantern-altar that explains why the guardian should not be fought blindly.",
+      "traits": [
+        "marl_clue",
+        "counterplay",
+        "support_role_credit"
+      ],
+      "visible": true,
+      "destructible": true,
+      "hp": 2,
+      "max_hp": 2,
+      "blocks_movement": false,
+      "blocks_los": false,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The altar text is clear: the guardian is strongest until the ember tether is read or broken.",
+            "trace_kind": "lantern_counterplay_read"
+          },
+          {
+            "type": "set_flag",
+            "key": "ember_altar_read",
+            "value": true
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "emit",
+          "message": "The ember tether snaps. The guardian's ward gutters down to a dull red.",
+          "trace_kind": "lantern_counterplay_broken"
+        },
+        {
+          "type": "set_flag",
+          "key": "ember_altar_destroyed",
+          "value": true
+        },
+        {
+          "type": "monster_status",
+          "role": "lantern_wight",
+          "status": "ward_dimmed"
+        },
+        {
+          "type": "monster_status",
+          "role": "crypt_brute",
+          "status": "ward_dimmed"
+        }
+      ]
+    }
+  ],
+  "bosses": {
+    "lantern_wight_1": {
+      "name": "Tethered Lantern-Wight",
+      "public_summary": "A solo-scale guardian whose ward weakens when the altar is read or broken.",
+      "counterplay_hint": "Search or break the ember altar before committing to the idol.",
+      "defeat_reward": 0.12
+    }
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "role-specialized causal counterplay",
+      "tags": [
+        "causal_inference",
+        "counterplay_before_damage",
+        "support_role_credit",
+        "frontline_screening",
+        "tandem_role_coordination"
+      ],
+      "core_failure_modes": [
+        "objective pickup before altar clue",
+        "boss engage before altar counterplay",
+        "support hero isolated while resolving the altar",
+        "no message that the guardian has been weakened",
+        "one role solves its local task without handing useful information to its pair"
+      ]
+    },
+    "pico_contract": {
+      "counterplay_anchor": "ember_altar_1",
+      "direct_fight_is_suboptimal": true,
+      "review_question": "Did the policy create value from clue/counterplay before committing to the guardian?",
+      "role_challenges": {
+        "wizard": "read or break the ember altar to expose the guardian's causal weakness",
+        "barbarian": "screen the altar reader and commit damage after counterplay is active",
+        "elf": "scout the lens cache and confirm the tether route before the idol run",
+        "dwarf": "mark the secret return route and manage hazard/route risk"
+      },
+      "tandem_challenges": [
+        "Wizard + Barbarian: counterplay reader protected by frontline screening",
+        "Elf + Dwarf: scout-confirmed tether route converted into a marked extraction path"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "protect the ember altar once heroes identify it",
+        "pressure the objective carrier if the altar is ignored",
+        "make the guardian's strength visibly depend on counterplay"
+      ],
+      "forbidden_tactics": [
+        "hide the altar clue after the guardian is revealed",
+        "spawn generic pressure that obscures the counterplay lesson"
+      ]
+    }
+  },
+  "achievements": [
+    {
+      "id": "pico_read_ember_tether",
+      "title": "Read the Ember Tether",
+      "description": "Search the altar clue before treating the guardian as a normal damage race.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "ember_altar_1"
+      }
+    },
+    {
+      "id": "pico_break_ember_tether",
+      "title": "Break the Ember Tether",
+      "description": "Destroy the altar that makes the guardian dangerous.",
+      "reward": 0.14,
+      "condition": {
+        "type": "furniture_destroyed",
+        "id": "ember_altar_1"
+      }
+    },
+    {
+      "id": "pico_recover_after_counterplay",
+      "title": "Recover After Counterplay",
+      "description": "Recover the idol after resolving or explicitly accounting for the altar.",
+      "reward": 0.16,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "pico_escape_with_idol",
+      "title": "Escape With the Ember Idol",
+      "description": "Extract after the counterplay lesson has shaped the route.",
+      "reward": 0.2,
+      "condition": {
+        "type": "escaped_with_objective"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "A boss-counterplay capsule: entry, altar clue, objective, and one guardian whose difficulty hinges on support action.",
+    "warden_style": "support action before damage commitment",
+    "marl_axis": "role-specialized causal counterplay",
+    "family": "lantern_crypt",
+    "tier": "pico",
+    "counterplay_anchor": "ember_altar_1"
+  },
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "decks": {
+    "clue": [
+      {
+        "id": "lantern_crypt_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "lantern_crypt_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "lantern_crypt_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "lantern_crypt_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "lantern_crypt_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "lantern_crypt_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ],
+  "chest_contents": {}
+}

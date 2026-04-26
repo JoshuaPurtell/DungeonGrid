@@ -1,0 +1,649 @@
+{
+  "quest_id": "base:lantern_crypt:heavy",
+  "title": "Lantern Crypt Heavy",
+  "max_heroes": 4,
+  "metadata": {
+    "size_tier": "heavy",
+    "intended_num_heroes": 4,
+    "supported_hero_range": [
+      1,
+      4
+    ],
+    "variant_family": "lantern_crypt",
+    "maturity": "migration_draft",
+    "marl_axis": "role-specialized causal counterplay",
+    "coordination_skills": [
+      "assign a clue reader or altar breaker before the boss engage",
+      "screen the support hero while counterplay is prepared",
+      "communicate when the guardian has been weakened enough to commit"
+    ],
+    "pressure_sources": [
+      "lantern altar",
+      "boss guardian",
+      "support tempo cost",
+      "alert from counterplay"
+    ],
+    "review_metrics": [
+      "counterplay before boss damage",
+      "messages about altar rules",
+      "frontline screens",
+      "support isolation turns"
+    ],
+    "tier_test_focus": "Expanded four-hero stress test with extra lanes, optional pressure, and stricter role-specialized causal counterplay failure modes."
+  },
+  "map": {
+    "ascii": "#######################\n#E....#.....#.........#\n#.....D..C..D....B....#\n###D###.....#####D#####\n#.....#.........#.....#\n#..T..D....L....D..G..#\n#.....#.........#.....#\n###D#######D#####D#####\n#.....#.....#.........#\n#..B..D..S..D....C....#\n#.....#.....#.........#\n#####D#####D#####D#####\n#.........#.....#.....#\n#....P....D..I..R..G..#\n#.........#.....#.....#\n#######################",
+    "width": 23,
+    "height": 16
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      4,
+      1
+    ]
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "ward_circle",
+        "reveal_glyph"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step"
+      ],
+      "combat_role": "skirmisher",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "ember_idol",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      13,
+      13
+    ]
+  },
+  "rooms": {
+    "entry_hall": {
+      "name": "Entry Hall",
+      "rect": [
+        1,
+        1,
+        5,
+        2
+      ],
+      "description": "A safe start that asks the party to assign reader, frontline, scout, and route-marker before opening doors.",
+      "tags": [
+        "start",
+        "role_assignment"
+      ]
+    },
+    "lens_cache": {
+      "name": "Lens Cache",
+      "rect": [
+        7,
+        1,
+        11,
+        3
+      ],
+      "description": "A scouting branch with a clue/reward object that confirms the altar tether.",
+      "tags": [
+        "clue",
+        "optional_prep"
+      ]
+    },
+    "bone_lane": {
+      "name": "Bone Lane",
+      "rect": [
+        13,
+        1,
+        21,
+        3
+      ],
+      "description": "A visible guard lane that tempts a pure combat policy before the altar is understood.",
+      "tags": [
+        "combat",
+        "temptation"
+      ]
+    },
+    "ember_crossing": {
+      "name": "Ember Crossing",
+      "rect": [
+        1,
+        4,
+        15,
+        6
+      ],
+      "description": "The central wight and altar force the party to protect the counterplay action.",
+      "tags": [
+        "counterplay",
+        "frontline_screen"
+      ]
+    },
+    "side_pressure": {
+      "name": "Side Pressure",
+      "rect": [
+        17,
+        4,
+        21,
+        6
+      ],
+      "description": "A small side threat punishes unsupported splits while the altar is unresolved.",
+      "tags": [
+        "split_party",
+        "pressure"
+      ]
+    },
+    "secret_route": {
+      "name": "Secret Route",
+      "rect": [
+        1,
+        8,
+        11,
+        10
+      ],
+      "description": "A specialist route that rewards map sharing instead of everyone crowding the wight.",
+      "tags": [
+        "secret",
+        "route_marking"
+      ]
+    },
+    "cold_iron_cache": {
+      "name": "Cold-Iron Cache",
+      "rect": [
+        13,
+        8,
+        21,
+        10
+      ],
+      "description": "Optional preparation that is useful only if the team keeps tempo and communicates.",
+      "tags": [
+        "prep",
+        "optional"
+      ]
+    },
+    "idol_chapel": {
+      "name": "Idol Chapel",
+      "rect": [
+        1,
+        12,
+        21,
+        14
+      ],
+      "description": "The final lane combines pickup, guardian pressure, and extraction under full-party coordination.",
+      "tags": [
+        "objective",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "ember_altar_1",
+      "name": "Ember Altar",
+      "category": "lore",
+      "pos": [
+        10,
+        5
+      ],
+      "deck": "clue",
+      "description": "A hot lantern-altar that explains why the guardian should not be fought blindly.",
+      "traits": [
+        "marl_clue",
+        "counterplay",
+        "support_role_credit"
+      ],
+      "visible": true,
+      "destructible": true,
+      "hp": 3,
+      "max_hp": 3,
+      "blocks_movement": false,
+      "blocks_los": false,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The altar text is clear: the guardian is strongest until the ember tether is read or broken.",
+            "trace_kind": "lantern_counterplay_read"
+          },
+          {
+            "type": "set_flag",
+            "key": "ember_altar_read",
+            "value": true
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "emit",
+          "message": "The ember tether snaps. The guardian's ward gutters down to a dull red.",
+          "trace_kind": "lantern_counterplay_broken"
+        },
+        {
+          "type": "set_flag",
+          "key": "ember_altar_destroyed",
+          "value": true
+        },
+        {
+          "type": "monster_status",
+          "role": "lantern_wight",
+          "status": "ward_dimmed"
+        },
+        {
+          "type": "monster_status",
+          "role": "crypt_brute",
+          "status": "ward_dimmed"
+        }
+      ]
+    },
+    {
+      "id": "lantern_lens_1",
+      "name": "Clear Lantern Lens",
+      "category": "lore",
+      "pos": [
+        8,
+        2
+      ],
+      "deck": "artifact",
+      "description": "A secondary clue that rewards scouting before the full party opens the lower chapel.",
+      "traits": [
+        "scouting",
+        "counterplay_confirmation"
+      ],
+      "visible": true,
+      "blocks_movement": false,
+      "blocks_los": false,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The lens shows the altar tether running from the guardian to the idol room.",
+            "trace_kind": "lantern_route_confirmed"
+          },
+          {
+            "type": "item",
+            "item": "lantern_lens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "weapon_rack_1",
+      "name": "Cold-Iron Weapon Rack",
+      "category": "weapon",
+      "pos": [
+        15,
+        13
+      ],
+      "deck": "supply",
+      "description": "A frontline preparation object that helps the party hold the guardian while support resolves the altar.",
+      "traits": [
+        "frontline_prep",
+        "screening"
+      ],
+      "visible": true,
+      "blocks_movement": false,
+      "blocks_los": false,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "weapon",
+            "item": "cold_iron_edge"
+          },
+          {
+            "type": "emit",
+            "message": "Cold iron gives the frontline a reason to hold position instead of rushing alone."
+          }
+        ]
+      }
+    },
+    {
+      "id": "route_mark_1",
+      "name": "Chalked Secret Route",
+      "category": "lore",
+      "pos": [
+        8,
+        9
+      ],
+      "deck": "clue",
+      "description": "A dwarf-readable route mark that turns the secret lower path into a safe extraction option.",
+      "traits": [
+        "dwarf_route_marking",
+        "secret_route",
+        "tandem_coordination"
+      ],
+      "visible": true,
+      "blocks_movement": false,
+      "blocks_los": false,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The chalk line marks a lower return route: useful only if someone tells the carrier.",
+            "trace_kind": "lantern_route_marked"
+          },
+          {
+            "type": "set_flag",
+            "key": "heavy_route_mark_read",
+            "value": true
+          }
+        ]
+      }
+    }
+  ],
+  "bosses": {
+    "lantern_wight_1": {
+      "name": "Tethered Lantern-Wight",
+      "public_summary": "A central guardian whose ward should be handled before the party opens the idol chapel.",
+      "counterplay_hint": "Read or break ember_altar_1 while the frontline screens the crossing.",
+      "defeat_reward": 0.16
+    },
+    "crypt_brute_1": {
+      "name": "Idol Door Brute",
+      "public_summary": "A late guardian that punishes pickup before the route and altar plan are settled.",
+      "counterplay_hint": "Use the lens, altar, and cold-iron rack before collapsing on the idol room.",
+      "defeat_reward": 0.14
+    }
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "role-specialized causal counterplay",
+      "tags": [
+        "causal_inference",
+        "counterplay_before_damage",
+        "support_role_credit",
+        "frontline_screening",
+        "tandem_role_coordination"
+      ],
+      "core_failure_modes": [
+        "objective pickup before altar clue",
+        "boss engage before altar counterplay",
+        "support hero isolated while resolving the altar",
+        "no message that the guardian has been weakened",
+        "one role solves its local task without handing useful information to its pair"
+      ]
+    },
+    "heavy_contract": {
+      "counterplay_anchor": "ember_altar_1",
+      "direct_fight_is_suboptimal": true,
+      "review_question": "Did the policy create value from clue/counterplay before committing to the guardian?",
+      "role_challenges": {
+        "wizard": "read or break the ember altar to expose the guardian's causal weakness",
+        "barbarian": "screen the altar reader and commit damage after counterplay is active",
+        "elf": "scout the lens cache and confirm the tether route before the idol run",
+        "dwarf": "mark the secret return route and manage hazard/route risk"
+      },
+      "tandem_challenges": [
+        "Wizard + Barbarian: counterplay reader protected by frontline screening",
+        "Elf + Dwarf: scout-confirmed tether route converted into a marked extraction path"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 2,
+      "preferred_tactics": [
+        "protect the ember altar once heroes identify it",
+        "pressure the objective carrier if the altar is ignored",
+        "make the guardian's strength visibly depend on counterplay"
+      ],
+      "forbidden_tactics": [
+        "hide the altar clue after the guardian is revealed",
+        "spawn generic pressure that obscures the counterplay lesson"
+      ]
+    }
+  },
+  "achievements": [
+    {
+      "id": "heavy_read_ember_tether",
+      "title": "Read the Ember Tether",
+      "description": "Search the altar clue before treating the guardian as a normal damage race.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "ember_altar_1"
+      }
+    },
+    {
+      "id": "heavy_break_ember_tether",
+      "title": "Break the Ember Tether",
+      "description": "Destroy the altar that makes the guardian dangerous.",
+      "reward": 0.14,
+      "condition": {
+        "type": "furniture_destroyed",
+        "id": "ember_altar_1"
+      }
+    },
+    {
+      "id": "heavy_recover_after_counterplay",
+      "title": "Recover After Counterplay",
+      "description": "Recover the idol after resolving or explicitly accounting for the altar.",
+      "reward": 0.16,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "heavy_escape_with_idol",
+      "title": "Escape With the Ember Idol",
+      "description": "Extract after the counterplay lesson has shaped the route.",
+      "reward": 0.2,
+      "condition": {
+        "type": "escaped_with_objective"
+      }
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The idol warms. Somewhere behind the walls, stone grinds against stone.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "skitterling",
+          "pos": [
+            8,
+            12
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 20,
+    "alert_reinforcement_threshold": 5,
+    "family": "lantern_crypt",
+    "tier": "heavy",
+    "marl_axis": "role-specialized causal counterplay",
+    "counterplay_anchor": "ember_altar_1"
+  },
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "deck_policies": {
+    "event": {
+      "reshuffle": true,
+      "identity": "pressure"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "finite_loot"
+    },
+    "artifact": {
+      "reshuffle": false,
+      "identity": "quest_counterplay"
+    }
+  },
+  "decks": {
+    "treasure": [
+      {
+        "id": "burial_coins",
+        "name": "Burial Coins",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.1,
+        "rarity": "common"
+      },
+      {
+        "id": "needle_spring",
+        "name": "Needle Spring",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03,
+        "rarity": "danger"
+      }
+    ],
+    "supply": [
+      {
+        "id": "clear_lantern_lens",
+        "name": "Clear Lantern Lens",
+        "type": "artifact",
+        "item": "lantern_lens",
+        "reward": 0.12,
+        "rarity": "rare"
+      },
+      {
+        "id": "sealed_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.08,
+        "rarity": "common"
+      }
+    ],
+    "artifact": [
+      {
+        "id": "ember_key",
+        "name": "Ember Key",
+        "type": "artifact",
+        "item": "ember_key",
+        "reward": 0.15,
+        "rarity": "rare"
+      },
+      {
+        "id": "ember_ward_card",
+        "name": "Ember Ward Card",
+        "type": "spell",
+        "item": "ward_circle",
+        "rarity": "rare",
+        "reward": 0.12
+      }
+    ],
+    "event": [
+      {
+        "id": "altar_pulse",
+        "name": "Altar Pulse",
+        "type": "event",
+        "alert": 2,
+        "reward": -0.05,
+        "rarity": "danger"
+      },
+      {
+        "id": "wandering_bone_guard",
+        "name": "Wandering Bone Guard",
+        "type": "event",
+        "rarity": "danger",
+        "reward": -0.06,
+        "effects": [
+          {
+            "type": "alert",
+            "amount": 1,
+            "reward": -0.02
+          },
+          {
+            "type": "spawn_monster",
+            "id": "wandering_bone_guard_1",
+            "role": "bone_guard"
+          }
+        ]
+      }
+    ]
+  },
+  "role_selection": {
+    "required_roles_by_party_size": {
+      "4": [
+        "barbarian",
+        "wizard",
+        "elf",
+        "dwarf"
+      ]
+    }
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "4": [
+      "barbarian",
+      "wizard",
+      "elf",
+      "dwarf"
+    ]
+  },
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "elf",
+    "dwarf"
+  ],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  }
+}

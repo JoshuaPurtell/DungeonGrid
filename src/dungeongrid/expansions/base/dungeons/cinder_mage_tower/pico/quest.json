@@ -1,0 +1,117 @@
+{
+  "quest_id": "base:cinder_mage_tower:pico",
+  "title": "Cinder Mage Tower Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "cinder_mage_tower",
+    "maturity": "migration_draft",
+    "marl_axis": "target priority under ranged threat",
+    "coordination_skills": [
+      "call out ranged line-of-sight threats",
+      "focus fire high-priority casters",
+      "use cover, doors, and interrupts before advancing"
+    ],
+    "pressure_sources": [
+      "ranged cinder mages",
+      "line-of-sight corridors",
+      "screens of weak guards",
+      "torch/alert tempo"
+    ],
+    "review_metrics": [
+      "turns caster remains alive after reveal",
+      "focus-fire consistency",
+      "damage taken from range",
+      "cover/door use"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the target priority under ranged threat signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..D..I..#\n#..#...#F.#\n#..C...G..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "cinder_formula",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first target priority under ranged threat choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on target priority under ranged threat without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache"
+  },
+  "scripts": {
+    "lite_design_note": "Two-threat tower: one ranged mage, one guard, and furniture that teaches cover/counterplay without a long map.",
+    "warden_style": "covering advance against ranged control",
+    "marl_axis": "target priority under ranged threat",
+    "family": "cinder_mage_tower",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_cinder_mage_tower_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Cinder Mage Tower variant while preserving the target priority under ranged threat signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}
