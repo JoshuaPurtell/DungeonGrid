@@ -7,6 +7,8 @@ trace, checkpoint, and resume routes through synth_containers.http_adapter.
 
 from __future__ import annotations
 
+import base64
+import pickle
 import uuid
 from collections.abc import Mapping
 from datetime import datetime, timezone
@@ -58,40 +60,86 @@ from dungeongrid.core.agent_engine import AchievementScoutPolicy, GreedyHeroPoli
 from dungeongrid.env import CHECKPOINT_VERSION
 from dungeongrid.models import model_to_dict
 
+from .store import SQLiteDungeonGridCheckpointStore
 from .task_sets import PLAYER_MODES, default_task_entries, entry_by_id
 
 DEFAULT_MAX_STEPS = 40
+AGENT_ENV_CHECKPOINT_VERSION = "dungeongrid.agent_env_checkpoint.v1"
 
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def _dump_checkpoint_payload(env: DungeonGridEnvironment, config: dict[str, Any]) -> str:
-    return env.checkpoint_base64(
+def _dump_checkpoint_payload(
+    env: DungeonGridEnvironment,
+    config: dict[str, Any],
+    *,
+    agent_state: dict[str, Any] | None = None,
+    rollout_state: dict[str, Any] | None = None,
+) -> str:
+    env_payload = env.checkpoint_payload(
         {
             "dungeongrid_version": DUNGEONGRID_VERSION,
             "config": dict(config),
             "checkpoint_semantics": "true_environment_snapshot",
         }
     )
+    envelope = {
+        "version": AGENT_ENV_CHECKPOINT_VERSION,
+        "dungeongrid_version": DUNGEONGRID_VERSION,
+        "checkpoint_semantics": "agent_and_environment_snapshot",
+        "env_checkpoint": env_payload,
+        "agent_state": dict(agent_state or {}),
+        "rollout_state": dict(rollout_state or {}),
+        "config": dict(config),
+    }
+    return base64.b64encode(pickle.dumps(envelope, protocol=pickle.HIGHEST_PROTOCOL)).decode(
+        "ascii"
+    )
 
 
 def _load_checkpoint_payload(data: str) -> dict[str, Any]:
-    payload = DungeonGridEnvironment()._decode_checkpoint(data)
+    envelope = _load_checkpoint_envelope(data)
+    payload = envelope.get("env_checkpoint")
     if not isinstance(payload, dict) or payload.get("version") != CHECKPOINT_VERSION:
         raise ValueError("unsupported DungeonGrid checkpoint payload")
     return payload
 
 
+def _load_checkpoint_envelope(data: str) -> dict[str, Any]:
+    payload = DungeonGridEnvironment()._decode_checkpoint(data)
+    if not isinstance(payload, dict):
+        raise ValueError("unsupported DungeonGrid checkpoint payload")
+    if payload.get("version") == AGENT_ENV_CHECKPOINT_VERSION:
+        env_payload = payload.get("env_checkpoint")
+        if not isinstance(env_payload, dict) or env_payload.get("version") != CHECKPOINT_VERSION:
+            raise ValueError("unsupported DungeonGrid env checkpoint in agent envelope")
+        return payload
+    if payload.get("version") != CHECKPOINT_VERSION:
+        raise ValueError("unsupported DungeonGrid checkpoint payload")
+    metadata = dict(payload.get("metadata") or {})
+    return {
+        "version": AGENT_ENV_CHECKPOINT_VERSION,
+        "dungeongrid_version": metadata.get("dungeongrid_version") or DUNGEONGRID_VERSION,
+        "checkpoint_semantics": "true_environment_snapshot",
+        "env_checkpoint": payload,
+        "agent_state": {},
+        "rollout_state": {},
+        "config": dict(metadata.get("config") or {}),
+        "legacy_env_checkpoint": True,
+    }
+
+
 class DungeonGridContainerRuntime:
     """In-memory managed runtime with true DungeonGrid state snapshots."""
 
-    def __init__(self) -> None:
+    def __init__(self, store_path: str | None = None) -> None:
         self._executions: dict[str, ExecutionRecord] = {}
         self._envs: dict[str, DungeonGridEnvironment] = {}
         self._checkpoints: dict[str, CheckpointDescriptor] = {}
         self._checkpoint_data: dict[str, str] = {}
+        self._store = SQLiteDungeonGridCheckpointStore(store_path) if store_path else None
 
     def metadata(self) -> RuntimeMetadata:
         capabilities = RuntimeCapabilitySurface(
@@ -179,6 +227,7 @@ class DungeonGridContainerRuntime:
                 "environment": "dungeongrid",
                 "dungeongrid_version": DUNGEONGRID_VERSION,
                 "checkpoint_version": CHECKPOINT_VERSION,
+                "agent_env_checkpoint_version": AGENT_ENV_CHECKPOINT_VERSION,
                 "action_contract": "OpenEnv ReAct JSON action plans",
             },
         )
@@ -274,6 +323,8 @@ class DungeonGridContainerRuntime:
             config=config,
             max_steps=max_steps,
             policy_kind=policy_kind,
+            agent_state=dict(config.pop("_agent_state", {}) or {}),
+            rollout_state=dict(config.pop("_rollout_state", {}) or {}),
             parent_rollout_id=str(request.get("parent_rollout_id") or "") or None,
             parent_checkpoint_id=parent_checkpoint_id,
             trial_id=str(request.get("trial_id") or "") or None,
@@ -322,6 +373,8 @@ class DungeonGridContainerRuntime:
             rollout_id=rollout_id,
             env=env,
             config=dict(execution.metadata.get("env_config") or {}),
+            agent_state=dict(execution.metadata.get("agent_state") or {}),
+            rollout_state=dict(execution.metadata.get("rollout_state") or {}),
             checkpoint_id=str(request.get("checkpoint_id") or "") or None,
             label=str(request.get("label") or "") or None,
             labels=[str(item) for item in request.get("labels", []) or []],
@@ -334,17 +387,34 @@ class DungeonGridContainerRuntime:
         return descriptor
 
     async def list_checkpoints(self, rollout_id: str | None = None) -> list[CheckpointDescriptor]:
+        if self._store is not None:
+            for descriptor, data in self._store.list_checkpoints(rollout_id):
+                self._checkpoints.setdefault(descriptor.checkpoint_id, descriptor)
+                if data:
+                    self._checkpoint_data.setdefault(descriptor.checkpoint_id, data)
         if rollout_id is None:
             return list(self._checkpoints.values())
         return [item for item in self._checkpoints.values() if item.rollout_id == rollout_id]
 
     async def get_checkpoint(self, checkpoint_id: str) -> CheckpointDescriptor | None:
-        return self._checkpoints.get(checkpoint_id)
+        checkpoint = self._checkpoints.get(checkpoint_id)
+        if checkpoint is not None:
+            return checkpoint
+        if self._store is None:
+            return None
+        loaded = self._store.load_checkpoint(checkpoint_id)
+        if loaded is None:
+            return None
+        descriptor, data = loaded
+        self._checkpoints[checkpoint_id] = descriptor
+        if data:
+            self._checkpoint_data[checkpoint_id] = data
+        return descriptor
 
     async def get_rollout_checkpoint(
         self, rollout_id: str, checkpoint_id: str
     ) -> CheckpointDescriptor | None:
-        checkpoint = self._checkpoints.get(checkpoint_id)
+        checkpoint = await self.get_checkpoint(checkpoint_id)
         if checkpoint is None or checkpoint.rollout_id != rollout_id:
             return None
         return checkpoint
@@ -372,7 +442,7 @@ class DungeonGridContainerRuntime:
         checkpoint_ref = (
             request.get("checkpoint") if isinstance(request.get("checkpoint"), Mapping) else None
         )
-        checkpoint_data = self._checkpoint_data.get(checkpoint_id)
+        checkpoint_data = self._checkpoint_data_for_id(checkpoint_id)
         if checkpoint_data is None:
             checkpoint_data = self._checkpoint_data_from_ref(checkpoint_ref)
         if not checkpoint_id and checkpoint_ref:
@@ -380,11 +450,14 @@ class DungeonGridContainerRuntime:
         if not checkpoint_id or checkpoint_data is None:
             return None
         checkpoint = self._checkpoints.get(checkpoint_id)
-        payload = _load_checkpoint_payload(checkpoint_data)
+        envelope = _load_checkpoint_envelope(checkpoint_data)
+        payload = envelope["env_checkpoint"]
         env = DungeonGridEnvironment()
         env.restore_checkpoint(payload)
         metadata = dict(payload.get("metadata") or {})
-        config = dict(metadata.get("config") or {})
+        config = dict(envelope.get("config") or metadata.get("config") or {})
+        agent_state = dict(envelope.get("agent_state") or {})
+        rollout_state = dict(envelope.get("rollout_state") or {})
         overrides = (
             request.get("overrides") if isinstance(request.get("overrides"), Mapping) else {}
         )
@@ -407,7 +480,9 @@ class DungeonGridContainerRuntime:
             max_steps=max_steps,
             policy_kind=str((overrides.get("policy") or {}).get("kind") or "achievement_scout")
             if isinstance(overrides.get("policy"), Mapping)
-            else "achievement_scout",
+            else str(agent_state.get("policy_kind") or "achievement_scout"),
+            agent_state=agent_state,
+            rollout_state=rollout_state,
             parent_rollout_id=(
                 checkpoint.rollout_id
                 if checkpoint
@@ -427,15 +502,19 @@ class DungeonGridContainerRuntime:
         checkpoint_id = checkpoint_ref if isinstance(checkpoint_ref, str) else None
         if isinstance(checkpoint_ref, Mapping):
             checkpoint_id = str(checkpoint_ref.get("checkpoint_id") or "").strip() or None
-        checkpoint_data = self._checkpoint_data.get(checkpoint_id or "")
+        checkpoint_data = self._checkpoint_data_for_id(checkpoint_id or "")
         if checkpoint_data is None and isinstance(checkpoint_ref, Mapping):
             checkpoint_data = self._checkpoint_data_from_ref(checkpoint_ref)
         if checkpoint_data is not None:
-            payload = _load_checkpoint_payload(checkpoint_data)
+            envelope = _load_checkpoint_envelope(checkpoint_data)
+            payload = envelope["env_checkpoint"]
             env = DungeonGridEnvironment()
             env.restore_checkpoint(payload)
             metadata = dict(payload.get("metadata") or {})
-            return env, dict(metadata.get("config") or {}), checkpoint_id
+            config = dict(envelope.get("config") or metadata.get("config") or {})
+            config["_agent_state"] = dict(envelope.get("agent_state") or {})
+            config["_rollout_state"] = dict(envelope.get("rollout_state") or {})
+            return env, config, checkpoint_id
 
         env_config = request.get("env") if isinstance(request.get("env"), Mapping) else {}
         raw_config = (
@@ -476,6 +555,8 @@ class DungeonGridContainerRuntime:
         config: dict[str, Any],
         max_steps: int,
         policy_kind: str,
+        agent_state: dict[str, Any] | None,
+        rollout_state: dict[str, Any] | None,
         parent_rollout_id: str | None,
         parent_checkpoint_id: str | None,
         trial_id: str | None,
@@ -487,10 +568,15 @@ class DungeonGridContainerRuntime:
             Actor(actor_id=hero_id, role=hero.role, display_name=hero.role.title())
             for hero_id, hero in env.state.heroes.items()
         ]
-        policy = (
-            AchievementScoutPolicy() if policy_kind == "achievement_scout" else GreedyHeroPolicy()
-        )
-        total_reward = 0.0
+        policy = _make_policy(policy_kind)
+        restored_policy_state = dict((agent_state or {}).get("hero_policy_state") or {})
+        restore_state = getattr(policy, "restore_state", None)
+        if callable(restore_state) and restored_policy_state:
+            restore_state(restored_policy_state)
+        previous_rollout_state = dict(rollout_state or {})
+        previous_turn_count = int(previous_rollout_state.get("turn_count", 0) or 0)
+        previous_total_reward = float(previous_rollout_state.get("total_reward", 0.0) or 0.0)
+        total_reward = previous_total_reward
         for turn_index in range(max_steps):
             if env.state.done:
                 break
@@ -546,7 +632,7 @@ class DungeonGridContainerRuntime:
                     event_type="dungeongrid_plan",
                     at=_utc_now_iso(),
                     event_id=f"{rollout_id}_event_{turn_index}",
-                    step_index=turn_index,
+                    step_index=previous_turn_count + turn_index,
                     actor_id=active,
                     payload={
                         "action": action,
@@ -566,21 +652,42 @@ class DungeonGridContainerRuntime:
             "quest_id": env.state.quest_id,
             "player_mode": config.get("player_mode"),
             "num_heroes": len(env.state.heroes),
-            "step_count": len(turns),
+            "step_count": previous_turn_count + len(turns),
+            "segment_step_count": len(turns),
             "success": bool(env.state.done and env.state.winner == "heroes"),
             "cell_key": self._cell_key(env),
+        }
+        agent_snapshot = {
+            "schema_version": "dungeongrid.container_agent_state.v1",
+            "policy_kind": policy_kind,
+            "hero_policy_class": type(policy).__name__,
+            "hero_policy_state": _snapshot_policy_state(policy),
+        }
+        rollout_snapshot = {
+            "schema_version": "dungeongrid.container_rollout_state.v1",
+            "rollout_id": rollout_id,
+            "turn_count": previous_turn_count + len(turns),
+            "segment_turn_count": len(turns),
+            "total_reward": round(total_reward, 4),
+            "previous_total_reward": round(previous_total_reward, 4),
+            "parent_rollout_id": parent_rollout_id,
+            "parent_checkpoint_id": parent_checkpoint_id,
+            "last_actor_id": turns[-1].actor_id if turns else None,
         }
         checkpoint = self._store_checkpoint(
             rollout_id=rollout_id,
             env=env,
             config=config,
+            agent_state=agent_snapshot,
+            rollout_state=rollout_snapshot,
             checkpoint_id=None,
             label="final" if env.state.done else "frontier",
             labels=["final" if env.state.done else "frontier", str(summary["cell_key"])],
             actor_ids=[actor.actor_id for actor in actors],
             metadata={
                 "cell_key": summary["cell_key"],
-                "step_count": len(turns),
+                "step_count": previous_turn_count + len(turns),
+                "segment_step_count": len(turns),
                 "env_config": dict(config),
             },
             annotations={"metrics": metrics},
@@ -620,7 +727,7 @@ class DungeonGridContainerRuntime:
             parent_rollout_id=parent_rollout_id,
             parent_checkpoint_id=parent_checkpoint_id,
             summary=summary,
-            usage={"env_steps": len(turns), "model_calls": 0},
+            usage={"env_steps": previous_turn_count + len(turns), "model_calls": 0},
             artifacts=[
                 ArtifactDescriptor(
                     artifact_id=f"{rollout_id}_transcript",
@@ -636,7 +743,12 @@ class DungeonGridContainerRuntime:
                 authoritative=True,
                 metadata={"cell_key": summary["cell_key"]},
             ),
-            metadata={"env_config": dict(config), "trial_id": trial_id or ""},
+            metadata={
+                "env_config": dict(config),
+                "trial_id": trial_id or "",
+                "agent_state": agent_snapshot,
+                "rollout_state": rollout_snapshot,
+            },
         )
         return execution
 
@@ -646,6 +758,8 @@ class DungeonGridContainerRuntime:
         rollout_id: str,
         env: DungeonGridEnvironment,
         config: dict[str, Any],
+        agent_state: dict[str, Any] | None,
+        rollout_state: dict[str, Any] | None,
         checkpoint_id: str | None,
         label: str | None,
         labels: list[str],
@@ -654,8 +768,18 @@ class DungeonGridContainerRuntime:
         annotations: dict[str, Any],
     ) -> CheckpointDescriptor:
         cid = checkpoint_id or f"dungeongrid_ckpt_{uuid.uuid4().hex[:10]}"
-        encoded = _dump_checkpoint_payload(env, config)
+        encoded = _dump_checkpoint_payload(
+            env,
+            config,
+            agent_state=agent_state,
+            rollout_state=rollout_state,
+        )
         self._checkpoint_data[cid] = encoded
+        checkpoint_kind = (
+            "agent_environment_snapshot"
+            if agent_state or rollout_state
+            else "environment_snapshot"
+        )
         descriptor = CheckpointDescriptor(
             checkpoint_id=cid,
             rollout_id=rollout_id,
@@ -667,7 +791,12 @@ class DungeonGridContainerRuntime:
             labels=list(dict.fromkeys([item for item in labels if item])),
             source="dungeongrid_container",
             actor_ids=actor_ids,
-            metadata={**metadata, "checkpoint_data_base64": encoded},
+            metadata={
+                **metadata,
+                "checkpoint_data_base64": encoded,
+                "checkpoint_kind": checkpoint_kind,
+                "agent_env_checkpoint_version": AGENT_ENV_CHECKPOINT_VERSION,
+            },
             annotations=annotations,
             branchable=True,
             checkpoint_semantics=CheckpointSemantics.TRUE_ENVIRONMENT_SNAPSHOT,
@@ -675,6 +804,8 @@ class DungeonGridContainerRuntime:
             true_environment_snapshot=True,
         )
         self._checkpoints[cid] = descriptor
+        if self._store is not None:
+            self._store.save_checkpoint(descriptor)
         return descriptor
 
     def _checkpoint_data_from_ref(self, checkpoint_ref: Mapping[str, Any] | None) -> str | None:
@@ -689,6 +820,19 @@ class DungeonGridContainerRuntime:
         if isinstance(data, str) and data:
             return data
         return None
+
+    def _checkpoint_data_for_id(self, checkpoint_id: str) -> str | None:
+        data = self._checkpoint_data.get(checkpoint_id)
+        if data is not None or self._store is None or not checkpoint_id:
+            return data
+        loaded = self._store.load_checkpoint(checkpoint_id)
+        if loaded is None:
+            return None
+        descriptor, data = loaded
+        self._checkpoints[checkpoint_id] = descriptor
+        if data:
+            self._checkpoint_data[checkpoint_id] = data
+        return data or None
 
     def _cell_key(self, env: DungeonGridEnvironment) -> str:
         state = env.state
@@ -728,3 +872,15 @@ def _policy_kind(request: Mapping[str, Any]) -> str:
         config = policy.get("config") if isinstance(policy.get("config"), Mapping) else policy
         return str(config.get("kind") or "achievement_scout")
     return "achievement_scout"
+
+
+def _make_policy(policy_kind: str):
+    return AchievementScoutPolicy() if policy_kind == "achievement_scout" else GreedyHeroPolicy()
+
+
+def _snapshot_policy_state(policy: Any) -> dict[str, Any]:
+    snapshot_state = getattr(policy, "snapshot_state", None)
+    if callable(snapshot_state):
+        value = snapshot_state()
+        return dict(value) if isinstance(value, Mapping) else {}
+    return {}

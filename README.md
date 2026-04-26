@@ -66,7 +66,7 @@ Reveal boundaries stop queued execution so the agent can replan after meaningful
 
 ## Checkpoint And Resume
 
-DungeonGrid checkpoints are true environment snapshots: hidden state, public state, trace, turn state, and RNG state are preserved.
+DungeonGrid checkpoints are true environment snapshots: hidden state, public state, trace, turn state, and RNG state are preserved. Container checkpoints wrap that env snapshot in an agent+env envelope so policy state, rollout cursor state, and cumulative reward can be restored together.
 
 ```python
 from dungeongrid import DungeonGridEnvironment
@@ -81,7 +81,7 @@ restored = DungeonGridEnvironment.load_checkpoint("lantern_crypt.ckpt")
 restored.act_plan([{"type": "end_turn"}])
 ```
 
-The container runtime exposes the same snapshot through checkpoint descriptors. `checkpoint_data_base64` can be passed to a fresh runtime process to resume or branch a rollout.
+The container runtime exposes the same snapshot through checkpoint descriptors. `checkpoint_data_base64` can be passed to a fresh runtime process to resume or branch a rollout. For durable local services, instantiate the container runtime with `store_path="dungeongrid.sqlite"`; checkpoint descriptors and blobs will be indexed in SQLite and can be resumed by checkpoint id after process restart.
 
 ## Dungeons
 
