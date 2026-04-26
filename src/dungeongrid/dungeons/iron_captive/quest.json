@@ -4,6 +4,10 @@
   "difficulty": "starter",
   "metadata": {
     "campaign_group": "batch_a",
+    "maturity_tier": "solid",
+    "maturity_label": "solid_less_live_tested",
+    "validation_status": "authored_needs_more_live_eval",
+    "maturity_notes": "Strong authored mechanics and metadata; needs more repeated live-agent balance/proof runs.",
     "quest_role": "rescue",
     "objective_type": "retrieve_and_escape",
     "dominant_mechanics": [

@@ -5,6 +5,11 @@
   "metadata": {
     "parent_quest_id": "moonblade_vault",
     "variant": "lite",
+    "maturity_tier": "developing",
+    "maturity_label": "good_content_needs_balance_runs_lite_diagnostic",
+    "validation_status": "lite_diagnostic_inherits_parent_maturity",
+    "maturity_notes": "Lite diagnostic variant; inherits the parent maturity tier but should be evaluated separately because it has smaller scope and less bespoke hook coverage.",
+    "parent_maturity_tier": "developing",
     "designed_for_heroes": 2,
     "supported_hero_range": [
       1,

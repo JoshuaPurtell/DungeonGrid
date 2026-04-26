@@ -4,6 +4,10 @@
   "difficulty": "starter",
   "metadata": {
     "campaign_group": "batch_c",
+    "maturity_tier": "developing",
+    "maturity_label": "good_content_needs_balance_runs",
+    "validation_status": "content_complete_needs_balance_proof",
+    "maturity_notes": "Good authored content with benchmark hooks; needs scripted solvability and live-agent balance/proof runs.",
     "quest_role": "rescue_search",
     "objective_type": "retrieve_and_escape",
     "dominant_mechanics": [

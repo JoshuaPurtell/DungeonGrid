@@ -4,6 +4,10 @@
   "difficulty": "starter",
   "metadata": {
     "campaign_group": "batch_d",
+    "maturity_tier": "polished",
+    "maturity_label": "most_mature",
+    "validation_status": "live_agent_polished",
+    "maturity_notes": "Rich authored mechanics and repeated live-agent pressure; closest to benchmark-grade.",
     "quest_role": "undead_barrow",
     "objective_type": "retrieve_and_escape",
     "dominant_mechanics": [
