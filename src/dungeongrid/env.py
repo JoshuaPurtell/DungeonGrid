@@ -13,6 +13,7 @@ from .achievements import AchievementEngine
 from .core.agent_engine import AgentEngine
 from .core.data import DIRECTIONS, default_per_hero_stats
 from .core.grid_engine import GridEngine
+from .core.message_protocol import protocol_from_state
 from .core.rules_engine import RulesEngine
 from .core.trace import trace_record
 from .hooks import HookContext, HookEngine
@@ -61,6 +62,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         observation_mode: str = "mixed",
         ruleset: str | dict[str, Any] | None = None,
         hero_roles: list[str] | None = None,
+        communication_protocol: dict[str, Any] | None = None,
     ) -> DungeonGridObservation:
         self.rng.seed(seed)
         self.rules.rng = self.rng
@@ -71,6 +73,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             seed=seed,
             ruleset=ruleset,
             hero_roles=hero_roles,
+            communication_protocol=communication_protocol,
         )
         self.hooks.call(self.state.quest_id, "on_load", HookContext(state=self.state, env=self))
         self.grid.update_monster_awareness(self.state, reason="initial_visibility")
@@ -532,6 +535,12 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 lines.append(
                     f"- {message.get('from')} -> {message.get('to')}: {message.get('text')}"
                 )
+        protocol = state.communication_protocol or {"mode": "pure_decentralized"}
+        lines.append(
+            "\nCommunication protocol: "
+            f"{protocol.get('mode', 'pure_decentralized')} "
+            f"(max_chars={protocol.get('max_chars', 240)})."
+        )
         if state.invalid_feedback:
             scoped_feedback = self._invalid_feedback_for_agent(agent_id)
         else:
@@ -615,10 +624,20 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             data["objective"] = self._public_objective_state(visible_tiles=visible)
             data["ruleset"] = {"enabled": bool(state.ruleset)}
             data["dread"] = None
+            data["message_queue_tail"] = []
+            data["message_events_tail"] = [
+                event
+                for event in data.get("message_events_tail", [])
+                if event.get("kind") in {"message_submitted", "message_delivered", "message_rejected"}
+            ][-10:]
+            if isinstance(data.get("message_metrics"), dict):
+                data["message_metrics"] = dict(data["message_metrics"])
+                data["message_metrics"].pop("next_message_index", None)
             data["social_metrics"] = {
                 "items_given": state.social_metrics.get("items_given", 0),
                 "objective_passes": state.social_metrics.get("objective_passes", 0),
                 "split_party_rounds": state.social_metrics.get("split_party_rounds", 0),
+                "communication": dict(state.social_metrics.get("communication", {})),
             }
             data["per_hero_stats"] = self._public_per_hero_stats(data.get("per_hero_stats", {}))
         return data
@@ -643,6 +662,11 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 "treasure": int(raw_stats.get("treasure", 0) or 0),
                 "extracted": bool(raw_stats.get("extracted", False)),
             }
+        return public
+
+    def _public_message_metrics(self, message_metrics: dict[str, Any]) -> dict[str, Any]:
+        public = dict(message_metrics)
+        public.pop("next_message_index", None)
         return public
 
     def _public_monster_state(self, monster: dict[str, Any]) -> dict[str, Any]:
@@ -730,6 +754,8 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "per_hero_stats": self.agent_engine.metrics(state).get("per_hero_stats", {}),
             "event_log": list(state.event_log),
             "party_messages": list(state.party_messages),
+            "message_events": list(state.message_events),
+            "message_metrics": self._public_message_metrics(state.message_metrics),
             "achievements": list(state.achievement_events),
             "turns": turns,
         }
@@ -866,7 +892,9 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "known_objective": f"recover_{state.objective.id}_and_escape",
             "objective_instruction": self._objective_instruction(),
             "escape_instruction": self._escape_instruction(),
-            "party_messages": list(state.party_messages[-10:]),
+            "party_messages": protocol_from_state(state).visible_messages(state, agent_id)[-10:],
+            "communication_protocol": dict(state.communication_protocol),
+            "message_metrics": self._public_message_metrics(state.message_metrics),
             "invalid_feedback": self._invalid_feedback_for_agent(agent_id)[-5:],
             "recent_card_draws": self._recent_card_draws(),
             "movement_remaining": state.movement_remaining.get(agent_id, 0),

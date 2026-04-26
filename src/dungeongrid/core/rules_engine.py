@@ -17,8 +17,10 @@ from .data import (
     Entity,
     GameState,
     Pos,
+    default_per_hero_stats,
 )
 from .grid_engine import GridEngine
+from .message_protocol import protocol_from_state
 
 
 class RulesEngine:
@@ -600,23 +602,12 @@ class RulesEngine:
         return text, reward
 
     def _message(self, state: GameState, hero: Entity, action: dict[str, Any]) -> tuple[str, float]:
-        target = str(action.get("target") or "party")
-        payload = action.get("payload") if isinstance(action.get("payload"), dict) else {}
-        text = str(payload.get("text") or payload.get("message") or "").strip()
-        text = " ".join(text.split())[:240]
-        if not text:
-            text = "(no message)"
-        message = {
-            "message_id": f"msg_{len(state.party_messages) + 1}",
-            "round": state.round,
-            "from": hero.id,
-            "role": hero.role,
-            "to": target,
-            "text": text,
-        }
-        state.party_messages.append(message)
+        result = protocol_from_state(state).submit(state, hero.id, action)
+        if result.delivered:
+            stats = state.per_hero_stats.setdefault(hero.id, default_per_hero_stats(hero))
+            stats["messages_sent"] = int(stats.get("messages_sent", 0)) + 1
         self._cost(state, hero, "message")
-        return f"{hero.role} to {target}: {text}", 0.0
+        return result.message, 0.0
 
     def _open_door(self, state: GameState, hero: Entity, door_id: str) -> tuple[str, float]:
         door = state.doors[door_id]

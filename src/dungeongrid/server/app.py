@@ -27,6 +27,7 @@ class ResetRequest(BaseModel):
     num_heroes: int = 4
     seed: int | None = None
     observation_mode: str = "mixed"
+    communication_protocol: dict[str, Any] | None = None
 
 
 class PlanRequest(BaseModel):
@@ -47,6 +48,7 @@ def reset(request: ResetRequest) -> DungeonGridObservation:
         num_heroes=request.num_heroes,
         seed=request.seed,
         observation_mode=request.observation_mode,
+        communication_protocol=request.communication_protocol,
     )
 
 

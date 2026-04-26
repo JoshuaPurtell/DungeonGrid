@@ -159,6 +159,8 @@ class AgentEngine:
             "extraction_rate": len(state.extracted_heroes) / max(1, len(state.heroes)),
             "termination_reason": state.termination_reason,
             "social_metrics": dict(state.social_metrics),
+            "message_metrics": dict(state.message_metrics),
+            "communication_protocol": dict(state.communication_protocol),
             "exploration": explored / max(1, floor_tiles),
             "explored_tiles": explored,
             "floor_tiles": floor_tiles,

@@ -31,6 +31,7 @@ from .data import (
     Trap,
     default_per_hero_stats,
 )
+from .message_protocol import configure_message_state, normalize_protocol_config
 
 
 class GridEngine:
@@ -72,6 +73,7 @@ class GridEngine:
         seed: int | None = None,
         ruleset: str | dict[str, Any] | None = None,
         hero_roles: list[str] | None = None,
+        communication_protocol: dict[str, Any] | None = None,
     ) -> GameState:
         rng = random.Random(seed)
         data = self.load_quest_data(quest_id)
@@ -255,6 +257,9 @@ class GridEngine:
             pos=objective_pos,
             fragile=bool(data["objective"].get("fragile", False)),
         )
+        protocol_config = normalize_protocol_config(
+            communication_protocol if communication_protocol is not None else data.get("communication_protocol")
+        )
         state = GameState(
             quest_id=quest_id,
             title=data.get("title", quest_id),
@@ -300,8 +305,10 @@ class GridEngine:
                 hero_id: default_per_hero_stats(hero) for hero_id, hero in heroes.items()
             },
             social_metrics=self._initial_social_metrics(heroes),
+            communication_protocol=protocol_config,
             torch=int(data.get("torch", 20)),
         )
+        configure_message_state(state, protocol_config)
         if role_requirement_warnings:
             state.event_log.append(
                 "Role warning: this dungeon favors "
@@ -408,6 +415,7 @@ class GridEngine:
             "healing_items_given": 0,
             "potions_hoarded_while_ally_critical": 0,
             "specialist_actions": {},
+            "communication": {},
         }
 
     def room_id_at(self, rooms: dict[str, Any], pos: Pos) -> str | None:

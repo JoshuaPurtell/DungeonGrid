@@ -623,6 +623,10 @@ class GameState:
     trace: list[dict[str, Any]] = field(default_factory=list)
     event_log: list[str] = field(default_factory=list)
     party_messages: list[dict[str, Any]] = field(default_factory=list)
+    communication_protocol: dict[str, Any] = field(default_factory=dict)
+    message_queue: list[dict[str, Any]] = field(default_factory=list)
+    message_events: list[dict[str, Any]] = field(default_factory=list)
+    message_metrics: dict[str, Any] = field(default_factory=dict)
     invalid_feedback: list[dict[str, Any]] = field(default_factory=list)
 
     def active_agent(self) -> str:
@@ -719,6 +723,10 @@ class GameState:
             "hero_loadouts": dict(self.hero_loadouts),
             "event_log_tail": self.event_log[-20:],
             "party_messages_tail": self.party_messages[-20:],
+            "communication_protocol": dict(self.communication_protocol),
+            "message_queue_tail": self.message_queue[-20:],
+            "message_events_tail": self.message_events[-20:],
+            "message_metrics": dict(self.message_metrics),
             "invalid_feedback_tail": self.invalid_feedback[-20:],
             "trace_len": len(self.trace),
             "visibility": visibility,

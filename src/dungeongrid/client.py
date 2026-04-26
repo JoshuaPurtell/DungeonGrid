@@ -21,9 +21,18 @@ class DungeonGridClient:
         self.timeout = timeout
 
     def reset(
-        self, quest_id: str = "lantern_crypt", num_heroes: int = 4, seed: int | None = None
+        self,
+        quest_id: str = "lantern_crypt",
+        num_heroes: int = 4,
+        seed: int | None = None,
+        communication_protocol: dict[str, Any] | None = None,
     ) -> DungeonGridObservation:
-        payload = {"quest_id": quest_id, "num_heroes": num_heroes, "seed": seed}
+        payload = {
+            "quest_id": quest_id,
+            "num_heroes": num_heroes,
+            "seed": seed,
+            "communication_protocol": communication_protocol,
+        }
         response = requests.post(f"{self.base_url}/reset", json=payload, timeout=self.timeout)
         response.raise_for_status()
         return DungeonGridObservation(**response.json())

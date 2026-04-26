@@ -73,6 +73,7 @@ from .effects import (
     ValidationFailure,
     WardenSpendDread,
 )
+from .message_protocol import protocol_from_state
 
 
 class TriggerRegistry:
@@ -203,6 +204,9 @@ class EffectResolver:
             self.runtime.grid.update_revealed_rooms(
                 state, reason="door_opened", opener_id=effect.actor_id
             )
+            if effect.actor_id in state.heroes:
+                state.scripts["last_room_revealer"] = effect.actor_id
+                state.scripts["last_room_revealer_round"] = state.round
             state.alert += 1
             if effect.actor_id in state.heroes:
                 stats = state.per_hero_stats.setdefault(
@@ -388,20 +392,27 @@ class EffectResolver:
         if isinstance(effect, EquipItem):
             return self._resolve_equip_item(ctx, effect)
         if isinstance(effect, MessageEffect):
-            hero = ctx.state.heroes.get(effect.actor_id)
-            message = {
-                "message_id": f"msg_{len(ctx.state.party_messages) + 1}",
-                "round": ctx.state.round,
-                "from": effect.actor_id,
-                "role": hero.role if hero else "unknown",
-                "to": effect.target,
-                "text": effect.text,
+            result = protocol_from_state(ctx.state).submit(
+                ctx.state,
+                effect.actor_id,
+                {"type": "message", "target": effect.target, "payload": {"text": effect.text}},
+            )
+            if result.delivered and result.envelope:
+                hero = ctx.state.heroes.get(effect.actor_id)
+                if hero:
+                    stats = ctx.state.per_hero_stats.setdefault(
+                        hero.id, default_per_hero_stats(hero)
+                    )
+                    stats["messages_sent"] = int(stats.get("messages_sent", 0)) + 1
+            ctx.info["message_result"] = {
+                "accepted": result.accepted,
+                "delivered": result.delivered,
+                "queued": result.queued,
+                "dropped": result.dropped,
+                "reason": result.reason,
+                "message": result.message,
             }
-            ctx.state.party_messages.append(message)
-            if hero:
-                stats = ctx.state.per_hero_stats.setdefault(hero.id, default_per_hero_stats(hero))
-                stats["messages_sent"] = int(stats.get("messages_sent", 0)) + 1
-            ctx.emit_text(f"{message['role']} to {effect.target}: {effect.text}")
+            ctx.emit_text(result.message)
             return []
         if isinstance(effect, Guard):
             hero = ctx.state.heroes.get(effect.actor_id)
@@ -2092,6 +2103,13 @@ class EngineRuntime:
         failure = self.validate(state, agent_id, action)
         if failure:
             state.invalid_actions += 1
+            if action.get("type") == "message" and failure.reason in {
+                "communication_disabled",
+                "not_designated_leader",
+                "unknown_recipient",
+                "unknown_sender",
+            }:
+                protocol_from_state(state).submit(state, agent_id, action)
             feedback = self.rules._invalid_feedback(
                 state, agent_id, action, failure.reason, failure.message
             )
@@ -2350,6 +2368,10 @@ class EngineRuntime:
                 action,
                 agent_id,
             )
+        if action.get("type") == "message":
+            result = protocol_from_state(state).submit_preview(state, agent_id, action)
+            if not result.accepted:
+                return ValidationFailure(result.reason, result.message, action, agent_id)
         legal = self.rules.legal_actions(state, agent_id)
         if not self.rules._action_is_legal(action, legal):
             reason, message = self.rules._classify_illegal_action(state, agent_id, action, legal)
