@@ -7,7 +7,9 @@ Warden is not a random encounter table and not an omniscient killer. His job is 
 The core package remains deterministic and network-free, but NanoCoop supports first-class
 ReAct-Warden evaluation runs. The Warden consumes `env.observe_warden()`, chooses one bounded
 legal Warden action through `WardenReActAdapter`, and records intent/fairness metadata in the
-transcript. Deterministic Warden remains the offline/fallback mode.
+transcript. NanoCoop `dungeongrid_react` configs use ReAct Warden by default; deterministic
+Warden remains the offline/fallback mode and can be requested explicitly with
+`warden_policy.kind=deterministic_warden`.
 
 ## Tool contract
 

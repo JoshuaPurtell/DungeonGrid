@@ -24,7 +24,7 @@ _env = DungeonGridEnvironment()
 
 class ResetRequest(BaseModel):
     quest_id: str = "lantern_crypt"
-    num_heroes: int = 4
+    num_heroes: int = 3
     seed: int | None = None
     observation_mode: str = "mixed"
 

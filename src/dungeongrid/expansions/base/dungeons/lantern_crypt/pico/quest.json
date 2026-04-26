@@ -1,0 +1,102 @@
+{
+  "quest_id": "base:lantern_crypt:pico",
+  "title": "The Lantern Crypt Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "room_count_target": "1-2",
+    "corridor_pressure": "one doorway teaches reveal and extraction timing",
+    "role_demands": {
+      "wizard": [
+        "read objective state",
+        "retrieve idol",
+        "escape through revealed door"
+      ]
+    },
+    "coordination_demands": [
+      "open the doorway before committing to the idol",
+      "decide whether the optional chest is worth the time"
+    ]
+  },
+  "map": {
+    "ascii": "###########\n#E..D..I..#\n#...#..G..#\n#..C#...G.#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "ember_idol",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      1
+    ]
+  },
+  "rooms": {
+    "entry": {
+      "name": "Entry Hall",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A short return corridor and a sealed door teach the retrieve-and-escape loop.",
+      "tags": [
+        "start",
+        "corridor"
+      ]
+    },
+    "idol_cell": {
+      "name": "Idol Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "The ember idol sits close enough to understand the goal, while small sentries preview pursuit pressure.",
+      "tags": [
+        "objective",
+        "pressure"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "lantern_wight_spawn": [
+      7,
+      2
+    ],
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_return_loop",
+      "title": "Complete the Small Return Loop",
+      "description": "Recover the idol in the pico version.",
+      "reward": 0.15,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ]
+}

@@ -1,0 +1,340 @@
+{
+  "quest_id": "base:lantern_crypt:heavy",
+  "title": "The Lantern Crypt Heavy",
+  "max_heroes": 4,
+  "metadata": {
+    "size_tier": "heavy",
+    "intended_num_heroes": 4,
+    "supported_hero_range": [
+      1,
+      4
+    ],
+    "room_count_target": "7-8",
+    "corridor_pressure": "multiple lanes create carrier escort and full-party traffic pressure",
+    "role_demands": {
+      "barbarian": [
+        "hold pursuit lane",
+        "fight brute",
+        "protect carrier"
+      ],
+      "wizard": [
+        "altar counterplay",
+        "ward carrier",
+        "ranged burst"
+      ],
+      "elf": [
+        "scout pressure lane",
+        "heal or support carrier",
+        "cover side cache"
+      ],
+      "dwarf": [
+        "trap/secret route",
+        "safe search",
+        "mark extraction path"
+      ]
+    },
+    "coordination_demands": [
+      "split only after the party agrees who holds the main lane",
+      "dwarf/elf make side route safe while barbarian/wizard handle altar and pursuit",
+      "objective carrier needs a declared escort before entering the final lane"
+    ]
+  },
+  "map": {
+    "ascii": "#######################\n#E....#.....#.........#\n#.....D..C..D....G....#\n###D###.....#####D#####\n#.....#.........#.....#\n#..T..D....P....D..P..#\n#.....#.........#.....#\n###D#######D#####D#####\n#.....#.....#.........#\n#..H..D..S..D....C....#\n#.....#.....#.........#\n#####D#####D#####D#####\n#.........#.....#.....#\n#....G....D..I..D..R..#\n#.........#.....#.....#\n#######################",
+    "width": 23,
+    "height": 16
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      4,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "ember_idol",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      14,
+      13
+    ]
+  },
+  "rooms": {
+    "entry_hall": {
+      "name": "Entry Hall",
+      "rect": [
+        1,
+        1,
+        5,
+        2
+      ],
+      "description": "The party enters through a narrow hall that immediately creates marching-order choices.",
+      "tags": [
+        "start",
+        "corridor"
+      ]
+    },
+    "upper_cache": {
+      "name": "Upper Cache",
+      "rect": [
+        7,
+        1,
+        11,
+        3
+      ],
+      "description": "A prep lane with chest and armory options before the crypt opens.",
+      "tags": [
+        "treasure",
+        "equipment"
+      ]
+    },
+    "sentry_lane": {
+      "name": "Sentry Lane",
+      "rect": [
+        13,
+        1,
+        21,
+        3
+      ],
+      "description": "A long pressure lane with a visible sentry and a door into the deeper crypt.",
+      "tags": [
+        "combat",
+        "lane"
+      ]
+    },
+    "altar_crossing": {
+      "name": "Altar Crossing",
+      "rect": [
+        1,
+        4,
+        15,
+        6
+      ],
+      "description": "The central altar route is the main counterplay lane.",
+      "tags": [
+        "counterplay",
+        "hazard"
+      ]
+    },
+    "rat_run": {
+      "name": "Rat Run",
+      "rect": [
+        17,
+        4,
+        21,
+        6
+      ],
+      "description": "A side pressure pocket punishes isolated scouting.",
+      "tags": [
+        "swarm",
+        "split_party"
+      ]
+    },
+    "secret_guard": {
+      "name": "Secret Guard",
+      "rect": [
+        1,
+        8,
+        11,
+        10
+      ],
+      "description": "The dwarf can help turn this guarded side route into a safer extraction path.",
+      "tags": [
+        "specialist",
+        "combat"
+      ]
+    },
+    "side_cache": {
+      "name": "Side Cache",
+      "rect": [
+        13,
+        8,
+        21,
+        10
+      ],
+      "description": "Optional reward sits away from the main route and tests message discipline.",
+      "tags": [
+        "treasure",
+        "greed"
+      ]
+    },
+    "idol_chapel": {
+      "name": "Idol Chapel",
+      "rect": [
+        1,
+        12,
+        21,
+        14
+      ],
+      "description": "The final lane contains both the idol and the brute, making extraction a full-party problem.",
+      "tags": [
+        "objective",
+        "boss",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "ember_altar_1",
+      "name": "Ember Altar",
+      "category": "altar",
+      "pos": [
+        11,
+        5
+      ],
+      "deck": "event",
+      "description": "The altar trembles whenever torchlight touches the idol.",
+      "traits": [
+        "altar",
+        "destructible",
+        "boss_weakness"
+      ],
+      "destructible": true,
+      "hp": 4,
+      "max_hp": 4,
+      "blocks_los": true,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "set_script",
+            "key": "ember_altar_read",
+            "value": true,
+            "trace_kind": "boss_weakness_revealed"
+          },
+          {
+            "type": "monster_status",
+            "role": "lantern_wight",
+            "status": "vulnerable",
+            "trace_kind": "boss_counterplay_used"
+          },
+          {
+            "type": "emit",
+            "message": "The altar inscription names the wight's ember-tether weakness."
+          }
+        ],
+        "treasure": {
+          "type": "draw_deck",
+          "deck": "event"
+        }
+      },
+      "break_effect": [
+        {
+          "type": "set_script",
+          "key": "ember_altar_destroyed",
+          "value": true,
+          "trace_kind": "boss_counterplay_used"
+        },
+        {
+          "type": "monster_status",
+          "role": "lantern_wight",
+          "status": "weakened"
+        },
+        {
+          "type": "alert",
+          "amount": 2,
+          "reward": -0.06
+        },
+        {
+          "type": "emit",
+          "message": "The ember altar collapses; the pursuing light gutters, but the crash echoes."
+        }
+      ]
+    },
+    {
+      "id": "weapon_rack_1",
+      "name": "Brittle Weapon Rack",
+      "category": "armory",
+      "pos": [
+        8,
+        2
+      ],
+      "deck": "artifact",
+      "description": "Most weapons are rusted through, but one wrapped object looks preserved.",
+      "traits": [
+        "armory",
+        "destructible",
+        "boss_counterplay"
+      ],
+      "destructible": true,
+      "hp": 3,
+      "max_hp": 3,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "weapon",
+            "item": "hand_axe",
+            "reward": 0.12
+          },
+          {
+            "type": "set_script",
+            "key": "crypt_weapon_rack_searched",
+            "value": true
+          },
+          {
+            "type": "emit",
+            "message": "A preserved hand axe slides free from the brittle rack."
+          }
+        ],
+        "treasure": {
+          "type": "draw_deck",
+          "deck": "artifact"
+        }
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.03
+        },
+        {
+          "type": "weapon",
+          "item": "hand_axe",
+          "reward": 0.08
+        },
+        {
+          "type": "emit",
+          "message": "The brittle rack shatters loudly, scattering one usable axe."
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "lantern_wight_spawn": [
+      13,
+      13
+    ],
+    "tier": "heavy"
+  },
+  "achievements": [
+    {
+      "id": "heavy_lane_control",
+      "title": "Control the Heavy Lanes",
+      "description": "Reveal at least six rooms in the heavy Lantern Crypt.",
+      "reward": 0.12,
+      "condition": {
+        "type": "rooms_explored_at_least",
+        "count": 6
+      }
+    }
+  ]
+}

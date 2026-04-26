@@ -48,7 +48,7 @@ This document defines the stable benchmark surfaces for DungeonGrid.
 - Seeds: 0-9.
 - Interface: OpenEnv/ReAct-style queued JSON plans.
 - Ruleset: declared by the benchmark config; default/AP and `classic_dynamic` scores are not aggregated.
-- Warden: deterministic for offline/reproducible suites, or first-class ReAct Warden when the config declares `warden_policy.kind=dungeongrid_warden_react`.
+- Warden: NanoCoop `dungeongrid_react` configs use first-class ReAct Warden by default; offline/reproducible suites opt out with `warden_policy.kind=deterministic_warden`.
 
 ### DG-ReAct-Warden
 

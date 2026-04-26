@@ -18,6 +18,10 @@ def validate_dungeons(*, include_classic_dynamic: bool = True) -> dict[str, Any]
     for quest_id in quest_ids:
         for ruleset in rulesets:
             for num_heroes in (1, 2, 3, 4):
+                quest_data = env.grid.load_quest_data(quest_id, num_heroes=num_heroes)
+                max_heroes = quest_data.get("max_heroes")
+                if max_heroes is not None and num_heroes > int(max_heroes):
+                    continue
                 obs = env.reset(quest_id=quest_id, num_heroes=num_heroes, seed=0, ruleset=ruleset)
                 public = env.public_state_json()
                 results.append(

@@ -259,6 +259,11 @@ model before adding more content. The goal is not procedural generation. The
 goal is a cleaner content boundary: explicit maps per tier, shared symbolic
 catalogs per dungeon family, and expansion-level content packs.
 
+Kickoff status: the first implementation slice should land expansion-aware
+loading, package data, canonical `base:lantern_crypt:<tier>` ids, Lantern family
+metadata, and the four Lantern tier quests before migrating any other dungeon
+families.
+
 ### Phase 1: Loader And IDs
 
 - Add an `expansions/` content root alongside the current flat `dungeons/`

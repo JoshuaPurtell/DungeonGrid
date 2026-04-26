@@ -56,7 +56,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
     def reset(
         self,
         quest_id: str = "lantern_crypt",
-        num_heroes: int = 4,
+        num_heroes: int = 3,
         seed: int | None = None,
         observation_mode: str = "mixed",
         ruleset: str | dict[str, Any] | None = None,

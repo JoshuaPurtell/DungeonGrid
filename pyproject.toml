@@ -68,7 +68,16 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-dungeongrid = ["dungeons/*/quest.json", "dungeons/*/hooks.py", "dungeons/*/README.md"]
+dungeongrid = [
+  "dungeons/*/quest.json",
+  "dungeons/*/hooks.py",
+  "dungeons/*/README.md",
+  "expansions/*/expansion.json",
+  "expansions/*/content/*.json",
+  "expansions/*/dungeons/*/family.json",
+  "expansions/*/dungeons/*/hooks.py",
+  "expansions/*/dungeons/*/*/quest.json",
+]
 
 [tool.ruff]
 line-length = 100

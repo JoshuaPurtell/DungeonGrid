@@ -1,0 +1,363 @@
+{
+  "id": "lantern_crypt",
+  "title": "The Lantern Crypt",
+  "metadata": {
+    "campaign_group": "base",
+    "maturity_tier": "polished",
+    "maturity_label": "most_mature",
+    "validation_status": "migration_proving_slice",
+    "quest_role": "tutorial_objective",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "corridors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "boss",
+      "pursuit",
+      "extraction"
+    ],
+    "marl_axis": "role-specialized causal counterplay",
+    "coordination_type": "support action before damage commitment",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_hero_attribution",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "discover counterplay before committing to the hard fight",
+    "classic_dynamic_warden_pressure": "pressure the carrier and split parties after the idol is taken",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the ember idol is secured"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 20,
+    "recommended_heroes": [
+      "barbarian",
+      "wizard",
+      "elf",
+      "dwarf"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "wizard"
+      ],
+      "2": [
+        "wizard",
+        "barbarian"
+      ],
+      "3": [
+        "barbarian",
+        "wizard",
+        "dwarf"
+      ],
+      "4": [
+        "barbarian",
+        "wizard",
+        "elf",
+        "dwarf"
+      ]
+    },
+    "hero_loadouts": {
+      "barbarian": {
+        "weapon": "broad_sword",
+        "armor": "hide_guard",
+        "combat_role": "frontline",
+        "items": [
+          "iron_ration"
+        ]
+      },
+      "wizard": {
+        "weapon": "ash_staff",
+        "spell_cards": [
+          "spark_lance",
+          "ward_circle",
+          "reveal_glyph"
+        ],
+        "combat_role": "caster",
+        "items": []
+      },
+      "elf": {
+        "weapon": "short_bow",
+        "spell_cards": [
+          "mend_wounds",
+          "blink_step"
+        ],
+        "combat_role": "skirmisher",
+        "items": []
+      },
+      "dwarf": {
+        "weapon": "hand_axe",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "chalk_marks"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "decks": {
+      "treasure": [
+        {
+          "id": "burial_coins",
+          "name": "Burial Coins",
+          "type": "treasure",
+          "item": "coin_cache",
+          "treasure": 1,
+          "reward": 0.1,
+          "rarity": "common"
+        },
+        {
+          "id": "needle_spring",
+          "name": "Needle Spring",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03,
+          "rarity": "danger"
+        }
+      ],
+      "supply": [
+        {
+          "id": "clear_lantern_lens",
+          "name": "Clear Lantern Lens",
+          "type": "artifact",
+          "item": "lantern_lens",
+          "reward": 0.12,
+          "rarity": "rare"
+        },
+        {
+          "id": "sealed_draught",
+          "name": "Sealed Draught",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08,
+          "rarity": "common"
+        }
+      ],
+      "artifact": [
+        {
+          "id": "ember_key",
+          "name": "Ember Key",
+          "type": "artifact",
+          "item": "ember_key",
+          "reward": 0.15,
+          "rarity": "rare"
+        },
+        {
+          "id": "ember_ward_card",
+          "name": "Ember Ward Card",
+          "type": "spell",
+          "item": "ward_circle",
+          "rarity": "rare",
+          "reward": 0.12
+        }
+      ],
+      "event": [
+        {
+          "id": "altar_pulse",
+          "name": "Altar Pulse",
+          "type": "event",
+          "alert": 2,
+          "reward": -0.05,
+          "rarity": "danger"
+        },
+        {
+          "id": "wandering_bone_guard",
+          "name": "Wandering Bone Guard",
+          "type": "event",
+          "rarity": "danger",
+          "reward": -0.06,
+          "effects": [
+            {
+              "type": "alert",
+              "amount": 1,
+              "reward": -0.02
+            },
+            {
+              "type": "spawn_monster",
+              "id": "wandering_bone_guard_1",
+              "role": "bone_guard"
+            }
+          ]
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic": {
+        "warden_pressure": "objective_pursuit",
+        "dread_hooks": [
+          "idol_taken",
+          "greedy_chest_search",
+          "split_party"
+        ],
+        "safe_room_search_required": true,
+        "partial_extraction": false
+      }
+    },
+    "role_selection": {
+      "required_roles_by_party_size": {
+        "1": [
+          "wizard"
+        ],
+        "2": [
+          "wizard",
+          "barbarian"
+        ],
+        "3": [
+          "barbarian",
+          "wizard",
+          "dwarf"
+        ],
+        "4": [
+          "barbarian",
+          "wizard",
+          "elf",
+          "dwarf"
+        ]
+      },
+      "mode": "hard_in_classic_dynamic"
+    }
+  },
+  "catalog": {
+    "objectives": {
+      "ember_idol": {
+        "type": "objective",
+        "objective_kind": "recover_and_extract",
+        "public_hint": "Recover the ember idol and return it to the exit."
+      }
+    },
+    "objects": {
+      "ember_altar_1": {
+        "type": "furniture",
+        "traits": [
+          "altar",
+          "destructible",
+          "boss_weakness"
+        ]
+      },
+      "weapon_rack_1": {
+        "type": "furniture",
+        "traits": [
+          "armory",
+          "destructible",
+          "boss_counterplay"
+        ]
+      },
+      "crypt_chest": {
+        "type": "chest",
+        "deck": "treasure"
+      },
+      "needle_trap": {
+        "type": "trap",
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "monsters": {
+      "lantern_wight": {
+        "type": "lantern_wight",
+        "pressure_role": "objective_pursuer"
+      },
+      "crypt_brute": {
+        "type": "crypt_brute",
+        "pressure_role": "idol_guard"
+      },
+      "hollow_guard": {
+        "type": "hollow_knight",
+        "pressure_role": "chokepoint_guard"
+      },
+      "rat_pressure": {
+        "type": "rat_pack",
+        "pressure_role": "split_party_punish"
+      },
+      "crypt_sentry": {
+        "type": "skitterling",
+        "pressure_role": "early_guard"
+      }
+    }
+  },
+  "shared_achievements": [
+    {
+      "id": "open_crypt_door",
+      "title": "Open the Crypt Door",
+      "description": "Open the first sealed door out of the entrance hall.",
+      "reward": 0.1,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "recover_ember_idol",
+      "title": "Recover the Ember Idol",
+      "description": "Pick up the ember idol.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "read_ember_tether",
+      "title": "Read the Ember Tether",
+      "description": "Search the altar and learn the wight's weakness.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "ember_altar_1"
+      }
+    },
+    {
+      "id": "escape_with_ember_idol",
+      "title": "Carry Light Home",
+      "description": "Escape with the ember idol.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "warden_runbook": {
+    "axis_pressure": "carrier pursuit, split-party punishment, and extraction timing",
+    "fairness_notes": [
+      "Do not punish heroes for hidden information before they can observe a clue.",
+      "Prefer pressure that preserves counterplay through doors, altar search, gear, or body-blocking."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "barbarian": [
+      "frontline",
+      "boss_damage",
+      "lane_holding",
+      "carrier_protection"
+    ],
+    "wizard": [
+      "ranged_magic",
+      "rule_clues",
+      "warding",
+      "counterplay_search"
+    ],
+    "elf": [
+      "scouting",
+      "ranged_cover",
+      "quick_search",
+      "carrier_support"
+    ],
+    "dwarf": [
+      "trap_disarm",
+      "route_marking",
+      "lock_hazard_specialist",
+      "safe_search"
+    ]
+  },
+  "scripts": {
+    "family": "lantern_crypt"
+  }
+}

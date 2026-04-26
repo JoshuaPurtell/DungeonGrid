@@ -72,7 +72,7 @@ DungeonGrid checkpoints are true environment snapshots: hidden state, public sta
 from dungeongrid import DungeonGridEnvironment
 
 env = DungeonGridEnvironment()
-env.reset(quest_id="lantern_crypt", num_heroes=4, seed=11)
+env.reset(quest_id="lantern_crypt", num_heroes=3, seed=11)
 env.act_plan([{"type": "move", "direction": "east"}])
 
 env.save_checkpoint("lantern_crypt.ckpt", metadata={"label": "after_first_move"})
@@ -85,7 +85,28 @@ The container runtime exposes the same snapshot through checkpoint descriptors. 
 
 ## Dungeons
 
-Bundled dungeons use a folder-per-dungeon schema:
+Bundled dungeons are moving to an expansion/family/tier schema:
+
+```text
+expansions/<expansion>/dungeons/<family>/
+  family.json
+  hooks.py
+  pico/quest.json
+  lite/quest.json
+  medium/quest.json
+  heavy/quest.json
+```
+
+Lantern Crypt is the first migrated family and is available as:
+
+```text
+base:lantern_crypt:pico
+base:lantern_crypt:lite
+base:lantern_crypt:medium
+base:lantern_crypt:heavy
+```
+
+Legacy bundled dungeons still use the folder-per-dungeon schema during migration:
 
 ```text
 dungeons/<dungeon_id>/

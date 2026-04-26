@@ -40,41 +40,173 @@ class GridEngine:
         self.quest_dir = Path(quest_dir) if quest_dir else None
 
     def available_quests(self) -> list[str]:
+        quest_ids: set[str] = set()
         if self.quest_dir:
-            return sorted(p.name for p in self.quest_dir.iterdir() if (p / "quest.json").exists())
+            quest_ids.update(p.name for p in self.quest_dir.iterdir() if (p / "quest.json").exists())
+            return sorted(quest_ids)
         dungeon_pkg = resources.files("dungeongrid.dungeons")
-        return sorted(
+        quest_ids.update(
             p.name
             for p in dungeon_pkg.iterdir()
             if p.is_dir() and p.joinpath("quest.json").is_file()
         )
+        quest_ids.update(self._available_expansion_quests())
+        return sorted(quest_ids)
 
-    def load_quest_data(self, quest_id: str) -> dict[str, Any]:
+    def load_quest_data(self, quest_id: str, num_heroes: int | None = None) -> dict[str, Any]:
         if self.quest_dir:
             path = self.quest_dir / quest_id / "quest.json"
             if not path.exists():
                 raise FileNotFoundError(f"Quest not found: {quest_id}")
             return json.loads(path.read_text(encoding="utf-8"))
+        canonical_id = self._canonical_quest_id(quest_id, num_heroes=num_heroes)
+        if self._is_expansion_quest_id(canonical_id):
+            return self._load_expansion_quest_data(canonical_id)
         try:
             text = (
                 resources.files("dungeongrid.dungeons")
-                .joinpath(quest_id, "quest.json")
+                .joinpath(canonical_id, "quest.json")
                 .read_text(encoding="utf-8")
             )
-            return json.loads(text)
+            data = json.loads(text)
+            data.setdefault("quest_id", canonical_id)
+            return data
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Quest not found: {quest_id}") from exc
+
+    def _canonical_quest_id(self, quest_id: str, num_heroes: int | None = None) -> str:
+        if quest_id == "lantern_crypt" and num_heroes in {1, 2, 3, 4}:
+            return {
+                1: "base:lantern_crypt:pico",
+                2: "base:lantern_crypt:lite",
+                3: "base:lantern_crypt:medium",
+                4: "base:lantern_crypt:heavy",
+            }[num_heroes]
+        aliases = {
+            "lantern_crypt": "base:lantern_crypt:medium",
+            "lantern_crypt_lite": "base:lantern_crypt:lite",
+            "lantern_crypt_pico": "base:lantern_crypt:pico",
+            "lantern_crypt_heavy": "base:lantern_crypt:heavy",
+        }
+        if quest_id in aliases:
+            return aliases[quest_id]
+        if quest_id.count(":") == 1:
+            family, tier = quest_id.split(":", 1)
+            return f"base:{family}:{tier}"
+        return quest_id
+
+    def _is_expansion_quest_id(self, quest_id: str) -> bool:
+        return quest_id.count(":") == 2
+
+    def _available_expansion_quests(self) -> list[str]:
+        try:
+            expansion_root = resources.files("dungeongrid").joinpath("expansions")
+        except ModuleNotFoundError:
+            return []
+        if not expansion_root.is_dir():
+            return []
+        quest_ids: list[str] = []
+        for expansion in expansion_root.iterdir():
+            dungeons_root = expansion.joinpath("dungeons")
+            if not expansion.is_dir() or not dungeons_root.is_dir():
+                continue
+            for family in dungeons_root.iterdir():
+                if not family.is_dir():
+                    continue
+                for tier in family.iterdir():
+                    if tier.is_dir() and tier.joinpath("quest.json").is_file():
+                        quest_ids.append(f"{expansion.name}:{family.name}:{tier.name}")
+        return quest_ids
+
+    def _load_expansion_quest_data(self, quest_id: str) -> dict[str, Any]:
+        expansion, family, tier = quest_id.split(":", 2)
+        family_root = (
+            resources.files("dungeongrid")
+            .joinpath("expansions", expansion, "dungeons", family)
+        )
+        quest_resource = family_root.joinpath(tier, "quest.json")
+        if not quest_resource.is_file():
+            raise FileNotFoundError(f"Quest not found: {quest_id}")
+        quest = json.loads(quest_resource.read_text(encoding="utf-8"))
+        family_data: dict[str, Any] = {}
+        family_resource = family_root.joinpath("family.json")
+        if family_resource.is_file():
+            family_data = json.loads(family_resource.read_text(encoding="utf-8"))
+        return self._merge_family_quest(
+            quest_id=quest_id,
+            expansion=expansion,
+            family=family,
+            tier=tier,
+            family_data=family_data,
+            quest=quest,
+        )
+
+    def _merge_family_quest(
+        self,
+        *,
+        quest_id: str,
+        expansion: str,
+        family: str,
+        tier: str,
+        family_data: dict[str, Any],
+        quest: dict[str, Any],
+    ) -> dict[str, Any]:
+        data = self._deep_merge(dict(family_data.get("defaults", {})), dict(quest))
+        data["quest_id"] = quest_id
+        data.setdefault("title", family_data.get("title", quest_id))
+        metadata = self._deep_merge(dict(family_data.get("metadata", {})), data.get("metadata", {}))
+        metadata.update(
+            {
+                "expansion": expansion,
+                "variant_family": family,
+                "size_tier": tier,
+                "canonical_quest_id": quest_id,
+            }
+        )
+        data["metadata"] = metadata
+        if family_data.get("catalog"):
+            data.setdefault("family_catalog", family_data["catalog"])
+        if family_data.get("warden_runbook"):
+            data.setdefault("warden_runbook", family_data["warden_runbook"])
+        if family_data.get("role_demand_vocabulary"):
+            data.setdefault("role_demand_vocabulary", family_data["role_demand_vocabulary"])
+        data["scripts"] = self._deep_merge(dict(family_data.get("scripts", {})), data.get("scripts", {}))
+        data["decks"] = self._deep_merge(dict(family_data.get("decks", {})), data.get("decks", {}))
+        data["hero_loadouts"] = self._deep_merge(
+            dict(family_data.get("hero_loadouts", {})), data.get("hero_loadouts", {})
+        )
+        shared_achievements = list(family_data.get("shared_achievements", []))
+        if shared_achievements:
+            seen: set[str] = set()
+            merged_achievements: list[dict[str, Any]] = []
+            for raw in [*shared_achievements, *data.get("achievements", [])]:
+                if not isinstance(raw, dict):
+                    continue
+                achievement_id = str(raw.get("id", ""))
+                if not achievement_id or achievement_id in seen:
+                    continue
+                seen.add(achievement_id)
+                merged_achievements.append(dict(raw))
+            data["achievements"] = merged_achievements
+        return data
 
     def new_state(
         self,
         quest_id: str = "lantern_crypt",
-        num_heroes: int = 4,
+        num_heroes: int = 3,
         seed: int | None = None,
         ruleset: str | dict[str, Any] | None = None,
         hero_roles: list[str] | None = None,
     ) -> GameState:
         rng = random.Random(seed)
-        data = self.load_quest_data(quest_id)
+        data = self.load_quest_data(quest_id, num_heroes=num_heroes)
+        state_quest_id = str(data.get("quest_id", quest_id))
+        max_heroes = data.get("max_heroes")
+        if max_heroes is not None and num_heroes > int(max_heroes):
+            raise ValueError(
+                f"Quest {state_quest_id!r} supports at most {int(max_heroes)} heroes; "
+                f"requested {num_heroes}."
+            )
         resolved_ruleset = self._resolve_ruleset(data, ruleset)
         ascii_map = data["map"]["ascii"]
         lines = [line.rstrip("\n") for line in ascii_map.strip("\n").splitlines()]
@@ -256,8 +388,8 @@ class GridEngine:
             fragile=bool(data["objective"].get("fragile", False)),
         )
         state = GameState(
-            quest_id=quest_id,
-            title=data.get("title", quest_id),
+            quest_id=state_quest_id,
+            title=data.get("title", state_quest_id),
             difficulty=data.get("difficulty", "starter"),
             width=width,
             height=len(lines),
@@ -289,7 +421,7 @@ class GridEngine:
                 },
             },
             ruleset=resolved_ruleset,
-            quest_achievement_defs=achievement_from_quest(quest_id, data),
+            quest_achievement_defs=achievement_from_quest(state_quest_id, data),
             hero_order=list(heroes),
             ap_remaining={hero_id: 3 for hero_id in heroes},
             movement_remaining={hero_id: 0 for hero_id in heroes},
@@ -347,9 +479,14 @@ class GridEngine:
             if len(roles) != num_heroes:
                 raise ValueError("hero_roles length must match num_heroes")
         else:
+            by_party_size = data.get("recommended_heroes_by_party_size", {})
+            party_recommended = by_party_size.get(str(num_heroes)) if isinstance(by_party_size, dict) else None
             recommended = [
                 str(role)
-                for role in data.get("recommended_heroes", ["barbarian", "wizard", "elf", "dwarf"])
+                for role in (
+                    party_recommended
+                    or data.get("recommended_heroes", ["barbarian", "wizard", "elf", "dwarf"])
+                )
             ]
             required = self._role_requirements(data, num_heroes) if apply_requirements else []
             roles = []

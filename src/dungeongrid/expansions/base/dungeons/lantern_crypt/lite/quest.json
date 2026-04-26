@@ -1,0 +1,250 @@
+{
+  "quest_id": "base:lantern_crypt:lite",
+  "title": "The Lantern Crypt Lite",
+  "max_heroes": 2,
+  "metadata": {
+    "size_tier": "lite",
+    "intended_num_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "room_count_target": "3-4",
+    "corridor_pressure": "one chokepoint creates a two-hero handoff",
+    "role_demands": {
+      "wizard": [
+        "search altar clue",
+        "carry or ward carrier"
+      ],
+      "barbarian": [
+        "hold door",
+        "fight brute",
+        "protect carrier"
+      ]
+    },
+    "coordination_demands": [
+      "barbarian holds the objective-room door while wizard searches or carries",
+      "optional cache is safer after the corridor is controlled"
+    ]
+  },
+  "map": {
+    "ascii": "###########\n#E..D.....#\n#...#..I..#\n#...#..R..#\n###D#######\n#..T.C..G.#\n###########",
+    "width": 11,
+    "height": 7
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "ember_idol",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      2
+    ]
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "Small enough that the two heroes must plan who opens, carries, or holds.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "objective_room": {
+      "name": "Objective Room",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "The idol room forces carrier timing under brute pressure.",
+      "tags": [
+        "objective",
+        "pressure"
+      ]
+    },
+    "side_cache": {
+      "name": "Side Cache",
+      "rect": [
+        1,
+        5,
+        9,
+        5
+      ],
+      "description": "A treasure route tests greed against extraction tempo.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "ember_altar_1",
+      "name": "Ember Altar",
+      "category": "altar",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "event",
+      "description": "The altar trembles whenever torchlight touches the idol.",
+      "traits": [
+        "altar",
+        "destructible",
+        "boss_weakness"
+      ],
+      "destructible": true,
+      "hp": 4,
+      "max_hp": 4,
+      "blocks_los": true,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "set_script",
+            "key": "ember_altar_read",
+            "value": true,
+            "trace_kind": "boss_weakness_revealed"
+          },
+          {
+            "type": "monster_status",
+            "role": "lantern_wight",
+            "status": "vulnerable",
+            "trace_kind": "boss_counterplay_used"
+          },
+          {
+            "type": "emit",
+            "message": "The altar inscription names the wight's ember-tether weakness."
+          }
+        ],
+        "treasure": {
+          "type": "draw_deck",
+          "deck": "event"
+        }
+      },
+      "break_effect": [
+        {
+          "type": "set_script",
+          "key": "ember_altar_destroyed",
+          "value": true,
+          "trace_kind": "boss_counterplay_used"
+        },
+        {
+          "type": "monster_status",
+          "role": "lantern_wight",
+          "status": "weakened"
+        },
+        {
+          "type": "alert",
+          "amount": 2,
+          "reward": -0.06
+        },
+        {
+          "type": "emit",
+          "message": "The ember altar collapses; the pursuing light gutters, but the crash echoes."
+        }
+      ]
+    },
+    {
+      "id": "weapon_rack_1",
+      "name": "Brittle Weapon Rack",
+      "category": "armory",
+      "pos": [
+        6,
+        1
+      ],
+      "deck": "artifact",
+      "description": "Most weapons are rusted through, but one wrapped object looks preserved.",
+      "traits": [
+        "armory",
+        "destructible",
+        "boss_counterplay"
+      ],
+      "destructible": true,
+      "hp": 3,
+      "max_hp": 3,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "weapon",
+            "item": "hand_axe",
+            "reward": 0.12
+          },
+          {
+            "type": "set_script",
+            "key": "crypt_weapon_rack_searched",
+            "value": true
+          },
+          {
+            "type": "emit",
+            "message": "A preserved hand axe slides free from the brittle rack."
+          }
+        ],
+        "treasure": {
+          "type": "draw_deck",
+          "deck": "artifact"
+        }
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.03
+        },
+        {
+          "type": "weapon",
+          "item": "hand_axe",
+          "reward": 0.08
+        },
+        {
+          "type": "emit",
+          "message": "The brittle rack shatters loudly, scattering one usable axe."
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "lantern_wight_spawn": [
+      7,
+      3
+    ],
+    "tier": "lite"
+  },
+  "achievements": [
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    }
+  ]
+}

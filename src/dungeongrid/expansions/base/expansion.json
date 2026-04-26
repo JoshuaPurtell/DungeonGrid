@@ -1,0 +1,6 @@
+{
+  "id": "base",
+  "title": "Base DungeonGrid",
+  "description": "Core DungeonGrid dungeon families and reusable classic dungeon-crawl mechanics.",
+  "status": "migration_in_progress"
+}

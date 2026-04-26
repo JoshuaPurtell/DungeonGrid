@@ -82,6 +82,11 @@ class HookEngine:
         if path and path.exists():
             return self._module_from_path(quest_id, path)
 
+        expansion_hook = self._expansion_hooks_resource(quest_id)
+        if expansion_hook is not None:
+            with resources.as_file(expansion_hook) as hook_path:
+                return self._module_from_path(quest_id, hook_path)
+
         try:
             hook_resource = resources.files("dungeongrid.dungeons").joinpath(quest_id, "hooks.py")
             if not hook_resource.is_file():
@@ -101,6 +106,34 @@ class HookEngine:
         if flat_path.exists():
             return flat_path
         return None
+
+    def _expansion_hooks_resource(self, quest_id: str) -> Any | None:
+        canonical = self._canonical_quest_id(quest_id)
+        if canonical.count(":") != 2:
+            return None
+        expansion, family, _tier = canonical.split(":", 2)
+        try:
+            hook_resource = (
+                resources.files("dungeongrid")
+                .joinpath("expansions", expansion, "dungeons", family, "hooks.py")
+            )
+        except ModuleNotFoundError:
+            return None
+        return hook_resource if hook_resource.is_file() else None
+
+    def _canonical_quest_id(self, quest_id: str) -> str:
+        aliases = {
+            "lantern_crypt": "base:lantern_crypt:medium",
+            "lantern_crypt_lite": "base:lantern_crypt:lite",
+            "lantern_crypt_pico": "base:lantern_crypt:pico",
+            "lantern_crypt_heavy": "base:lantern_crypt:heavy",
+        }
+        if quest_id in aliases:
+            return aliases[quest_id]
+        if quest_id.count(":") == 1:
+            family, tier = quest_id.split(":", 1)
+            return f"base:{family}:{tier}"
+        return quest_id
 
     def _module_from_path(self, quest_id: str, path: Path) -> ModuleType | None:
         module_name = f"_dungeongrid_hook_{quest_id}_{abs(hash(str(path)))}"

@@ -1,0 +1,303 @@
+{
+  "quest_id": "base:lantern_crypt:medium",
+  "title": "The Lantern Crypt",
+  "max_heroes": 3,
+  "metadata": {
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      1,
+      3
+    ],
+    "room_count_target": "5-6",
+    "corridor_pressure": "branching corridors create scouting, route choice, and pursuit management",
+    "role_demands": {
+      "barbarian": [
+        "hold chokepoint",
+        "fight brute",
+        "protect carrier"
+      ],
+      "wizard": [
+        "search altar",
+        "use ward or ranged magic",
+        "support carrier"
+      ],
+      "dwarf": [
+        "handle trap",
+        "find secret route",
+        "safe chest search"
+      ]
+    },
+    "coordination_demands": [
+      "barbarian controls pursuit while wizard resolves altar counterplay",
+      "dwarf opens or marks the safer return route before idol extraction",
+      "carrier waits for the exit route to be safe before committing"
+    ]
+  },
+  "map": {
+    "ascii": "###################\n#E....#.....#.....#\n#.....D..C..D..G..#\n###D###.....###D###\n#.....#.........#.#\n#..T..D....P....D.#\n#.....#.........#.#\n###D#######D#####D#\n#.....#.....#.....#\n#..H..D..S..#..I.R#\n#.....#.....D.....#\n###################",
+    "width": 19,
+    "height": 12
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      3,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "ember_idol",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      15,
+      9
+    ]
+  },
+  "rooms": {
+    "entry_hall": {
+      "name": "Entry Hall",
+      "rect": [
+        1,
+        1,
+        5,
+        2
+      ],
+      "description": "Cold lantern hooks line the first hall. Footprints lead toward a sealed eastern door.",
+      "tags": [
+        "start",
+        "safe"
+      ]
+    },
+    "upper_cache": {
+      "name": "Upper Cache",
+      "rect": [
+        7,
+        1,
+        11,
+        3
+      ],
+      "description": "A compact cache and armory branch gives the party a preparation choice.",
+      "tags": [
+        "treasure",
+        "equipment"
+      ]
+    },
+    "sentry_post": {
+      "name": "Sentry Post",
+      "rect": [
+        13,
+        1,
+        17,
+        3
+      ],
+      "description": "A skittering sentry punishes reckless solo scouting.",
+      "tags": [
+        "combat",
+        "scouting"
+      ]
+    },
+    "altar_crossing": {
+      "name": "Altar Crossing",
+      "rect": [
+        1,
+        4,
+        15,
+        6
+      ],
+      "description": "The central corridor and altar explain how to weaken the idol pursuit.",
+      "tags": [
+        "hazard",
+        "counterplay",
+        "coordination"
+      ]
+    },
+    "lower_guard": {
+      "name": "Lower Guard Room",
+      "rect": [
+        1,
+        8,
+        11,
+        10
+      ],
+      "description": "A hollow guard and secret route give the dwarf real route work.",
+      "tags": [
+        "combat",
+        "specialist"
+      ]
+    },
+    "idol_chapel": {
+      "name": "Idol Chapel",
+      "rect": [
+        14,
+        8,
+        17,
+        10
+      ],
+      "description": "The ember idol glows near a hulking crypt guardian. Taking it changes the extraction problem.",
+      "tags": [
+        "objective",
+        "boss"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "ember_altar_1",
+      "name": "Ember Altar",
+      "category": "altar",
+      "pos": [
+        11,
+        5
+      ],
+      "deck": "event",
+      "description": "The altar trembles whenever torchlight touches the idol.",
+      "traits": [
+        "altar",
+        "destructible",
+        "boss_weakness"
+      ],
+      "destructible": true,
+      "hp": 4,
+      "max_hp": 4,
+      "blocks_los": true,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "set_script",
+            "key": "ember_altar_read",
+            "value": true,
+            "trace_kind": "boss_weakness_revealed"
+          },
+          {
+            "type": "monster_status",
+            "role": "lantern_wight",
+            "status": "vulnerable",
+            "trace_kind": "boss_counterplay_used"
+          },
+          {
+            "type": "emit",
+            "message": "The altar inscription names the wight's ember-tether weakness."
+          }
+        ],
+        "treasure": {
+          "type": "draw_deck",
+          "deck": "event"
+        }
+      },
+      "break_effect": [
+        {
+          "type": "set_script",
+          "key": "ember_altar_destroyed",
+          "value": true,
+          "trace_kind": "boss_counterplay_used"
+        },
+        {
+          "type": "monster_status",
+          "role": "lantern_wight",
+          "status": "weakened"
+        },
+        {
+          "type": "alert",
+          "amount": 2,
+          "reward": -0.06
+        },
+        {
+          "type": "emit",
+          "message": "The ember altar collapses; the pursuing light gutters, but the crash echoes."
+        }
+      ]
+    },
+    {
+      "id": "weapon_rack_1",
+      "name": "Brittle Weapon Rack",
+      "category": "armory",
+      "pos": [
+        8,
+        2
+      ],
+      "deck": "artifact",
+      "description": "Most weapons are rusted through, but one wrapped object looks preserved.",
+      "traits": [
+        "armory",
+        "destructible",
+        "boss_counterplay"
+      ],
+      "destructible": true,
+      "hp": 3,
+      "max_hp": 3,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "weapon",
+            "item": "hand_axe",
+            "reward": 0.12
+          },
+          {
+            "type": "set_script",
+            "key": "crypt_weapon_rack_searched",
+            "value": true
+          },
+          {
+            "type": "emit",
+            "message": "A preserved hand axe slides free from the brittle rack."
+          }
+        ],
+        "treasure": {
+          "type": "draw_deck",
+          "deck": "artifact"
+        }
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.03
+        },
+        {
+          "type": "weapon",
+          "item": "hand_axe",
+          "reward": 0.08
+        },
+        {
+          "type": "emit",
+          "message": "The brittle rack shatters loudly, scattering one usable axe."
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "lantern_wight_spawn": [
+      9,
+      10
+    ],
+    "tier": "medium"
+  },
+  "achievements": [
+    {
+      "id": "map_medium_routes",
+      "title": "Map the Medium Routes",
+      "description": "Reveal at least four Lantern Crypt rooms.",
+      "reward": 0.12,
+      "condition": {
+        "type": "rooms_explored_at_least",
+        "count": 4
+      }
+    }
+  ]
+}
