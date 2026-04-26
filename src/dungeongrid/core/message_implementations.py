@@ -46,7 +46,7 @@ class MasterToSlavesProtocol(MessageProtocol):
             return None
         return (
             "not_designated_leader",
-            f"{actor_id} cannot send under master_to_slaves; current leader is {leader_id}.",
+            f"{actor_id} cannot send under {self.mode}; current leader is {leader_id}.",
         )
 
     def public_config(self) -> dict[str, Any]:
