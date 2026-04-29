@@ -413,7 +413,13 @@ class RulesEngine:
             and action.get("target") is None
         ):
             return "missing_target", f"{action_type} requires a target."
-        if hero and action_type in {"interact", "open_door", "search_treasure", "search_furniture", "disarm"}:
+        if hero and action_type in {
+            "interact",
+            "open_door",
+            "search_treasure",
+            "search_furniture",
+            "disarm",
+        }:
             guidance = self._proximity_guidance(state, hero, str(action_type), action.get("target"))
             if guidance:
                 return guidance
@@ -589,9 +595,8 @@ class RulesEngine:
             state.total_damage_taken += damage
             text += f" A hidden trap snaps open, dealing {damage} damage."
             if hero.hp <= 0:
-                hero.alive = False
-                hero.hp = 0
-                text += f" {hero.role} is downed."
+                state.mark_defeated(hero)
+                text += f" {state.defeat_message(hero)}"
                 if state.objective.carrier == hero.id and state.objective.fragile:
                     state.done = True
                     state.winner = "dungeon"
@@ -680,8 +685,7 @@ class RulesEngine:
             ):
                 special_text += f" {target.role} rises again."
             else:
-                target.alive = False
-                target.hp = 0
+                state.mark_defeated(target)
                 killed = True
                 if state.objective.carrier == target.id:
                     if state.objective.fragile:
@@ -697,11 +701,13 @@ class RulesEngine:
         mode = "ranged" if ranged else "melee"
         weapon_name = weapon.get("name") if weapon else None
         with_weapon = f" with {weapon_name}" if weapon_name else ""
-        text = f"{attacker.role} makes a {mode} attack{with_weapon} on {target.role}: {hits} hits, {blocks} blocks, {damage} damage."
+        attacker_name = state.mode.display_role(attacker.role)
+        target_name = state.mode.display_role(target.role)
+        text = f"{attacker_name} makes a {mode} attack{with_weapon} on {target_name}: {hits} hits, {blocks} blocks, {damage} damage."
         text += special_text
         reward = 0.05 * damage
         if killed:
-            text += f" {target.role} is defeated."
+            text += f" {state.defeat_message(target)}"
             reward += 0.15 if target.team == "dungeon" else -0.3
         return text, reward
 
@@ -748,12 +754,13 @@ class RulesEngine:
                     killed = False
                     special_text += f" {target.role} rises again."
                 else:
-                    target.hp = 0
-                    target.alive = False
-            text = f"{caster.role} casts spark lance at {target.role}: {damage} damage."
+                    state.mark_defeated(target)
+            caster_name = state.mode.display_role(caster.role)
+            target_name = state.mode.display_role(target.role)
+            text = f"{caster_name} casts spark lance at {target_name}: {damage} damage."
             text += special_text
             if killed:
-                text += f" {target.role} is defeated."
+                text += f" {state.defeat_message(target)}"
             self._consume_spell_card(state, caster, spell, target_id=target.id)
             return text, 0.08 * damage + (0.15 if killed else 0.0)
         if spell == "ward_circle":
@@ -1202,7 +1209,7 @@ class RulesEngine:
         trap = state.traps[trap_id]
         self._cost(state, hero, "disarm")
         # Simple deterministic skill gate with random tie-breaker.
-        roll = self.rng.randint(1, 6) + (2 if hero.role == "dwarf" else 0)
+        roll = self.rng.randint(1, 6) + self._trapcraft_bonus(hero)
         if roll >= 4:
             trap.armed = False
             trap.revealed = True
@@ -1212,8 +1219,7 @@ class RulesEngine:
         trap.armed = False
         trap.revealed = True
         if hero.hp <= 0:
-            hero.alive = False
-            hero.hp = 0
+            state.mark_defeated(hero)
         return f"{hero.role} fails to disarm {trap.id}; it triggers for 1 damage.", -0.15
 
     def _interact(self, state: GameState, hero: Entity, target_id: str) -> tuple[str, float]:
@@ -1428,7 +1434,7 @@ class RulesEngine:
                 hero.hp = max(0, hero.hp - amount)
                 state.total_damage_taken += amount
                 if hero.hp <= 0:
-                    hero.alive = False
+                    state.mark_defeated(hero)
                 texts.append(f"{hero.role} takes {amount} damage.")
                 reward += float(payload.get("reward", -0.15 * amount))
                 resolved.append({"type": "damage", "amount": amount})
@@ -1900,7 +1906,7 @@ class RulesEngine:
             hero.hp = max(0, hero.hp - damage)
             state.total_damage_taken += damage
             if hero.hp <= 0:
-                hero.alive = False
+                state.mark_defeated(hero)
             return (
                 f"{hero.role} opens a chest; a trap snaps shut for {damage} damage.",
                 -0.15 * damage,
@@ -2021,7 +2027,9 @@ class RulesEngine:
             if self.grid.manhattan(monster.pos, h.pos) <= monster.sight_range
             and self.grid.line_clear(state, monster.pos, h.pos)
         ]
-        if monster.role == "cinder_mage" and visible_targets:
+        if (
+            monster.role == "cinder_mage" or monster.equipment.get("attack_range")
+        ) and visible_targets:
             attack_range = int(getattr(monster, "equipment", {}).get("attack_range", 0) or 5)
             ranged_targets = [
                 h
@@ -2109,8 +2117,7 @@ class RulesEngine:
         hero.hp -= damage
         state.total_damage_taken += damage
         if hero.hp <= 0:
-            hero.hp = 0
-            hero.alive = False
+            state.mark_defeated(hero)
             if state.objective.carrier == hero.id:
                 if state.objective.fragile:
                     state.done = True
@@ -2132,7 +2139,7 @@ class RulesEngine:
         text += prevention_text
         text += cleave_text
         if not hero.alive:
-            text += f" {hero.role} is downed."
+            text += f" {state.defeat_message(hero)}"
         return text, -0.1 * damage
 
     def _hero_is_isolated(self, state: GameState, hero: Entity) -> bool:
@@ -2156,8 +2163,7 @@ class RulesEngine:
         target.hp -= damage
         state.total_damage_taken += damage
         if target.hp <= 0:
-            target.hp = 0
-            target.alive = False
+            state.mark_defeated(target)
         self._record_monster_special(
             state,
             "monster_cleave",
@@ -2169,7 +2175,7 @@ class RulesEngine:
         suffix = f" {monster.role} cleaves into {target.role} for {damage} damage."
         suffix += prevention_text
         if not target.alive:
-            suffix += f" {target.role} is downed."
+            suffix += f" {state.defeat_message(target)}"
         return suffix
 
     def _record_monster_special(
@@ -2258,6 +2264,15 @@ class RulesEngine:
 
     def _roll_successes(self, dice: int) -> int:
         return sum(1 for _ in range(max(0, dice)) if self.rng.randint(1, 6) >= 5)
+
+    def _trapcraft_bonus(self, hero: Entity) -> int:
+        if (
+            hero.role == "dwarf"
+            or hero.ability == "trapcraft"
+            or hero.equipment.get("tool") == "trap_kit"
+        ):
+            return 2
+        return 0
 
     def _run_script(self, state: GameState, script_name: str) -> None:
         script = state.scripts.get(script_name)

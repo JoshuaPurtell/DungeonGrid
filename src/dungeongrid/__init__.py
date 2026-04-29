@@ -21,6 +21,7 @@ from .warden import DeterministicWardenPolicy, WardenDecision, WardenPolicy, War
 __version__ = "0.1.0a6"
 
 __all__ = [
+    "CHECKPOINT_VERSION",
     "SUPPORTED_ENV_NAMES",
     "DeterministicWardenPolicy",
     "DungeonGridAction",
@@ -35,7 +36,6 @@ __all__ = [
     "WardenDecision",
     "WardenPolicy",
     "WardenReActAdapter",
-    "CHECKPOINT_VERSION",
     "__version__",
     "dungeongrid_act_schema",
     "dungeongrid_rules",

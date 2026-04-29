@@ -1,0 +1,219 @@
+{
+  "quest_id": "goblin:ironroot_hold:heavy",
+  "title": "Ironroot Hold Heavy",
+  "max_heroes": 4,
+  "metadata": {
+    "size_tier": "heavy",
+    "intended_num_heroes": 4,
+    "supported_hero_range": [
+      1,
+      4
+    ],
+    "room_count_target": "5"
+  },
+  "map": {
+    "ascii": "#####################\n#E..D....C....#.....#\n#...#..Q...X..#..T..#\n#...#..###D####.....#\n#...T..#..I..Z#..U..#\n#......#..U...#.....#\n###D#########D###.###\n#....C....Q....X....#\n#..T......#....V....#\n#....D....#....Z....#\n#....C.........U....#\n#####################",
+    "width": 21,
+    "height": 12
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      2,
+      2
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "warden_seal",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      10,
+      4
+    ]
+  },
+  "rooms": {
+    "breach": {
+      "name": "Goblin Breach",
+      "rect": [
+        1,
+        1,
+        5,
+        5
+      ],
+      "description": "A crowded breach that rewards careful sequencing.",
+      "tags": [
+        "start",
+        "trap"
+      ]
+    },
+    "barracks": {
+      "name": "Shield Barracks",
+      "rect": [
+        7,
+        1,
+        13,
+        2
+      ],
+      "description": "Dwarves rally around shields and bolts.",
+      "tags": [
+        "combat",
+        "ranged"
+      ]
+    },
+    "rune_workshop": {
+      "name": "Rune Workshop",
+      "rect": [
+        16,
+        1,
+        19,
+        5
+      ],
+      "description": "Rune plates and alarm lines threaten noisy raiders.",
+      "tags": [
+        "rune",
+        "trap"
+      ]
+    },
+    "seal_vault": {
+      "name": "Seal Vault",
+      "rect": [
+        8,
+        4,
+        13,
+        5
+      ],
+      "description": "The target sits in the most defensible corner of the hold.",
+      "tags": [
+        "objective",
+        "support"
+      ]
+    },
+    "warden_patrol": {
+      "name": "Warden Patrol",
+      "rect": [
+        1,
+        7,
+        19,
+        10
+      ],
+      "description": "The warden patrol can punish a split extraction.",
+      "tags": [
+        "pressure",
+        "boss"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "armory_rack_1",
+      "pos": [
+        10,
+        1
+      ],
+      "category": "armory",
+      "name": "Dwarven Armory Rack",
+      "description": "Orderly axes and shields line the wall.",
+      "deck": "supply",
+      "traits": [
+        "armory",
+        "searchable"
+      ],
+      "hp": 2,
+      "max_hp": 2,
+      "destructible": true
+    },
+    {
+      "id": "ledger_desk_1",
+      "pos": [
+        5,
+        7
+      ],
+      "category": "desk",
+      "name": "Shift Ledger Desk",
+      "description": "Patrol notes are written in impossibly neat dwarven script.",
+      "deck": "treasure",
+      "traits": [
+        "records",
+        "searchable"
+      ]
+    },
+    {
+      "id": "rune_plinth_1",
+      "pos": [
+        11,
+        5
+      ],
+      "category": "shrine",
+      "name": "Rune Plinth",
+      "description": "A defensive rune hums under the runekeeper's watch.",
+      "traits": [
+        "rune",
+        "cover"
+      ],
+      "cover": 1
+    },
+    {
+      "id": "cell_gate_1",
+      "pos": [
+        6,
+        10
+      ],
+      "category": "gate",
+      "name": "Low Cell Gate",
+      "description": "A heavy dwarven cell gate, currently wedged open.",
+      "blocks_movement": false,
+      "traits": [
+        "prison",
+        "gate"
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "cell_key",
+    "chest_3": "dwarf_coin_roll"
+  },
+  "scripts": {
+    "tier": "heavy"
+  },
+  "achievements": [
+    {
+      "id": "heavy_full_crew_escape",
+      "title": "Everyone Back Underground",
+      "description": "Escape the heavy hold with the full monster crew alive.",
+      "reward": 0.2,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_warden_1": {
+      "activation": "alert"
+    }
+  },
+  "bosses": {
+    "dwarf_warden_1": {
+      "name": "Captain Stonebrow",
+      "phase": "base",
+      "defeat_reward": 0.3,
+      "counterplay_hint": "Use the kobold to clear traps and the ogre to hold the shield line."
+    }
+  },
+  "torch": 24
+}

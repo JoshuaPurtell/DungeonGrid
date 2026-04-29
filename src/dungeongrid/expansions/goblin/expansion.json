@@ -1,0 +1,10 @@
+{
+  "id": "goblin",
+  "title": "Goblin Mode",
+  "description": "An inverted DungeonGrid expansion where a monster-party raids a dwarven hold and defeats defenders by knocking them out.",
+  "version": "0.1.0",
+  "default_game_mode": "goblin",
+  "families": [
+    "ironroot_hold"
+  ]
+}

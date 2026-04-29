@@ -1,0 +1,82 @@
+{
+  "sprite_style": "procedural_pixel_grid",
+  "party_roles": {
+    "goblin_scout": {
+      "palette": [
+        "green",
+        "dark_hood",
+        "leather"
+      ],
+      "silhouette": "small hooded sling scout"
+    },
+    "ogre_bruiser": {
+      "palette": [
+        "green",
+        "brown",
+        "iron"
+      ],
+      "silhouette": "large club bruiser"
+    },
+    "kobold_tinkerer": {
+      "palette": [
+        "orange",
+        "brown",
+        "steel"
+      ],
+      "silhouette": "small reptile with tool spear"
+    },
+    "boggart_trickster": {
+      "palette": [
+        "blue_gray",
+        "purple",
+        "gold"
+      ],
+      "silhouette": "fae trickster with hook staff"
+    }
+  },
+  "opponent_roles": {
+    "dwarf_sentry": {
+      "palette": [
+        "steel",
+        "brown",
+        "gold"
+      ],
+      "silhouette": "short armored guard"
+    },
+    "dwarf_shieldbearer": {
+      "palette": [
+        "steel",
+        "blue",
+        "gold"
+      ],
+      "silhouette": "shield-forward blocker"
+    },
+    "dwarf_crossbow": {
+      "palette": [
+        "steel",
+        "wood",
+        "brown"
+      ],
+      "silhouette": "short crossbow defender"
+    },
+    "dwarf_runekeeper": {
+      "palette": [
+        "steel",
+        "gold",
+        "stone"
+      ],
+      "silhouette": "rune staff support"
+    },
+    "dwarf_warden": {
+      "palette": [
+        "steel",
+        "burgundy",
+        "gold"
+      ],
+      "silhouette": "elite shield warden"
+    }
+  },
+  "status_overlays": {
+    "knocked_out": "dimmed prone marker with sleep stars, never a corpse marker"
+  }
+}

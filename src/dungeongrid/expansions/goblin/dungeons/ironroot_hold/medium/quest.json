@@ -1,0 +1,185 @@
+{
+  "quest_id": "goblin:ironroot_hold:medium",
+  "title": "Ironroot Hold Medium",
+  "max_heroes": 3,
+  "metadata": {
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      1,
+      3
+    ],
+    "room_count_target": "4"
+  },
+  "map": {
+    "ascii": "###################\n#E..D....C....#...#\n#...#..Q...X..#...#\n#...#..###D####.T.#\n#...T..#..I..Z#...#\n#......#..U...#...#\n###D########D###.##\n#....C....Q....X..#\n#.........#....V..#\n###################",
+    "width": 19,
+    "height": 10
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "warden_seal",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      10,
+      4
+    ]
+  },
+  "rooms": {
+    "breach": {
+      "name": "Goblin Breach",
+      "rect": [
+        1,
+        1,
+        5,
+        5
+      ],
+      "description": "The crew enters through a maintenance crack under the brewery floor.",
+      "tags": [
+        "start",
+        "trap"
+      ]
+    },
+    "barracks": {
+      "name": "Shield Barracks",
+      "rect": [
+        7,
+        1,
+        13,
+        2
+      ],
+      "description": "The first organized response forms around ranged cover.",
+      "tags": [
+        "combat",
+        "ranged"
+      ]
+    },
+    "seal_vault": {
+      "name": "Seal Vault",
+      "rect": [
+        8,
+        4,
+        13,
+        5
+      ],
+      "description": "A rune-lit alcove holds the seal.",
+      "tags": [
+        "objective",
+        "support"
+      ]
+    },
+    "warden_patrol": {
+      "name": "Warden Patrol",
+      "rect": [
+        1,
+        7,
+        17,
+        8
+      ],
+      "description": "A lower patrol route can cut off sloppy exits.",
+      "tags": [
+        "pressure",
+        "boss"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "armory_rack_1",
+      "pos": [
+        10,
+        1
+      ],
+      "category": "armory",
+      "name": "Dwarven Armory Rack",
+      "description": "Orderly axes and shields line the wall.",
+      "deck": "supply",
+      "traits": [
+        "armory",
+        "searchable"
+      ],
+      "hp": 2,
+      "max_hp": 2,
+      "destructible": true
+    },
+    {
+      "id": "ledger_desk_1",
+      "pos": [
+        5,
+        7
+      ],
+      "category": "desk",
+      "name": "Shift Ledger Desk",
+      "description": "Patrol notes are written in impossibly neat dwarven script.",
+      "deck": "treasure",
+      "traits": [
+        "records",
+        "searchable"
+      ]
+    },
+    {
+      "id": "rune_plinth_1",
+      "pos": [
+        11,
+        5
+      ],
+      "category": "shrine",
+      "name": "Rune Plinth",
+      "description": "A defensive rune hums under the runekeeper's watch.",
+      "traits": [
+        "rune",
+        "cover"
+      ],
+      "cover": 1
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "cell_key"
+  },
+  "scripts": {
+    "tier": "medium"
+  },
+  "achievements": [
+    {
+      "id": "medium_open_patrol_route",
+      "title": "Risk the Patrol Route",
+      "description": "Open the patrol-route door before extracting.",
+      "reward": 0.1,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_3"
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_warden_1": {
+      "activation": "alert"
+    }
+  },
+  "bosses": {
+    "dwarf_warden_1": {
+      "name": "Captain Stonebrow",
+      "phase": "base",
+      "defeat_reward": 0.25,
+      "counterplay_hint": "Avoid the patrol route unless the ogre can pin the lane."
+    }
+  }
+}

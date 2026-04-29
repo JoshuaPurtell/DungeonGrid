@@ -106,15 +106,15 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
     def checkpoint_base64(self, metadata: dict[str, Any] | None = None) -> str:
         return base64.b64encode(self.checkpoint_bytes(metadata)).decode("ascii")
 
-    def save_checkpoint(
-        self, path: str | Path, metadata: dict[str, Any] | None = None
-    ) -> Path:
+    def save_checkpoint(self, path: str | Path, metadata: dict[str, Any] | None = None) -> Path:
         checkpoint_path = Path(path)
         checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
         checkpoint_path.write_bytes(self.checkpoint_bytes(metadata))
         return checkpoint_path
 
-    def restore_checkpoint(self, checkpoint: bytes | str | dict[str, Any]) -> DungeonGridObservation:
+    def restore_checkpoint(
+        self, checkpoint: bytes | str | dict[str, Any]
+    ) -> DungeonGridObservation:
         payload = self._decode_checkpoint(checkpoint)
         if payload.get("version") != CHECKPOINT_VERSION:
             raise ValueError("unsupported DungeonGrid checkpoint payload")
@@ -380,9 +380,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 "reward_attribution": {
                     resolved_agent: {
                         "reward": round(total_reward, 4),
-                        "new_achievements": [
-                            event.get("id") for event in plan_new_achievements
-                        ],
+                        "new_achievements": [event.get("id") for event in plan_new_achievements],
                     }
                 }
                 if resolved_agent in state.heroes
@@ -401,7 +399,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             lines.append("You are the Warden.")
         elif agent_id in state.heroes:
             role = state.heroes[agent_id].role
-            lines.append(f"You are the {role.title()}.")
+            lines.append(f"You are the {state.mode.display_role(role)}.")
         else:
             lines.append(f"Observer: {agent_id}.")
         lines.append(f"Round {state.round}. Phase: {state.phase}. Active agent: {active}.")
@@ -436,10 +434,10 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         if roster:
             lines.append("\nParty roster:")
             for member in roster:
-                status = "alive" if member["alive"] else "down"
+                status = "alive" if member["alive"] else state.mode.defeat_status_for("heroes")
+                role_name = state.mode.display_role(member["role"])
                 lines.append(
-                    f"- {member['id']}: {member['role']} hp {member['hp']}/{member['max_hp']} "
-                    f"{status}"
+                    f"- {member['id']}: {role_name} hp {member['hp']}/{member['max_hp']} {status}"
                 )
         visible_teammates = self._visible_teammates(agent_id)
         if visible_teammates:
@@ -459,9 +457,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 lines.append(f"- {tile['direction']}: {tile['status']} at {tile['pos']}{detail}")
         lines.append("\nVisible map:")
         lines.append(self._coordinate_map(visible_map))
-        lines.append(
-            "\nLegend: B/W/E/D heroes, g/b/k/r/w/p/n/m/f/y/h monsters, D closed door, / open door, C chest, A/a/d/v/l/s/$/f furniture, T revealed trap, I objective, E exit."
-        )
+        lines.append(f"\nLegend: {state.mode.legend}")
         visible_rooms = self._visible_rooms(agent_id)
         if visible_rooms:
             lines.append("\nVisible rooms:")
@@ -470,7 +466,9 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         visible_entities = self._visible_entities(agent_id)
         visible_objects = self._visible_objects(agent_id)
         if visible_entities:
-            lines.append("\nVisible entities:")
+            lines.append(
+                f"\nVisible {state.mode.opponent_label if agent_id in state.heroes else 'entities'}:"
+            )
             for ent in visible_entities:
                 if ent["id"] != agent_id:
                     distance = (
@@ -487,7 +485,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                         boss = f", boss={ent.get('boss_name', ent['role'])} phase={ent.get('boss_phase', 'base')}{hint}"
                     statuses = f", status={ent.get('status')}" if ent.get("status") else ""
                     lines.append(
-                        f"- {ent['id']} ({ent['role']}) at {ent['pos']} "
+                        f"- {ent['id']} ({state.mode.display_role(ent['role'])}) at {ent['pos']} "
                         f"hp {ent['hp']}/{ent['max_hp']}{distance}{combat}{boss}{statuses}"
                     )
                     if ent.get("boss_summary"):
@@ -696,10 +694,10 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                         "unused_actions": record.get("unused_actions", []),
                         "reveal_reason": record.get("reveal_reason"),
                         "new_achievements": record.get("new_achievements", []),
-                    "reward": record.get("reward", 0.0),
-                    "reward_attribution": record.get("reward_attribution", {}),
-                }
-            )
+                        "reward": record.get("reward", 0.0),
+                        "reward_attribution": record.get("reward_attribution", {}),
+                    }
+                )
             continue
             warden_reasoning = {
                 field: record[field] for field in WARDEN_REASONING_FIELDS if field in record
@@ -873,6 +871,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "movement_roll": state.movement_rolls.get(agent_id, 0),
             "major_action_used": state.major_action_used.get(agent_id, False),
             "ruleset_enabled": bool(state.ruleset),
+            "game_mode": state.mode.to_dict(),
             "extracted_heroes": sorted(state.extracted_heroes),
             "termination_reason": state.termination_reason,
             "known_discards": {
@@ -897,10 +896,11 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
     def _quest_brief(self) -> str:
         state = self._require_state()
         item_name = self._humanize_id(state.objective.id)
-        return (
-            f"Quest brief: recover the {item_name} from the dungeon, then bring the "
-            f"carrier back to the escape tile at {list(state.escape_tile)}. Explore "
-            "unopened doors and unrevealed rooms until the objective glyph I is visible."
+        return state.mode.quest_brief_template.format(
+            item_name=item_name,
+            escape_tile=list(state.escape_tile),
+            party=state.mode.party_label,
+            opponents=state.mode.opponent_label,
         )
 
     def _objective_instruction(self) -> str:
@@ -937,7 +937,11 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         if objective.carrier:
             data["location_state"] = "carried"
             return data
-        if objective.pos is not None and visible_tiles is not None and objective.pos in visible_tiles:
+        if (
+            objective.pos is not None
+            and visible_tiles is not None
+            and objective.pos in visible_tiles
+        ):
             data["pos"] = list(objective.pos)
             data["visible"] = True
             data["location_known"] = True

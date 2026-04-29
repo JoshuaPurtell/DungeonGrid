@@ -1,0 +1,134 @@
+{
+  "quest_id": "goblin:ironroot_hold:lite",
+  "title": "Ironroot Hold Lite",
+  "max_heroes": 2,
+  "metadata": {
+    "size_tier": "lite",
+    "intended_num_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "room_count_target": "3"
+  },
+  "map": {
+    "ascii": "###############\n#E..D....C....#\n#...#..Q...X..#\n#...#..###D####\n#...T..#..I..Z#\n#......#..U...#\n###############",
+    "width": 15,
+    "height": 7
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "warden_seal",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      10,
+      4
+    ]
+  },
+  "rooms": {
+    "breach": {
+      "name": "Goblin Breach",
+      "rect": [
+        1,
+        1,
+        5,
+        5
+      ],
+      "description": "A side tunnel with a noisy dwarven pressure plate.",
+      "tags": [
+        "start",
+        "trap"
+      ]
+    },
+    "barracks": {
+      "name": "Shield Barracks",
+      "rect": [
+        7,
+        1,
+        13,
+        2
+      ],
+      "description": "Sentries and crossbows guard the passage to the seal.",
+      "tags": [
+        "combat",
+        "ranged"
+      ]
+    },
+    "seal_vault": {
+      "name": "Seal Vault",
+      "rect": [
+        8,
+        4,
+        13,
+        5
+      ],
+      "description": "A shieldbearer and runekeeper hold the objective room.",
+      "tags": [
+        "objective",
+        "elite"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "armory_rack_1",
+      "pos": [
+        10,
+        1
+      ],
+      "category": "armory",
+      "name": "Dwarven Armory Rack",
+      "description": "Orderly axes and shields line the wall.",
+      "deck": "supply",
+      "traits": [
+        "armory",
+        "searchable"
+      ],
+      "hp": 2,
+      "max_hp": 2,
+      "destructible": true
+    },
+    {
+      "id": "stout_table_1",
+      "pos": [
+        3,
+        5
+      ],
+      "category": "table",
+      "name": "Stout Table",
+      "description": "Too short for the ogre, perfect cover for a goblin.",
+      "cover": 1
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "coin_cache"
+  },
+  "scripts": {
+    "tier": "lite"
+  },
+  "achievements": [
+    {
+      "id": "lite_disable_hold_trap",
+      "title": "Borrowed Mechanism",
+      "description": "Disarm the first dwarven hold trap.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trap_disarmed",
+        "id": "trap_1"
+      }
+    }
+  ]
+}

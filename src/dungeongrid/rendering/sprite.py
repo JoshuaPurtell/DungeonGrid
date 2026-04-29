@@ -350,6 +350,39 @@ def _paint_hero(sprite, role: str) -> None:
         sprite.line((12, 4, 12, 12), fill=GOLD)
         sprite.rectangle((11, 3, 13, 5), fill=GOLD)
         sprite.line((8, 7, 8, 12), fill=GOLD)
+    elif role == "goblin_scout":
+        sprite.line((12, 5, 14, 12), fill=WOOD_LIGHT)
+        sprite.rectangle((5, 7, 11, 13), fill=(72, 58, 45), outline=OUTLINE)
+        sprite.polygon([(8, 2), (3, 7), (13, 7)], fill=(58, 45, 68), outline=OUTLINE)
+        sprite.rectangle((6, 5, 10, 8), fill=(104, 159, 67), outline=OUTLINE)
+        sprite.polygon([(5, 6), (2, 5), (5, 7)], fill=(104, 159, 67), outline=OUTLINE)
+        sprite.polygon([(11, 6), (14, 5), (11, 7)], fill=(104, 159, 67), outline=OUTLINE)
+        sprite.point((7, 6), fill=GOLD)
+        sprite.point((9, 6), fill=GOLD)
+    elif role == "ogre_bruiser":
+        sprite.rectangle((3, 7, 13, 14), fill=(92, 132, 58), outline=OUTLINE)
+        sprite.rectangle((4, 3, 12, 9), fill=(104, 145, 66), outline=OUTLINE)
+        sprite.rectangle((3, 8, 6, 10), fill=STONE_LIGHT)
+        sprite.line((13, 3, 15, 13), fill=WOOD_LIGHT)
+        sprite.rectangle((12, 2, 15, 4), fill=WOOD_DARK, outline=OUTLINE)
+        sprite.point((6, 5), fill=OUTLINE)
+        sprite.point((10, 5), fill=OUTLINE)
+    elif role == "kobold_tinkerer":
+        sprite.rectangle((5, 7, 11, 13), fill=(122, 79, 44), outline=OUTLINE)
+        sprite.rectangle((5, 4, 11, 8), fill=(190, 83, 43), outline=OUTLINE)
+        sprite.polygon([(5, 5), (2, 6), (5, 7)], fill=(190, 83, 43), outline=OUTLINE)
+        sprite.line((12, 3, 12, 14), fill=STONE_LIGHT)
+        sprite.line((10, 12, 14, 14), fill=(190, 83, 43))
+        sprite.point((8, 6), fill=GOLD)
+    elif role == "boggart_trickster":
+        sprite.rectangle((5, 7, 11, 13), fill=(65, 49, 86), outline=OUTLINE)
+        sprite.rectangle((6, 4, 10, 8), fill=(104, 129, 149), outline=OUTLINE)
+        sprite.polygon([(5, 5), (1, 4), (5, 7)], fill=(82, 75, 124), outline=OUTLINE)
+        sprite.polygon([(11, 5), (15, 4), (11, 7)], fill=(82, 75, 124), outline=OUTLINE)
+        sprite.line((12, 3, 12, 14), fill=WOOD_LIGHT)
+        sprite.arc((10, 2, 15, 7), 200, 40, fill=(183, 133, 220))
+        sprite.point((7, 6), fill=GOLD)
+        sprite.point((9, 6), fill=GOLD)
     elif role == "barbarian":
         sprite.line((3, 4, 3, 13), fill=BONE)
         sprite.rectangle((2, 3, 4, 4), fill=BONE)
@@ -379,6 +412,27 @@ def _monster_family(role: str) -> str:
 
 
 def _paint_monster(sprite, role: str) -> None:
+    if role.startswith("dwarf_"):
+        sprite.rectangle((4, 7, 12, 13), fill=(123, 96, 65), outline=OUTLINE)
+        sprite.rectangle((5, 4, 11, 8), fill=(196, 144, 82), outline=OUTLINE)
+        sprite.rectangle((5, 2, 11, 5), fill=STONE_LIGHT, outline=OUTLINE)
+        sprite.rectangle((6, 8, 10, 11), fill=(82, 87, 91), outline=OUTLINE)
+        sprite.point((7, 6), fill=OUTLINE)
+        sprite.point((9, 6), fill=OUTLINE)
+        if role == "dwarf_shieldbearer":
+            sprite.rectangle((2, 8, 5, 13), fill=BLUE, outline=GOLD)
+        elif role == "dwarf_crossbow":
+            sprite.line((2, 7, 14, 7), fill=WOOD_LIGHT)
+            sprite.line((8, 5, 8, 11), fill=WOOD_DARK)
+        elif role == "dwarf_runekeeper":
+            sprite.point((12, 4), fill=GOLD)
+            sprite.line((12, 5, 12, 13), fill=GOLD)
+        elif role == "dwarf_warden":
+            sprite.rectangle((3, 8, 6, 13), fill=BURGUNDY, outline=GOLD)
+            sprite.line((13, 4, 13, 13), fill=STONE_LIGHT)
+        else:
+            sprite.line((12, 5, 13, 13), fill=STONE_LIGHT)
+        return
     if role == "cinder_mage":
         sprite.polygon([(8, 2), (3, 13), (13, 13)], fill=BURGUNDY, outline=OUTLINE)
         sprite.rectangle((6, 5, 10, 8), fill=(25, 18, 15))
@@ -580,10 +634,13 @@ def _draw_entities(draw, state: dict[str, Any], x0: int, y0: int, tile: int, fon
     visible = None if not party_visible else known
     active = state.get("active_agent")
     for monster in (state.get("monsters") or {}).values():
+        pos = _pos(monster.get("pos"))
+        if pos is None or (visible is not None and pos not in visible):
+            continue
         if monster.get("alive", True):
-            pos = _pos(monster.get("pos"))
-            if pos is not None and (visible is None or pos in visible):
-                _draw_monster(draw, monster, pos, x0, y0, tile)
+            _draw_monster(draw, monster, pos, x0, y0, tile)
+        elif "knocked_out" in (monster.get("status") or []):
+            _draw_knocked_out(draw, monster, pos, x0, y0, tile)
     for hero in (state.get("heroes") or {}).values():
         if hero.get("alive", True):
             pos = _pos(hero.get("pos"))
@@ -630,6 +687,10 @@ def _draw_footprints(
         "wizard": (130, 102, 222),
         "elf": (80, 172, 104),
         "dwarf": (210, 143, 64),
+        "goblin_scout": (104, 159, 67),
+        "ogre_bruiser": (92, 132, 58),
+        "kobold_tinkerer": (190, 83, 43),
+        "boggart_trickster": (183, 133, 220),
     }.get(role, (150, 160, 180))
     x, y = pos
     x1, y1, x2, y2 = _tile_box(x0, y0, x, y, tile)
@@ -752,6 +813,25 @@ def _draw_monster(
     )
 
 
+def _draw_knocked_out(
+    draw, monster: dict[str, Any], pos: tuple[int, int], x0: int, y0: int, tile: int
+) -> None:
+    role = str(monster.get("role") or "monster")
+    x, y = pos
+    box = _tile_box(x0, y0, x, y, tile)
+    x1, y1, x2, _y2 = box
+    _paste_native(draw, box, lambda sprite: _paint_monster(sprite, role))
+    scale = max(1, tile // NATIVE_TILE)
+    # Dim/prone marker plus sleep stars: visible as knockout, not corpse.
+    draw.rectangle(
+        (x1 + 3 * scale, y1 + 9 * scale, x2 - 3 * scale, y1 + 13 * scale),
+        fill=(36, 32, 29),
+        outline=OUTLINE,
+    )
+    for ox, oy in ((10, 3), (12, 5), (9, 6)):
+        draw.text((x1 + ox * scale, y1 + oy * scale), "z", fill=GOLD)
+
+
 def _draw_hp_bar(draw, x: int, y: int, w: int, h: int, hp: Any, max_hp: Any) -> None:
     try:
         hp_f = max(0.0, float(hp))
@@ -798,10 +878,17 @@ def _draw_hud(
         f"Extracted: {len(state.get('extracted_heroes') or [])}",
         f"Reward this turn: {events.get('reward', 0)}",
         "",
-        "Party",
+        str((state.get("game_mode") or {}).get("party_label") or "Party").title(),
     ]
     for line in lines:
-        draw.text((x + 14, yy), line, fill=GOLD if line == "Party" else MUTED, font=font)
+        draw.text(
+            (x + 14, yy),
+            line,
+            fill=GOLD
+            if line == str((state.get("game_mode") or {}).get("party_label") or "Party").title()
+            else MUTED,
+            font=font,
+        )
         yy += 20
     for hero in (state.get("heroes") or {}).values():
         role = str(hero.get("role") or hero.get("id"))

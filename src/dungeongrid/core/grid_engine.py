@@ -16,11 +16,8 @@ from .data import (
     DEFAULT_CLASSIC_TREASURE_DECK,
     DIRECTIONS,
     HERO_ARCHETYPES,
-    HERO_GLYPHS,
     MONSTER_GLYPHS,
-    MONSTER_RENDER_GLYPHS,
     MONSTER_TYPES,
-    ROLE_GLYPHS,
     Chest,
     Door,
     Entity,
@@ -30,6 +27,7 @@ from .data import (
     Pos,
     Trap,
     default_per_hero_stats,
+    game_mode_from_quest,
 )
 
 
@@ -42,7 +40,9 @@ class GridEngine:
     def available_quests(self) -> list[str]:
         quest_ids: set[str] = set()
         if self.quest_dir:
-            quest_ids.update(p.name for p in self.quest_dir.iterdir() if (p / "quest.json").exists())
+            quest_ids.update(
+                p.name for p in self.quest_dir.iterdir() if (p / "quest.json").exists()
+            )
             return sorted(quest_ids)
         dungeon_pkg = resources.files("dungeongrid.dungeons")
         quest_ids.update(
@@ -87,6 +87,8 @@ class GridEngine:
             "lantern_crypt_lite": "base:lantern_crypt:lite",
             "lantern_crypt_pico": "base:lantern_crypt:pico",
             "lantern_crypt_heavy": "base:lantern_crypt:heavy",
+            "goblin_hold": "goblin:ironroot_hold:lite",
+            "ironroot_hold": "goblin:ironroot_hold:lite",
         }
         if quest_id in aliases:
             return aliases[quest_id]
@@ -120,9 +122,8 @@ class GridEngine:
 
     def _load_expansion_quest_data(self, quest_id: str) -> dict[str, Any]:
         expansion, family, tier = quest_id.split(":", 2)
-        family_root = (
-            resources.files("dungeongrid")
-            .joinpath("expansions", expansion, "dungeons", family)
+        family_root = resources.files("dungeongrid").joinpath(
+            "expansions", expansion, "dungeons", family
         )
         quest_resource = family_root.joinpath(tier, "quest.json")
         if not quest_resource.is_file():
@@ -170,7 +171,9 @@ class GridEngine:
             data.setdefault("warden_runbook", family_data["warden_runbook"])
         if family_data.get("role_demand_vocabulary"):
             data.setdefault("role_demand_vocabulary", family_data["role_demand_vocabulary"])
-        data["scripts"] = self._deep_merge(dict(family_data.get("scripts", {})), data.get("scripts", {}))
+        data["scripts"] = self._deep_merge(
+            dict(family_data.get("scripts", {})), data.get("scripts", {})
+        )
         data["decks"] = self._deep_merge(dict(family_data.get("decks", {})), data.get("decks", {}))
         data["hero_loadouts"] = self._deep_merge(
             dict(family_data.get("hero_loadouts", {})), data.get("hero_loadouts", {})
@@ -208,6 +211,7 @@ class GridEngine:
                 f"requested {num_heroes}."
             )
         resolved_ruleset = self._resolve_ruleset(data, ruleset)
+        mode = game_mode_from_quest(data)
         ascii_map = data["map"]["ascii"]
         lines = [line.rstrip("\n") for line in ascii_map.strip("\n").splitlines()]
         if not lines:
@@ -403,6 +407,7 @@ class GridEngine:
             doors=doors,
             traps=traps,
             chests=chests,
+            mode=mode,
             furniture=furniture,
             rooms=dict(data.get("rooms", {})),
             decks=decks,
@@ -480,7 +485,9 @@ class GridEngine:
                 raise ValueError("hero_roles length must match num_heroes")
         else:
             by_party_size = data.get("recommended_heroes_by_party_size", {})
-            party_recommended = by_party_size.get(str(num_heroes)) if isinstance(by_party_size, dict) else None
+            party_recommended = (
+                by_party_size.get(str(num_heroes)) if isinstance(by_party_size, dict) else None
+            )
             recommended = [
                 str(role)
                 for role in (
@@ -903,10 +910,10 @@ class GridEngine:
         ent = state.entity_at(pos)
         if ent:
             if ent.team == "heroes":
-                return HERO_GLYPHS.get(ent.id, ROLE_GLYPHS.get(ent.role, "@"))
+                return state.mode.glyph_for(team=ent.team, role=ent.role, entity_id=ent.id)
             if agent_id != "warden" and ent.activation == "dormant":
                 return "." if self.terrain_at(state, pos) == "." else "#"
-            return MONSTER_RENDER_GLYPHS.get(ent.role, "m")
+            return state.mode.glyph_for(team=ent.team, role=ent.role, entity_id=ent.id)
         if (
             state.objective.pos == pos
             and state.objective.carrier is None

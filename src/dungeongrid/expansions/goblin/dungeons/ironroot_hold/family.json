@@ -1,0 +1,290 @@
+{
+  "id": "ironroot_hold",
+  "title": "Ironroot Hold",
+  "metadata": {
+    "campaign_group": "goblin",
+    "maturity_tier": "prototype",
+    "maturity_label": "first_goblin_mode_slice",
+    "validation_status": "mode_refactor_content_slice",
+    "quest_role": "inverted_dungeon_crawl",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "traps",
+      "chests",
+      "dwarven_defenders",
+      "knockout_defeat",
+      "extraction"
+    ],
+    "marl_axis": "monster-party role specialization against organized dwarven defenders",
+    "coordination_type": "scout opens, ogre pins, kobold solves hazards, boggart disrupts",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_raider_attribution"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 20,
+    "game_mode": {
+      "id": "goblin"
+    },
+    "recommended_heroes": [
+      "goblin_scout",
+      "ogre_bruiser",
+      "kobold_tinkerer",
+      "boggart_trickster"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "goblin_scout"
+      ],
+      "2": [
+        "goblin_scout",
+        "ogre_bruiser"
+      ],
+      "3": [
+        "goblin_scout",
+        "ogre_bruiser",
+        "kobold_tinkerer"
+      ],
+      "4": [
+        "goblin_scout",
+        "ogre_bruiser",
+        "kobold_tinkerer",
+        "boggart_trickster"
+      ]
+    },
+    "hero_loadouts": {
+      "goblin_scout": {
+        "weapon": "sling",
+        "combat_role": "scout",
+        "items": [
+          "sling_stones",
+          "stolen_map"
+        ]
+      },
+      "ogre_bruiser": {
+        "weapon": "ogre_club",
+        "combat_role": "frontline",
+        "items": [
+          "ogre_ration"
+        ]
+      },
+      "kobold_tinkerer": {
+        "weapon": "wrench_spear",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "spare_springs"
+        ]
+      },
+      "boggart_trickster": {
+        "weapon": "boggart_hook",
+        "combat_role": "controller",
+        "items": [
+          "curse_charm"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "decks": {
+      "treasure": [
+        {
+          "id": "dwarf_coin_roll",
+          "name": "Dwarf Coin Roll",
+          "type": "treasure",
+          "item": "coin_cache",
+          "treasure": 1,
+          "reward": 0.1,
+          "rarity": "common"
+        },
+        {
+          "id": "sentry_alarm",
+          "name": "Sentry Alarm",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03,
+          "rarity": "danger"
+        }
+      ],
+      "supply": [
+        {
+          "id": "buttery_biscuit",
+          "name": "Buttery Biscuit",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08,
+          "rarity": "common"
+        },
+        {
+          "id": "brass_lock_key",
+          "name": "Brass Lock Key",
+          "type": "artifact",
+          "item": "cell_key",
+          "reward": 0.12,
+          "rarity": "rare"
+        }
+      ],
+      "event": [
+        {
+          "id": "patrol_whistle",
+          "name": "Patrol Whistle",
+          "type": "event",
+          "alert": 2,
+          "reward": -0.05,
+          "rarity": "danger"
+        },
+        {
+          "id": "wandering_sentry",
+          "name": "Wandering Sentry",
+          "type": "event",
+          "rarity": "danger",
+          "reward": -0.06,
+          "effects": [
+            {
+              "type": "alert",
+              "amount": 1,
+              "reward": -0.02
+            },
+            {
+              "type": "spawn_monster",
+              "id": "wandering_dwarf_sentry_1",
+              "role": "dwarf_sentry"
+            }
+          ]
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic": {
+        "warden_pressure": "dwarven_hold_response",
+        "dread_hooks": [
+          "seal_taken",
+          "noisy_chest_search",
+          "split_party"
+        ],
+        "safe_room_search_required": true,
+        "partial_extraction": false
+      }
+    },
+    "role_selection": {
+      "required_roles_by_party_size": {
+        "1": [
+          "goblin_scout"
+        ],
+        "2": [
+          "goblin_scout",
+          "ogre_bruiser"
+        ],
+        "3": [
+          "goblin_scout",
+          "ogre_bruiser",
+          "kobold_tinkerer"
+        ],
+        "4": [
+          "goblin_scout",
+          "ogre_bruiser",
+          "kobold_tinkerer",
+          "boggart_trickster"
+        ]
+      },
+      "mode": "hard_in_classic_dynamic"
+    }
+  },
+  "catalog": {
+    "objectives": {
+      "warden_seal": {
+        "type": "objective",
+        "objective_kind": "recover_and_extract",
+        "public_hint": "Snatch the warden seal and flee back to the entry tunnel."
+      }
+    },
+    "monsters": {
+      "sentry": {
+        "type": "dwarf_sentry",
+        "pressure_role": "early_guard"
+      },
+      "shieldbearer": {
+        "type": "dwarf_shieldbearer",
+        "pressure_role": "blocker"
+      },
+      "crossbow": {
+        "type": "dwarf_crossbow",
+        "pressure_role": "ranged_pressure"
+      },
+      "runekeeper": {
+        "type": "dwarf_runekeeper",
+        "pressure_role": "support"
+      },
+      "warden": {
+        "type": "dwarf_warden",
+        "pressure_role": "objective_guard"
+      }
+    }
+  },
+  "shared_achievements": [
+    {
+      "id": "open_hold_gate",
+      "title": "Open the Hold Gate",
+      "description": "Open the first dwarven door out of the entry tunnel.",
+      "reward": 0.1,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "snatch_warden_seal",
+      "title": "Snatch the Warden Seal",
+      "description": "Pick up the dwarven warden seal.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_with_warden_seal",
+      "title": "Back to the Tunnels",
+      "description": "Escape with the warden seal.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "warden_runbook": {
+    "axis_pressure": "line control, alarm response, and extraction timing",
+    "fairness_notes": [
+      "Dwarves are defenders and should be narrated as knocked out, never killed.",
+      "Use pressure that preserves counterplay through doors, traps, and visible patrol routes."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "goblin_scout": [
+      "scouting",
+      "ranged_harass",
+      "door_timing"
+    ],
+    "ogre_bruiser": [
+      "frontline",
+      "shield_wall_breaker",
+      "carrier_protection"
+    ],
+    "kobold_tinkerer": [
+      "trap_disarm",
+      "hazard_specialist",
+      "safe_search"
+    ],
+    "boggart_trickster": [
+      "control",
+      "status_pressure",
+      "route_disruption"
+    ]
+  },
+  "scripts": {
+    "family": "ironroot_hold"
+  }
+}

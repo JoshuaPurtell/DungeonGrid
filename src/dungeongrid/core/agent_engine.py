@@ -146,6 +146,9 @@ class AgentEngine:
         ]
         return {
             "success": state.done and state.winner == "heroes",
+            "game_mode": state.mode.id,
+            "party_label": state.mode.party_label,
+            "opponent_label": state.mode.opponent_label,
             "winner": state.winner,
             "rounds": state.round,
             "survival": living / max(1, len(state.heroes)),
@@ -174,6 +177,10 @@ class AgentEngine:
             "rule_violations": state.violations,
             "invalid_actions": state.invalid_actions,
             "monsters_defeated": len([m for m in state.monsters.values() if not m.alive]),
+            "opponents_defeated": len([m for m in state.monsters.values() if not m.alive]),
+            "opponents_knocked_out": len(
+                [m for m in state.monsters.values() if "knocked_out" in m.status]
+            ),
         }
 
     def _per_hero_stats(self, state: GameState) -> dict[str, dict[str, Any]]:
@@ -182,9 +189,7 @@ class AgentEngine:
             raw = dict(state.per_hero_stats.get(hero_id, {}))
             raw.setdefault("role", hero.role)
             raw["reward"] = round(float(raw.get("reward", 0.0) or 0.0), 4)
-            raw["achievement_reward"] = round(
-                float(raw.get("achievement_reward", 0.0) or 0.0), 4
-            )
+            raw["achievement_reward"] = round(float(raw.get("achievement_reward", 0.0) or 0.0), 4)
             raw["treasure"] = int(state.hero_treasure.get(hero_id, raw.get("treasure", 0)))
             raw["extracted"] = hero_id in state.extracted_heroes
             raw["alive"] = hero.alive
