@@ -1,0 +1,781 @@
+{
+  "quest_id": "base:glass_maze:medium",
+  "title": "The Glass Maze",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "batch_b",
+    "quest_role": "maze_artifact",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "secret_doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "alarm",
+      "boss",
+      "pursuit",
+      "loop_route"
+    ],
+    "hazard_profile": "moderate",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "cultists",
+      "brute"
+    ],
+    "warden_pressure": "medium",
+    "post_objective_escalation": "moderate",
+    "route_structure": "maze_loop",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": true,
+    "best_party_sizes": [
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 10,
+    "global_progress_hooks": [
+      "doors",
+      "furniture",
+      "traps",
+      "combat",
+      "objective_pickup",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "alarm_control",
+      "hazard_discovery",
+      "post_objective_escalation",
+      "pre_objective_plan"
+    ],
+    "primary_score_emphasis": [
+      "exploration",
+      "route_structure",
+      "objective"
+    ],
+    "reward_density": "medium",
+    "map_width": 17,
+    "map_height": 15,
+    "room_count": 7,
+    "door_count": 11,
+    "trap_count": 2,
+    "chest_count": 2,
+    "furniture_count": 4,
+    "initial_monster_count": 5,
+    "has_secret_doors": true,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true,
+    "marl_axis": "shared map memory",
+    "coordination_type": "scout-report-map-update loop",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "turn scout observations into a shared route plan",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: shared map memory and route compression",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured",
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      1,
+      3
+    ],
+    "variant_family": "glass_maze",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "name landmarks and dead ends in messages",
+      "avoid duplicate scouting of already-known branches",
+      "share secret-door and trap information before movement"
+    ],
+    "pressure_sources": [
+      "maze branches",
+      "mirror decoys",
+      "secret doors",
+      "limited line of sight"
+    ],
+    "review_metrics": [
+      "route-message count",
+      "repeated dead-end visits",
+      "secret searches after hints",
+      "tiles revealed per action"
+    ],
+    "tier_test_focus": "Legacy full task geometry preserved as the canonical medium benchmark variant.",
+    "coordination_demands": [
+      "name landmarks and dead ends in messages",
+      "avoid duplicate scouting of already-known branches",
+      "share secret-door and trap information before movement"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 3,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "mirror_reading",
+        "ward_circle"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step"
+      ],
+      "combat_role": "skirmisher",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#################\n#E...D...#...C..#\n###.###D###.###.#\n#...#.....#...#.#\n#.G.#.T.Y.D.S.#.#\n#...#.....#...#.#\n#.###D###.###D###\n#.....#...#.....#\n###D#.#.I.#.T.R.#\n#...#.#...#.....#\n#.S.#.###D#####.#\n#...#.....#.....#\n#.C.D..B..D..G..#\n#...#.....#.....#\n#################",
+    "width": 17,
+    "height": 15
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "mirror_prism",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "bundle",
+      "contents": [
+        "silvered_shard",
+        {
+          "type": "armor",
+          "item": "warding_cloak"
+        },
+        {
+          "type": "table",
+          "entries": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chest_2": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "weapon",
+          "item": "crossbow"
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_reflection": {
+      "name": "Entry Reflection",
+      "rect": [
+        1,
+        1,
+        8,
+        3
+      ],
+      "description": "A polished entry hall throws false shadows over the first turn.",
+      "tags": [
+        "start",
+        "navigation"
+      ]
+    },
+    "left_glass_cell": {
+      "name": "Left Glass Cell",
+      "rect": [
+        1,
+        3,
+        5,
+        6
+      ],
+      "description": "A skitterling moves behind pane-thin walls that make spacing awkward.",
+      "tags": [
+        "combat",
+        "maze"
+      ]
+    },
+    "mirror_reading_room": {
+      "name": "Mirror Reading Room",
+      "rect": [
+        6,
+        3,
+        11,
+        5
+      ],
+      "description": "A trapped reading lane and a cultist guard the best clue to the maze.",
+      "tags": [
+        "hazard",
+        "search",
+        "alarm"
+      ]
+    },
+    "north_cache": {
+      "name": "North Cache",
+      "rect": [
+        12,
+        1,
+        15,
+        5
+      ],
+      "description": "A small cache is visible early, but its approach bends through a secret pane.",
+      "tags": [
+        "treasure",
+        "secret"
+      ]
+    },
+    "prism_core": {
+      "name": "Prism Core",
+      "rect": [
+        7,
+        7,
+        11,
+        10
+      ],
+      "description": "The mirror prism floats in a glass ring that exposes any unplanned retreat.",
+      "tags": [
+        "objective",
+        "coordination"
+      ]
+    },
+    "right_shatter_room": {
+      "name": "Right Shatter Room",
+      "rect": [
+        12,
+        7,
+        15,
+        10
+      ],
+      "description": "A brute waits beside a trapped reflection path.",
+      "tags": [
+        "boss",
+        "hazard"
+      ]
+    },
+    "lower_refectory": {
+      "name": "Lower Refectory",
+      "rect": [
+        1,
+        11,
+        15,
+        13
+      ],
+      "description": "A lower loop lets scouts reconnect the party if someone records the route.",
+      "tags": [
+        "loop",
+        "combat",
+        "treasure"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "mirror_stand_1",
+      "name": "Mirror Stand",
+      "category": "mirror",
+      "pos": [
+        8,
+        4
+      ],
+      "deck": "mirror",
+      "description": "The mirror shows a corridor from the wrong side.",
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "spell",
+            "item": "blink_step",
+            "reward": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "glass_cabinet_1",
+      "name": "Glass Cabinet",
+      "category": "treasure",
+      "pos": [
+        13,
+        1
+      ],
+      "deck": "treasure",
+      "description": "A silvered shard glints inside a thin cabinet."
+    },
+    {
+      "id": "prism_plinth_1",
+      "name": "Prism Plinth",
+      "category": "altar",
+      "pos": [
+        8,
+        8
+      ],
+      "deck": "event",
+      "description": "Light bends around the plinth whenever a door opens."
+    },
+    {
+      "id": "lower_map_1",
+      "name": "Scratched Lower Map",
+      "category": "lore",
+      "pos": [
+        3,
+        12
+      ],
+      "deck": "map",
+      "description": "Someone scratched a crude loop map into the underside of a table.",
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "spell",
+            "item": "reveal_glyph",
+            "reward": 0.1
+          }
+        ]
+      }
+    }
+  ],
+  "decks": {
+    "mirror": [
+      {
+        "id": "blink_reflection",
+        "name": "Blink Reflection",
+        "type": "spell",
+        "item": "blink_step",
+        "reward": 0.14,
+        "rarity": "common"
+      },
+      {
+        "id": "mirror_hint",
+        "name": "Mirror Hint",
+        "type": "artifact",
+        "item": "mirror_hint",
+        "reward": 0.12,
+        "rarity": "rare"
+      },
+      {
+        "id": "false_reflection",
+        "name": "False Reflection",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03,
+        "rarity": "danger"
+      }
+    ],
+    "treasure": [
+      {
+        "id": "silvered_shard",
+        "name": "Silvered Shard",
+        "type": "artifact",
+        "item": "silvered_shard",
+        "reward": 0.15,
+        "rarity": "rare"
+      },
+      {
+        "id": "glittering_coin",
+        "name": "Glittering Coin",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.1,
+        "rarity": "common"
+      }
+    ],
+    "map": [
+      {
+        "id": "glyph_map",
+        "name": "Glyph Map",
+        "type": "spell",
+        "item": "reveal_glyph",
+        "reward": 0.14,
+        "rarity": "common"
+      },
+      {
+        "id": "lower_loop_mark",
+        "name": "Lower Loop Mark",
+        "type": "artifact",
+        "item": "lower_loop_mark",
+        "reward": 0.1,
+        "rarity": "rare"
+      }
+    ],
+    "event": [
+      {
+        "id": "shatter_echo",
+        "name": "Shatter Echo",
+        "type": "event",
+        "alert": 2,
+        "reward": -0.05,
+        "rarity": "danger"
+      },
+      {
+        "id": "mirror_alarm",
+        "name": "Mirror Alarm",
+        "type": "event",
+        "rarity": "danger",
+        "reward": -0.05,
+        "effects": [
+          {
+            "type": "alert",
+            "amount": 1
+          },
+          {
+            "type": "activate_monster",
+            "role": "mirror_adept"
+          }
+        ]
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "open_first_glass_gate",
+      "title": "Open the First Glass Gate",
+      "description": "Open the first door into the glass maze.",
+      "reward": 0.12,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "find_secret_pane",
+      "title": "Find a Secret Pane",
+      "description": "Reveal one secret pane in the maze.",
+      "reward": 0.14,
+      "condition": {
+        "type": "door_opened",
+        "id": "secret_1"
+      }
+    },
+    {
+      "id": "read_the_reflection",
+      "title": "Read the Reflection",
+      "description": "Search a mirror or map object.",
+      "reward": 0.1,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "break_mirror_decoy",
+      "title": "Break a Mirror Decoy",
+      "description": "Force a mirror adept's first-hit decoy to collapse.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "monster_decoy_triggered"
+      }
+    },
+    {
+      "id": "reveal_glass_trap",
+      "title": "Reveal a Glass Trap",
+      "description": "Reveal one hidden hazard in the maze.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trap_revealed"
+      }
+    },
+    {
+      "id": "defeat_shatter_guard",
+      "title": "Defeat the Shatter Guard",
+      "description": "Defeat the brute guarding the right shatter room.",
+      "reward": 0.2,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "crypt_brute"
+      }
+    },
+    {
+      "id": "blink_through_reflection",
+      "title": "Blink Through Reflection",
+      "description": "Use blink_step in the glass maze.",
+      "reward": 0.12,
+      "condition": {
+        "type": "spell_used",
+        "spell": "blink_step"
+      }
+    },
+    {
+      "id": "reveal_glass_glyphs",
+      "title": "Reveal Glass Glyphs",
+      "description": "Use reveal_glyph to read the maze.",
+      "reward": 0.1,
+      "condition": {
+        "type": "spell_used",
+        "spell": "reveal_glyph"
+      }
+    },
+    {
+      "id": "claim_mirror_prism",
+      "title": "Claim the Mirror Prism",
+      "description": "Pick up the mirror prism objective.",
+      "reward": 0.3,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_the_glass_maze",
+      "title": "Escape the Glass Maze",
+      "description": "Return to the entry with the mirror prism.",
+      "reward": 0.65,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The prism turns every wall into a half-door. The maze starts answering footsteps.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "lantern_wight",
+          "pos": [
+            10,
+            4
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 22,
+    "alert_reinforcement_threshold": 5,
+    "family": "glass_maze",
+    "tier": "medium",
+    "marl_axis": "shared map memory"
+  },
+  "torch": 20,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "deck_policies": {
+    "event": {
+      "reshuffle": true,
+      "identity": "pressure"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "finite_loot"
+    },
+    "artifact": {
+      "reshuffle": false,
+      "identity": "quest_counterplay"
+    },
+    "mirror": {
+      "reshuffle": false,
+      "identity": "finite_tricks"
+    }
+  },
+  "bosses": {
+    "mirror_adept_1": {
+      "name": "Mirror Adept Prime",
+      "public_summary": "A trickster boss whose first damaging hit is absorbed by a mirror decoy.",
+      "counterplay_hint": "Expect the first real hit to be wasted; coordinate a follow-up attack.",
+      "defeat_reward": 0.22,
+      "defeat_description": "Break the prime reflection in the glass maze.",
+      "on_defeated": [
+        {
+          "type": "set_flag",
+          "key": "mirror_adept_prime_defeated",
+          "value": true
+        },
+        {
+          "type": "emit",
+          "message": "The prime reflection breaks into harmless glass dust."
+        }
+      ],
+      "phases": [
+        {
+          "id": "second_reflection",
+          "hp_at_or_below": 1,
+          "alert": 1,
+          "status": [
+            "vulnerable"
+          ],
+          "message": "The mirror adept fractures into a desperate final reflection.",
+          "effects": [
+            {
+              "type": "spawn_monster_near",
+              "id": "mirror_splinter_1",
+              "role": "mirror_adept",
+              "anchor_id": "mirror_adept_1",
+              "fallback_pos": [
+                12,
+                7
+              ],
+              "status": [
+                "vulnerable"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "monster_overrides": {
+    "mirror_adept_1": {
+      "wake_on": "line_of_sight",
+      "equipment": {
+        "boss": true,
+        "boss_name": "Mirror Adept Prime",
+        "phases": [
+          {
+            "id": "second_reflection",
+            "hp_at_or_below": 1,
+            "alert": 1,
+            "status": [
+              "vulnerable"
+            ],
+            "message": "The mirror adept fractures into a desperate final reflection."
+          }
+        ]
+      }
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "shared map memory and route compression",
+      "tags": [
+        "scout-report-map-update_loop"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "pressure the declared MARL axis: shared map memory and route compression"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ]
+  }
+}

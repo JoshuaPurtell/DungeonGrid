@@ -1,6 +1,7 @@
 {
   "quest_id": "goblin:ironroot_hold:pico",
   "title": "Ironroot Hold Pico",
+  "min_heroes": 1,
   "max_heroes": 1,
   "metadata": {
     "size_tier": "pico",

@@ -24,6 +24,13 @@ class RandomLegalPolicy:
         legal = observation.get("legal_actions") or [{"type": "end_turn"}]
         return self.rng.choice(legal)
 
+    def snapshot_state(self) -> dict[str, Any]:
+        return {"rng_state": self.rng.getstate()}
+
+    def restore_state(self, state: dict[str, Any]) -> None:
+        if "rng_state" in state:
+            self.rng.setstate(state["rng_state"])
+
 
 class GreedyHeroPolicy:
     """Simple baseline: attack, pick objective, escape, open doors, move to frontier."""
@@ -112,6 +119,12 @@ class ScriptedWardenPolicy:
                 return action
         return {"type": "end_turn"}
 
+    def snapshot_state(self) -> dict[str, Any]:
+        return {}
+
+    def restore_state(self, state: dict[str, Any]) -> None:
+        return None
+
 
 class AgentEngine:
     """Utility wrapper for running policies through GridEngine + RulesEngine."""
@@ -162,6 +175,8 @@ class AgentEngine:
             "extraction_rate": len(state.extracted_heroes) / max(1, len(state.heroes)),
             "termination_reason": state.termination_reason,
             "social_metrics": dict(state.social_metrics),
+            "message_metrics": dict(state.message_metrics),
+            "communication_protocol": dict(state.communication_protocol),
             "exploration": explored / max(1, floor_tiles),
             "explored_tiles": explored,
             "floor_tiles": floor_tiles,

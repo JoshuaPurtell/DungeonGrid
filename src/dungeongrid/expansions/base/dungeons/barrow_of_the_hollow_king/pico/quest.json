@@ -1,0 +1,115 @@
+{
+  "quest_id": "base:barrow_of_the_hollow_king:pico",
+  "title": "Barrow of the Hollow King Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "barrow_of_the_hollow_king",
+    "maturity": "migration_draft",
+    "marl_axis": "boss counterplay and revive control",
+    "coordination_skills": [
+      "search for counterplay before brute-force boss damage",
+      "assign guard cleanup while boss pressure is active",
+      "coordinate retreat when revive pressure exceeds tempo"
+    ],
+    "pressure_sources": [
+      "hollow knights",
+      "boss chamber",
+      "revive pressure",
+      "secret or altar counterplay"
+    ],
+    "review_metrics": [
+      "counterplay searched before boss damage",
+      "revived guards defeated",
+      "route control during boss fight",
+      "messages about boss rules"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the boss counterplay and revive control signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..I..D..#\n#..#...#..#\n#..B...G..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "hollow_seal",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      4,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first boss counterplay and revive control choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on boss counterplay and revive control without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {},
+  "scripts": {
+    "lite_design_note": "A two-threat barrow: one hollow knight, one guard, one root marker, and an objective that accelerates revival pressure.",
+    "warden_style": "fight-cleanse-guard rotation",
+    "marl_axis": "boss counterplay and revive control",
+    "family": "barrow_of_the_hollow_king",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_barrow_of_the_hollow_king_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Barrow of the Hollow King variant while preserving the boss counterplay and revive control signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

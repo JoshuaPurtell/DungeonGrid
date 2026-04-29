@@ -1,0 +1,512 @@
+{
+  "quest_id": "base:ashen_pantry:medium",
+  "title": "The Ashen Pantry",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "original_5",
+    "quest_role": "treasure_recovery",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "secret_doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure"
+    ],
+    "hazard_profile": "light",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards"
+    ],
+    "warden_pressure": "low",
+    "post_objective_escalation": "mild",
+    "route_structure": "compact_branching",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": false,
+    "best_party_sizes": [
+      "solo",
+      "duo",
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 6,
+    "global_progress_hooks": [
+      "doors",
+      "traps",
+      "objective_pickup",
+      "furniture",
+      "inventory",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "hazard_discovery",
+      "treasure"
+    ],
+    "primary_score_emphasis": [
+      "treasure",
+      "exploration",
+      "objective"
+    ],
+    "reward_density": "dense",
+    "map_width": 16,
+    "map_height": 14,
+    "room_count": 5,
+    "door_count": 5,
+    "trap_count": 1,
+    "chest_count": 1,
+    "furniture_count": 3,
+    "initial_monster_count": 2,
+    "has_secret_doors": true,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true,
+    "marl_axis": "resource triage and safe-search discipline",
+    "coordination_type": "divide-and-report exploration",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "guard optional searches without duplicating work",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: decentralized task allocation under costly search",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured",
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      1,
+      3
+    ],
+    "variant_family": "ashen_pantry",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "declare need before taking supplies",
+      "search rooms only after threats are controlled",
+      "route consumables toward the hero carrying team risk"
+    ],
+    "pressure_sources": [
+      "scarce supplies",
+      "low-level swarms",
+      "trap/search tradeoffs",
+      "optional caches"
+    ],
+    "review_metrics": [
+      "items given",
+      "healing held while ally critical",
+      "searches before room safe",
+      "supply hoarding"
+    ],
+    "tier_test_focus": "Legacy full task geometry preserved as the canonical medium benchmark variant.",
+    "coordination_demands": [
+      "declare need before taking supplies",
+      "search rooms only after threats are controlled",
+      "route consumables toward the hero carrying team risk"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 3,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "cleaver_sword",
+      "armor": "ash_apron",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "cinder_staff",
+      "spell_cards": [
+        "spark_lance",
+        "reveal_glyph",
+        "ward_circle"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "################\n#E.....#.......#\n#.....D#..P....#\n#......#.......#\n####D#####.#####\n#........#.....#\n#..C.....D..B..#\n#........#.....#\n###.########D###\n#...#..........#\n#...#..T.......#\n#...S......I...#\n#...#..........#\n################",
+    "width": 16,
+    "height": 14
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "sealed_provision_ledger",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_stores": {
+      "name": "Entry Stores",
+      "rect": [
+        1,
+        1,
+        6,
+        3
+      ],
+      "description": "Charred shelves leave narrow lanes for careful scouting.",
+      "tags": [
+        "start",
+        "search"
+      ]
+    },
+    "north_larder": {
+      "name": "North Larder",
+      "rect": [
+        9,
+        1,
+        14,
+        3
+      ],
+      "description": "A skitterling nests among cracked jars and hanging hooks.",
+      "tags": [
+        "combat"
+      ]
+    },
+    "central_pantry": {
+      "name": "Central Pantry",
+      "rect": [
+        1,
+        5,
+        8,
+        7
+      ],
+      "description": "A strongbox and many blind corners reward coordinated searching.",
+      "tags": [
+        "treasure",
+        "routing"
+      ]
+    },
+    "guarded_passage": {
+      "name": "Guarded Passage",
+      "rect": [
+        10,
+        5,
+        14,
+        7
+      ],
+      "description": "A bone guard watches the passage toward the lower ledger room.",
+      "tags": [
+        "combat"
+      ]
+    },
+    "lower_shelves": {
+      "name": "Lower Shelves",
+      "rect": [
+        1,
+        9,
+        14,
+        12
+      ],
+      "description": "A secret shortcut and pressure plate make this room a trapcraft test.",
+      "tags": [
+        "secret",
+        "hazard",
+        "objective"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "spice_rack_1",
+      "name": "Blackened Spice Rack",
+      "category": "supply",
+      "pos": [
+        4,
+        2
+      ],
+      "deck": "supply",
+      "description": "Labels are burned away, but several sealed packets remain."
+    },
+    {
+      "id": "ledger_desk_1",
+      "name": "Ledger Desk",
+      "category": "records",
+      "pos": [
+        11,
+        11
+      ],
+      "deck": "artifact",
+      "description": "The desk has a scorched lockplate and hidden compartments."
+    },
+    {
+      "id": "ash_shelf_1",
+      "name": "Ash Shelf",
+      "category": "pantry",
+      "pos": [
+        3,
+        6
+      ],
+      "deck": "treasure",
+      "description": "A sagging shelf may hide a cache or a bad surprise."
+    }
+  ],
+  "decks": {
+    "supply": [
+      {
+        "id": "sealed_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.08
+      },
+      {
+        "id": "chalk_powder",
+        "name": "Chalk Powder",
+        "type": "treasure",
+        "item": "chalk_powder",
+        "treasure": 1,
+        "reward": 0.06
+      }
+    ],
+    "artifact": [
+      {
+        "id": "ledger_key",
+        "name": "Ledger Key",
+        "type": "artifact",
+        "item": "ledger_key",
+        "reward": 0.14
+      }
+    ],
+    "treasure": [
+      {
+        "id": "hidden_coin_roll",
+        "name": "Hidden Coin Roll",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.1
+      },
+      {
+        "id": "falling_jars",
+        "name": "Falling Jars",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "find_pantry_shortcut",
+      "title": "Find the Pantry Shortcut",
+      "description": "Reveal the secret door in the ashen pantry.",
+      "reward": 0.18,
+      "condition": {
+        "type": "door_opened",
+        "id": "secret_1"
+      }
+    },
+    {
+      "id": "reveal_pantry_trap",
+      "title": "Reveal the Pantry Trap",
+      "description": "Find the trap before or by entering the lower pantry.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trap_revealed"
+      }
+    },
+    {
+      "id": "recover_sealed_ledger",
+      "title": "Recover the Sealed Ledger",
+      "description": "Pick up the sealed provision ledger.",
+      "reward": 0.3,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "search_pantry_shelf",
+      "title": "Search the Pantry Shelves",
+      "description": "Search one pantry furniture object.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "find_ledger_key",
+      "title": "Find the Ledger Key",
+      "description": "Recover the key hidden near the ledger room.",
+      "reward": 0.16,
+      "condition": {
+        "type": "inventory_contains",
+        "item": "ledger_key"
+      }
+    },
+    {
+      "id": "escape_with_sealed_ledger",
+      "title": "Escape With the Sealed Ledger",
+      "description": "Complete The Ashen Pantry.",
+      "reward": 0.6,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "secret_hint": "Inspect adjacent wall tiles to reveal a shortcut.",
+    "family": "ashen_pantry",
+    "tier": "medium",
+    "marl_axis": "resource triage and safe-search discipline"
+  },
+  "torch": 16,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "decentralized task allocation under costly search",
+      "tags": [
+        "divide-and-report_exploration"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "pressure the declared MARL axis: decentralized task allocation under costly search"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ]
+  }
+}

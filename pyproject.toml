@@ -74,9 +74,11 @@ dungeongrid = [
   "dungeons/*/README.md",
   "expansions/*/expansion.json",
   "expansions/*/content/*.json",
+  "expansions/*/dungeons/*/README.md",
   "expansions/*/dungeons/*/family.json",
   "expansions/*/dungeons/*/hooks.py",
   "expansions/*/dungeons/*/*/quest.json",
+  "expansions/*/dungeons/*/*/hooks.py",
 ]
 
 [tool.ruff]

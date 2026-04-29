@@ -1,12 +1,13 @@
 {
   "quest_id": "goblin:ironroot_hold:heavy",
   "title": "Ironroot Hold Heavy",
+  "min_heroes": 4,
   "max_heroes": 4,
   "metadata": {
     "size_tier": "heavy",
     "intended_num_heroes": 4,
     "supported_hero_range": [
-      1,
+      4,
       4
     ],
     "room_count_target": "5",

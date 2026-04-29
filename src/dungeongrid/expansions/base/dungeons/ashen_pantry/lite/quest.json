@@ -1,0 +1,431 @@
+{
+  "quest_id": "base:ashen_pantry:lite",
+  "title": "Ashen Pantry Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "ashen_pantry",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "I",
+    "marl_axis": "resource triage and safe-search discipline",
+    "coordination_type": "divide-and-report exploration",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "task_allocation",
+      "exploration",
+      "communication"
+    ],
+    "challenge_summary": "Agents must split low-risk search tasks, avoid duplicate interactions, and leave once the ledger is recovered instead of turning a tutorial into a greed spiral.",
+    "dilemmas": [
+      "Extra pantry loot increases score but consumes turns and may raise alert",
+      "The hazard specialist is useful searching, but also needs protection",
+      "Solo play favors a compact route; duo play rewards division of labor"
+    ],
+    "coordination_problems": [
+      "Redundant-action avoidance",
+      "Shared map update after the secret hatch",
+      "Specialist protection while searching",
+      "Exit timing after objective pickup"
+    ],
+    "warden_runbook": [
+      "Apply only mild vermin pressure",
+      "Punish repeated redundant searching, not initial caution",
+      "Let an early clean extraction succeed",
+      "Use the secret cache as temptation rather than mandatory content"
+    ],
+    "lite_focus": "Three-room search discipline: one suspicious shelf, one hidden hatch, one objective room, and a short extraction.",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards"
+    ],
+    "room_count": 3,
+    "map_width": 11,
+    "map_height": 7,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "guard optional searches without duplicating work",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: decentralized task allocation under costly search",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured",
+    "size_tier": "lite",
+    "intended_num_heroes": 2,
+    "variant_family": "ashen_pantry",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "declare need before taking supplies",
+      "search rooms only after threats are controlled",
+      "route consumables toward the hero carrying team risk"
+    ],
+    "pressure_sources": [
+      "scarce supplies",
+      "low-level swarms",
+      "trap/search tradeoffs",
+      "optional caches"
+    ],
+    "review_metrics": [
+      "items given",
+      "healing held while ally critical",
+      "searches before room safe",
+      "supply hoarding"
+    ],
+    "tier_test_focus": "Small two-hero diagnostic for communication and first-order resource triage and safe-search discipline coordination.",
+    "coordination_demands": [
+      "declare need before taking supplies",
+      "search rooms only after threats are controlled",
+      "route consumables toward the hero carrying team risk"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard"
+  ],
+  "hero_loadouts": {
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step",
+        "quiet_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "###########\n#E..D.....#\n#...#..I..#\n#...#..B..#\n###S#######\n#..T.C..G.#\n###########",
+    "width": 11,
+    "height": 7
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "charred_ledger_leaf",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      2
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into The Ashen Pantry is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "objective_room": {
+      "name": "Objective Room",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "The core object of the lite challenge is visible here; taking it should trigger extraction thinking, not exhaustive exploration.",
+      "tags": [
+        "objective",
+        "pressure"
+      ]
+    },
+    "secret_cache": {
+      "name": "Secret Cache",
+      "rect": [
+        1,
+        5,
+        9,
+        5
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "ashen_pantry_focus_1",
+      "name": "Quiet Shelf Marker",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for decentralized task allocation under costly search. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "task_allocation",
+        "exploration"
+      ]
+    },
+    {
+      "id": "ashen_pantry_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        8,
+        5
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "ashen_pantry_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "ashen_pantry_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "ashen_pantry_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "ashen_pantry_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "ashen_pantry_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "ashen_pantry_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains decentralized task allocation under costly search.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "ashen_pantry_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up charred_ledger_leaf.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete The Ashen Pantry Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "Three-room search discipline: one suspicious shelf, one hidden hatch, one objective room, and a short extraction.",
+    "warden_style": "divide-and-report exploration",
+    "marl_axis": "resource triage and safe-search discipline",
+    "family": "ashen_pantry",
+    "tier": "lite"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "decentralized task allocation under costly search",
+      "tags": [
+        "task_allocation",
+        "exploration",
+        "communication",
+        "greed_control"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "noise_budget": 2,
+      "optional_secret_cache": true
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Apply only mild vermin pressure",
+        "Punish repeated redundant searching, not initial caution",
+        "Let an early clean extraction succeed",
+        "pressure the declared MARL axis: decentralized task allocation under costly search"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "torch": 10,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ]
+  }
+}

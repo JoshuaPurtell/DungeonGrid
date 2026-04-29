@@ -1,0 +1,462 @@
+{
+  "quest_id": "base:moonblade_vault:lite",
+  "title": "Moonblade Vault Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "moonblade_vault",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "III",
+    "marl_axis": "specialist sequencing and greed control",
+    "coordination_type": "scout-disarm-handoff",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "heterogeneous_agents",
+      "task_allocation",
+      "handoff"
+    ],
+    "challenge_summary": "Different subtasks favor different heroes: scouting reflection lines, disarming vault wards, and carrying the blade token.",
+    "dilemmas": [
+      "The elf sees routes quickly but cannot safely handle the trap",
+      "The dwarf can open the vault but is slower",
+      "Carrying the blade may expose the scout"
+    ],
+    "coordination_problems": [
+      "Role-task matching",
+      "Handoff",
+      "Parallel subtask sequencing",
+      "Heterogeneous-agent planning"
+    ],
+    "warden_runbook": [
+      "Pressure wrong-role assignments",
+      "Guard the handoff point",
+      "Respect successful disarm/scout play",
+      "Avoid making one role mandatory for basic success"
+    ],
+    "lite_focus": "A compact vault where one hero scouts reflection, the other handles hazard, and the token may need a handoff.",
+    "monster_profile": [
+      "iron_sentinels",
+      "mirror_adepts"
+    ],
+    "room_count": 4,
+    "map_width": 13,
+    "map_height": 7,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "assign scout, disarm, and handoff roles before taking the vault item",
+    "classic_dynamic_warden_pressure": "pressure the declared MARL axis: heterogeneous role-task assignment",
+    "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured",
+    "size_tier": "lite",
+    "intended_num_heroes": 2,
+    "variant_family": "moonblade_vault",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "wait for the specialist before opening vault hazards",
+      "announce optional loot before taking it",
+      "protect the key or blade carrier on exit"
+    ],
+    "pressure_sources": [
+      "vault locks",
+      "secret routes",
+      "optional treasure",
+      "carrier pursuit"
+    ],
+    "review_metrics": [
+      "specialist actions before vault open",
+      "treasure detours",
+      "carrier protection",
+      "messages before cache interactions"
+    ],
+    "tier_test_focus": "Small two-hero diagnostic for communication and first-order specialist sequencing and greed control coordination.",
+    "coordination_demands": [
+      "wait for the specialist before opening vault hazards",
+      "announce optional loot before taking it",
+      "protect the key or blade carrier on exit"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard"
+  ],
+  "hero_loadouts": {
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step",
+        "quiet_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#############\n#E..D...D..I#\n#...#...#...#\n#...#Y..#N..#\n###D#####D###\n#..T..C.....#\n#############",
+    "width": 13,
+    "height": 7
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "moonblade_silver_token",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      11,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "healing",
+              "item": "healing_draught"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Moonblade Vault is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "middle_room": {
+      "name": "Middle Room",
+      "rect": [
+        5,
+        1,
+        7,
+        3
+      ],
+      "description": "A compact pressure room isolates the challenge: heterogeneous role-task assignment.",
+      "tags": [
+        "pressure"
+      ]
+    },
+    "objective_room": {
+      "name": "Objective Room",
+      "rect": [
+        9,
+        1,
+        11,
+        3
+      ],
+      "description": "The core object of the lite challenge is visible here; taking it should trigger extraction thinking, not exhaustive exploration.",
+      "tags": [
+        "objective",
+        "pressure"
+      ]
+    },
+    "lower_route": {
+      "name": "Lower Route",
+      "rect": [
+        1,
+        5,
+        11,
+        5
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "moonblade_vault_focus_1",
+      "name": "Moon-Slit Mirror",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for heterogeneous role-task assignment. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "heterogeneous_agents",
+        "task_allocation"
+      ]
+    },
+    {
+      "id": "moonblade_vault_temptation_1",
+      "name": "Optional Cache",
+      "category": "treasure",
+      "pos": [
+        10,
+        5
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "moonblade_vault_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "moonblade_vault_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "moonblade_vault_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "moonblade_vault_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "moonblade_vault_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "moonblade_vault_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains heterogeneous role-task assignment.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "moonblade_vault_focus_1"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up moonblade_silver_token.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Moonblade Vault Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "A compact vault where one hero scouts reflection, the other handles hazard, and the token may need a handoff.",
+    "warden_style": "scout-disarm-handoff",
+    "marl_axis": "specialist sequencing and greed control",
+    "family": "moonblade_vault",
+    "tier": "lite"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "heterogeneous role-task assignment",
+      "tags": [
+        "heterogeneous_agents",
+        "task_allocation",
+        "handoff",
+        "role_specialization"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "vault_roles": [
+        "scout",
+        "hazard_specialist"
+      ],
+      "handoff_recommended": true
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Pressure wrong-role assignments",
+        "Guard the handoff point",
+        "Respect successful disarm/scout play",
+        "pressure the declared MARL axis: heterogeneous role-task assignment"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    }
+  },
+  "torch": 12,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "bosses": {
+    "iron_sentinel_1": {
+      "name": "Moon-Vault Sentinel",
+      "public_summary": "Lite boss for heterogeneous role-task assignment; it should test coordination before raw damage.",
+      "counterplay_hint": "Search the focus object and coordinate roles before committing to damage.",
+      "defeat_reward": 0.16,
+      "defeat_description": "Defeat Moon-Vault Sentinel after using the lite challenge's coordination lesson."
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ]
+  }
+}

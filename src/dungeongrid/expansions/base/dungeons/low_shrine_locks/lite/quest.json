@@ -1,0 +1,473 @@
+{
+  "quest_id": "base:low_shrine_locks:lite",
+  "title": "Low Shrine Locks Lite",
+  "difficulty": "lite",
+  "metadata": {
+    "parent_quest_id": "low_shrine_locks",
+    "variant": "lite",
+    "designed_for_heroes": 2,
+    "supported_hero_range": [
+      1,
+      2
+    ],
+    "campaign_act": "II",
+    "marl_axis": "joint-action synchronization",
+    "coordination_type": "ready-check and simultaneous activation",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "text_runbook_react_agent",
+    "dominant_mechanics": [
+      "doors",
+      "objective",
+      "communication",
+      "furniture_search",
+      "synchronization",
+      "joint_action",
+      "communication"
+    ],
+    "challenge_summary": "The goal requires synchronized decentralized action; waiting and messaging become productive actions.",
+    "dilemmas": [
+      "Splitting solves quickly but exposes both heroes",
+      "Premature activation wastes turns",
+      "The dwarf can hold a plinth or disarm the trap, not both"
+    ],
+    "coordination_problems": [
+      "Joint action dependency",
+      "Temporal synchronization",
+      "Ready protocol",
+      "Split-and-regroup discipline"
+    ],
+    "warden_runbook": [
+      "Disrupt timing rather than simply dealing damage",
+      "Harass exposed holders",
+      "Let clean synchronization succeed",
+      "Punish premature solo activation"
+    ],
+    "lite_focus": "A duo-first two-plinth shrine: two side rooms, center objective, and explicit ready-check pressure.",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards"
+    ],
+    "room_count": 4,
+    "map_width": 11,
+    "map_height": 9,
+    "has_custom_hooks": false,
+    "non_copy_safety_notes": [
+      "Original compact layout and original scenario text.",
+      "Targets abstract cooperative dungeon-crawl dynamics rather than protected quest content.",
+      "Uses MARL challenge metadata as the design contract."
+    ],
+    "classic_dynamic_role_dilemma": "let the lock specialist handle shrine hazards while allies cover timing",
+    "classic_dynamic_warden_pressure": "pressure unsynchronized lock attempts and exposed non-specialists",
+    "classic_dynamic_extraction_hook": "partial extraction is allowed once the shrine objective is secured",
+    "size_tier": "lite",
+    "intended_num_heroes": 2,
+    "variant_family": "low_shrine_locks",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "announce lock/door intent before spending AP",
+      "hold positions until paired progress is possible",
+      "sequence search, open, and carry actions across separated lanes"
+    ],
+    "pressure_sources": [
+      "paired locks",
+      "separated lanes",
+      "door timing",
+      "minor sentries"
+    ],
+    "review_metrics": [
+      "same-round lock progress",
+      "messages before opens",
+      "doorway waits",
+      "split-party delay"
+    ],
+    "tier_test_focus": "Small two-hero diagnostic for communication and first-order joint-action synchronization coordination.",
+    "coordination_demands": [
+      "announce lock/door intent before spending AP",
+      "hold positions until paired progress is possible",
+      "sequence search, open, and carry actions across separated lanes"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 2,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard"
+  ],
+  "hero_loadouts": {
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "blink_step",
+        "quiet_step"
+      ],
+      "combat_role": "scout",
+      "items": []
+    }
+  },
+  "map": {
+    "ascii": "###########\n#E..D.....#\n#...#..C..#\n#...#.....#\n###D#D#####\n#..T#..I..#\n#..G#..B..#\n#...#.....#\n###########",
+    "width": 11,
+    "height": 9
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "low_shrine_token",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      5
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "bundle",
+          "contents": [
+            "coin_cache",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "armor",
+              "item": "leather_jerkin"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "healing",
+              "item": "healing_draught"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_room": {
+      "name": "Entry Room",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "The entry into Low Shrine Locks is intentionally small: enough space to form a plan, not enough to hide poor coordination.",
+      "tags": [
+        "start",
+        "coordination"
+      ]
+    },
+    "upper_right": {
+      "name": "Upper Right",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "A compact pressure room isolates the challenge: joint-action synchronization.",
+      "tags": [
+        "pressure"
+      ]
+    },
+    "lower_left": {
+      "name": "Lower Left",
+      "rect": [
+        1,
+        5,
+        3,
+        7
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    },
+    "lower_right": {
+      "name": "Lower Right",
+      "rect": [
+        5,
+        5,
+        9,
+        7
+      ],
+      "description": "An optional route/cache tests whether the agents understand the dungeon's MARL axis instead of chasing reward blindly.",
+      "tags": [
+        "optional",
+        "routing"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "left_plinth",
+      "name": "Left Plinth",
+      "category": "lore",
+      "pos": [
+        2,
+        2
+      ],
+      "deck": "clue",
+      "description": "Primary clue object for joint-action synchronization. It should teach agents what kind of coordination this dungeon rewards.",
+      "traits": [
+        "marl_clue",
+        "synchronization",
+        "joint_action"
+      ]
+    },
+    {
+      "id": "right_plinth",
+      "name": "Right Plinth",
+      "category": "treasure",
+      "pos": [
+        8,
+        3
+      ],
+      "deck": "treasure",
+      "description": "Optional reward that is safe only when the team has solved the core coordination problem first.",
+      "traits": [
+        "optional",
+        "tempo_test"
+      ]
+    },
+    {
+      "id": "center_lock",
+      "name": "Center Lock",
+      "category": "supply",
+      "pos": [
+        8,
+        7
+      ],
+      "deck": "supply",
+      "description": "A small support object that makes the non-damaging coordination action visible in transcript review.",
+      "traits": [
+        "support",
+        "coordination"
+      ]
+    }
+  ],
+  "decks": {
+    "clue": [
+      {
+        "id": "low_shrine_locks_clue",
+        "name": "Coordination Clue",
+        "type": "artifact",
+        "item": "low_shrine_locks_clue",
+        "reward": 0.08
+      },
+      {
+        "id": "low_shrine_locks_warning",
+        "name": "Warning Scratch",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.02
+      }
+    ],
+    "treasure": [
+      {
+        "id": "low_shrine_locks_coin_cache",
+        "name": "Small Coin Cache",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.08
+      },
+      {
+        "id": "low_shrine_locks_tempo_cost",
+        "name": "Noisy Find",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "supply": [
+      {
+        "id": "low_shrine_locks_draught",
+        "name": "Sealed Draught",
+        "type": "healing",
+        "item": "healing_draught",
+        "reward": 0.06
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "read_lite_clue",
+      "title": "Read the Lite Clue",
+      "description": "Search the focus object that explains joint-action synchronization.",
+      "reward": 0.12,
+      "condition": {
+        "type": "furniture_searched",
+        "id": "left_plinth"
+      }
+    },
+    {
+      "id": "open_first_lite_door",
+      "title": "Open the First Lite Door",
+      "description": "Open the first door and trigger a reveal-boundary planning step.",
+      "reward": 0.08,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "send_coordination_message",
+      "title": "Send a Coordination Message",
+      "description": "Use communication instead of silent independent wandering.",
+      "reward": 0.08,
+      "condition": {
+        "type": "messages_sent_at_least",
+        "count": 1,
+        "min_heroes": 2
+      }
+    },
+    {
+      "id": "recover_lite_objective",
+      "title": "Recover the Lite Objective",
+      "description": "Pick up low_shrine_token.",
+      "reward": 0.25,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_lite",
+      "title": "Escape the Lite Dungeon",
+      "description": "Complete Low Shrine Locks Lite.",
+      "reward": 0.5,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "lite_design_note": "A duo-first two-plinth shrine: two side rooms, center objective, and explicit ready-check pressure.",
+    "warden_style": "ready-check and simultaneous activation",
+    "marl_axis": "joint-action synchronization",
+    "family": "low_shrine_locks",
+    "tier": "lite"
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "joint-action synchronization",
+      "tags": [
+        "synchronization",
+        "joint_action",
+        "communication",
+        "timing"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "duplicate or mistimed actions",
+        "failure to protect the coordination-critical agent",
+        "objective pickup before route/extraction agreement",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "lite_contract": {
+      "requires_duo_for_full_score": true,
+      "simultaneous_plinths": [
+        "left_plinth",
+        "right_plinth"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "Disrupt timing rather than simply dealing damage",
+        "Harass exposed holders",
+        "Let clean synchronization succeed",
+        "pressure unsynchronized lock attempts and exposed non-specialists"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    },
+    "classic_dynamic": {
+      "warden": "pressure unsynchronized lock attempts and exposed non-specialists",
+      "metric": "specialist_actions.dwarf_disarm",
+      "extraction": "partial extraction is allowed once the shrine objective is secured"
+    }
+  },
+  "torch": 12,
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Lite variants keep monsters dormant until reveal so smaller LLMs can replan at clear boundaries."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Lite variants emphasize explicit search/action choices and communication."
+  },
+  "deck_policies": {
+    "clue": {
+      "reshuffle": false,
+      "identity": "coordination_clues"
+    },
+    "treasure": {
+      "reshuffle": false,
+      "identity": "optional_reward"
+    }
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ]
+  }
+}

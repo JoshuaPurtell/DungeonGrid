@@ -1,0 +1,604 @@
+{
+  "quest_id": "base:veiled_castle:medium",
+  "title": "Veiled Castle",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "batch_d",
+    "quest_role": "mystery_route",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "secret_doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "alarm",
+      "boss",
+      "pursuit",
+      "loop_route"
+    ],
+    "hazard_profile": "moderate",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "cultists",
+      "brute"
+    ],
+    "warden_pressure": "medium",
+    "post_objective_escalation": "moderate",
+    "route_structure": "secret_branching_loop",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": true,
+    "best_party_sizes": [
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 7,
+    "global_progress_hooks": [
+      "doors",
+      "furniture",
+      "inventory",
+      "combat",
+      "objective_pickup",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "alarm_control",
+      "hazard_discovery",
+      "post_objective_escalation",
+      "pre_objective_plan"
+    ],
+    "primary_score_emphasis": [
+      "exploration",
+      "search",
+      "objective"
+    ],
+    "reward_density": "medium",
+    "map_width": 17,
+    "map_height": 15,
+    "room_count": 7,
+    "door_count": 12,
+    "trap_count": 2,
+    "chest_count": 2,
+    "furniture_count": 4,
+    "initial_monster_count": 5,
+    "has_secret_doors": true,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true,
+    "marl_axis": "stealth coordination and detection management",
+    "coordination_type": "belief, clue, counterplay, and extraction composition",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "compose clues, role gates, Warden pressure, and extraction planning",
+    "classic_dynamic_warden_pressure": "apply revealed-state pressure to inconsistent beliefs and late extraction choices",
+    "classic_dynamic_extraction_hook": "final challenge should reward explicit carrier and exit planning",
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      1,
+      3
+    ],
+    "variant_family": "veiled_castle",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "announce noisy actions before taking them",
+      "let scouts verify patrol lanes before group movement",
+      "coordinate regroup points after stealth breaks"
+    ],
+    "pressure_sources": [
+      "patrol sight lines",
+      "secret doors",
+      "alarm cultists",
+      "optional noisy loot"
+    ],
+    "review_metrics": [
+      "alert increments",
+      "messages before noisy actions",
+      "scout-before-group moves",
+      "regroup after detection"
+    ],
+    "tier_test_focus": "Legacy full task geometry preserved as the canonical medium benchmark variant.",
+    "coordination_demands": [
+      "announce noisy actions before taking them",
+      "let scouts verify patrol lanes before group movement",
+      "coordinate regroup points after stealth breaks"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 3,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "ward_circle",
+        "veil_reading"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "quiet_step"
+      ],
+      "combat_role": "skirmisher",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#################\n#E....D.....#...#\n#.###.###D###.C.#\n#...#.#.....#...#\n#G..D.#.K...D...#\n#...#.#..S..#.###\n###D#.###D###...#\n#...#.....#.....#\n#.T.D..B..D..I.R#\n#...#.....#.....#\n#.###D#####.###.#\n#.....#...#.....#\n#.C...D.G.D..T..#\n#.....#...#.....#\n#################",
+    "width": 17,
+    "height": 15
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "veiled_signet",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "bundle",
+      "contents": [
+        "castle_key",
+        {
+          "type": "table",
+          "entries": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chest_2": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "weapon",
+          "item": "crossbow"
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "crossbow"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_court": {
+      "name": "Entry Court",
+      "rect": [
+        1,
+        1,
+        15,
+        2
+      ],
+      "description": "A quiet entry court splits into too many plausible doors.",
+      "tags": [
+        "start",
+        "navigation"
+      ]
+    },
+    "left_gallery": {
+      "name": "Left Gallery",
+      "rect": [
+        1,
+        3,
+        5,
+        6
+      ],
+      "description": "A skitterling lurks near old portraits whose eyes point at the wrong door.",
+      "tags": [
+        "combat",
+        "search"
+      ]
+    },
+    "veil_archive": {
+      "name": "Veil Archive",
+      "rect": [
+        7,
+        3,
+        12,
+        6
+      ],
+      "description": "A secret pane and a cultist hide the best clue to the true route.",
+      "tags": [
+        "secret",
+        "lore",
+        "alarm"
+      ]
+    },
+    "upper_treasury": {
+      "name": "Upper Treasury",
+      "rect": [
+        13,
+        1,
+        15,
+        5
+      ],
+      "description": "A treasury is visible, but reaching it can distract from the objective search.",
+      "tags": [
+        "treasure",
+        "optional"
+      ]
+    },
+    "mask_hall": {
+      "name": "Mask Hall",
+      "rect": [
+        1,
+        7,
+        11,
+        9
+      ],
+      "description": "A trapped hall with a central guard rewards careful reporting of what each hero sees.",
+      "tags": [
+        "hazard",
+        "combat",
+        "coordination"
+      ]
+    },
+    "signet_room": {
+      "name": "Signet Room",
+      "rect": [
+        12,
+        7,
+        15,
+        10
+      ],
+      "description": "The veiled signet sits beyond a false ceremonial route, watched by a brute.",
+      "tags": [
+        "objective",
+        "boss"
+      ]
+    },
+    "lower_servants_route": {
+      "name": "Lower Servants Route",
+      "rect": [
+        1,
+        11,
+        15,
+        13
+      ],
+      "description": "The lower route can become the clean exit if the party finds and opens it early.",
+      "tags": [
+        "loop",
+        "escape",
+        "hazard"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "portrait_wall_1",
+      "name": "Portrait Wall",
+      "category": "lore",
+      "pos": [
+        9,
+        4
+      ],
+      "deck": "veil",
+      "description": "The portraits all look toward a different doorway when seen from the side."
+    },
+    {
+      "id": "treasury_case_1",
+      "name": "Treasury Case",
+      "category": "treasure",
+      "pos": [
+        14,
+        2
+      ],
+      "deck": "treasure",
+      "description": "A delicate case holds a key and several convincing decoys."
+    },
+    {
+      "id": "signet_plinth_1",
+      "name": "Signet Plinth",
+      "category": "altar",
+      "pos": [
+        14,
+        8
+      ],
+      "deck": "event",
+      "description": "The plinth hides its shadow under the signet."
+    },
+    {
+      "id": "servants_map_1",
+      "name": "Servants Map",
+      "category": "lore",
+      "pos": [
+        3,
+        12
+      ],
+      "deck": "veil",
+      "description": "A plain work map shows the castle's less ceremonial routes."
+    }
+  ],
+  "decks": {
+    "veil": [
+      {
+        "id": "true_route_note",
+        "name": "True Route Note",
+        "type": "artifact",
+        "item": "true_route_note",
+        "reward": 0.16
+      },
+      {
+        "id": "false_portrait",
+        "name": "False Portrait",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "treasure": [
+      {
+        "id": "castle_key",
+        "name": "Castle Key",
+        "type": "artifact",
+        "item": "castle_key",
+        "reward": 0.15
+      },
+      {
+        "id": "bright_counterfeit",
+        "name": "Bright Counterfeit",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.1
+      }
+    ],
+    "event": [
+      {
+        "id": "veil_drop",
+        "name": "Veil Drop",
+        "type": "event",
+        "alert": 2,
+        "reward": -0.05
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "open_castle_court",
+      "title": "Open the Castle Court",
+      "description": "Open the first castle door.",
+      "reward": 0.12,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "find_veiled_pane",
+      "title": "Find the Veiled Pane",
+      "description": "Open the secret pane in the archive route.",
+      "reward": 0.14,
+      "condition": {
+        "type": "door_opened",
+        "id": "secret_1"
+      }
+    },
+    {
+      "id": "read_true_route",
+      "title": "Read the True Route",
+      "description": "Search a clue object in the castle.",
+      "reward": 0.1,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "recover_castle_key",
+      "title": "Recover the Castle Key",
+      "description": "Find a key or route clue in the treasury.",
+      "reward": 0.16,
+      "condition": {
+        "type": "inventory_contains",
+        "item": "castle_key"
+      }
+    },
+    {
+      "id": "defeat_signet_guard",
+      "title": "Defeat the Signet Guard",
+      "description": "Defeat the brute guarding the signet room.",
+      "reward": 0.22,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "crypt_brute"
+      }
+    },
+    {
+      "id": "take_veiled_signet",
+      "title": "Take the Veiled Signet",
+      "description": "Pick up the veiled signet.",
+      "reward": 0.32,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_veiled_castle",
+      "title": "Escape the Veiled Castle",
+      "description": "Return to the entry with the veiled signet.",
+      "reward": 0.7,
+      "condition": {
+        "type": "success"
+      }
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The signet's veil drops. Portrait eyes snap toward the carrier.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 2
+        },
+        {
+          "type": "spawn",
+          "monster": "lantern_wight",
+          "pos": [
+            10,
+            4
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 23,
+    "alert_reinforcement_threshold": 5,
+    "family": "veiled_castle",
+    "tier": "medium",
+    "marl_axis": "stealth coordination and detection management"
+  },
+  "torch": 20,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "ruleset": {
+    "classic_dynamic_available": true
+  },
+  "mechanics": {
+    "marl_contract": {
+      "axis": "compositional partial-observation final",
+      "tags": [
+        "belief,_clue,_counterplay,_and_extraction_compos"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "apply revealed-state pressure to inconsistent beliefs and late extraction choices"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    },
+    "classic_dynamic": {
+      "warden": "apply revealed-state pressure to inconsistent beliefs and late extraction choices",
+      "metric": "objective_passes, split_party_rounds, and specialist_actions",
+      "extraction": "final challenge should reward explicit carrier and exit planning"
+    }
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ]
+  }
+}

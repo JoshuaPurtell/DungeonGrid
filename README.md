@@ -76,7 +76,7 @@ Reveal boundaries stop queued execution so the agent can replan after meaningful
 
 ## Checkpoint And Resume
 
-DungeonGrid checkpoints are true environment snapshots: hidden state, public state, trace, turn state, and RNG state are preserved.
+DungeonGrid checkpoints are true environment snapshots: hidden state, public state, trace, turn state, and RNG state are preserved. Container checkpoints wrap that env snapshot in an agent+env envelope so policy state, rollout cursor state, and cumulative reward can be restored together.
 
 ```python
 from dungeongrid import DungeonGridEnvironment
@@ -91,7 +91,9 @@ restored = DungeonGridEnvironment.load_checkpoint("lantern_crypt.ckpt")
 restored.act_plan([{"type": "end_turn"}])
 ```
 
-The container runtime exposes the same snapshot through checkpoint descriptors. `checkpoint_data_base64` can be passed to a fresh runtime process to resume or branch a rollout.
+The container runtime exposes the same snapshot through checkpoint descriptors. `checkpoint_data_base64` can be passed to a fresh runtime process to resume or branch a rollout. For durable local services, instantiate the container runtime with `store_path="dungeongrid.sqlite"`; checkpoint descriptors and blobs will be indexed in SQLite and can be resumed by checkpoint id after process restart.
+
+Container rollouts support blocking and async modes. Use `submission_mode="async"` to queue a rollout and poll `get_execution()`, or call `submit_rollout_batch([...], max_parallel=10)` to run benchmark slices concurrently with `asyncio.gather`.
 
 ## Dungeons
 
@@ -126,6 +128,40 @@ dungeons/<dungeon_id>/
 
 `quest.json` defines the map, rooms, objective, decks, furniture, monsters, bosses, scripts, and achievements. `hooks.py` is optional Python for bespoke trigger/effect behavior.
 
+The bundled base expansion also exposes each dungeon family at four size tiers:
+
+```text
+base:<family>:pico    # 1 hero
+base:<family>:lite    # 2 heroes
+base:<family>:medium  # 3 heroes
+base:<family>:heavy   # 4 heroes
+```
+
+Legacy family IDs auto-select a tier by party size during `reset`, so `quest_id="lantern_crypt", num_heroes=1` runs `base:lantern_crypt:pico`, while `num_heroes=4` runs `base:lantern_crypt:heavy`. Legacy `_lite` IDs resolve to the `lite` tier.
+
+### External Expansions
+
+Private or local expansion packs can be mounted without adding their content to
+the public package. Set `DUNGEONGRID_EXPANSION_PATHS` to one or more
+`os.pathsep`-separated directories. Each path may be either an expansion root or
+a parent containing expansion roots:
+
+```text
+<namespace>/
+  manifest.json or expansion.json  # optional; id/namespace overrides folder name
+  dungeons/<family>/<tier>/quest.json
+```
+
+`missions/<mission>/<tier>/quest.json` is also supported. Mounted expansions use
+the same public ID shape as bundled tiers:
+
+```text
+<namespace>:<family>:pico|lite|medium|heavy
+<namespace>:<family>  # auto-selects tier by party size
+```
+
+For Python callers, pass `expansion_paths=[...]` to `DungeonGridEnvironment`.
+
 ## Benchmark Protocol
 
 DungeonGrid includes default AP-mode suites plus the opt-in `classic_dynamic` suite:
@@ -135,6 +171,7 @@ DungeonGrid includes default AP-mode suites plus the opt-in `classic_dynamic` su
 | `DG-Solo-20` | 20 full dungeons | default AP mode | one hero, no specialist hard gates |
 | `DG-Coop-20` | 20 full dungeons | default AP mode | two to four heroes |
 | `DG-Lite-20` | 20 lite diagnostics | default or `classic_dynamic` | short MARL probes |
+| `DG-Tiered-80` | 20 families x pico/lite/medium/heavy | default or `classic_dynamic` | explicit size-tier probes |
 | `DG-ClassicDynamic-20` | 20 full dungeons | `ruleset="classic_dynamic"` | roll-to-move, major actions, dread, extraction, role requirements |
 | `DG-OpenEnv-ReAct` | full or lite | selected by config | queued JSON plans with reveal-boundary replanning |
 | `DG-ReAct-Warden` | full or lite | selected by config | hero ReAct plus private bounded ReAct Warden |

@@ -1,0 +1,214 @@
+{
+  "id": "black_standard_keep",
+  "title": "Black Standard Keep",
+  "metadata": {
+    "campaign_group": "base",
+    "maturity": "migration_draft",
+    "validation_status": "tier_migration_pending_review",
+    "objective_type": "retrieve_and_escape",
+    "marl_axis": "lane assignment under fortress pressure",
+    "marl_purpose": "Tests distributed lane ownership and rally-point discipline in a keep with multiple defensive pockets.",
+    "coordination_skills": [
+      "assign lanes before opening fortress doors",
+      "collapse to a rally point when pressure spikes",
+      "share status updates across separated rooms"
+    ],
+    "pressure_sources": [
+      "fortress doors",
+      "multi-lane guards",
+      "alarm cultists",
+      "optional cache detours"
+    ],
+    "review_metrics": [
+      "lane coverage",
+      "messages after new room reveal",
+      "turns isolated",
+      "alarm/alert growth"
+    ],
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_hero_attribution"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 21,
+    "recommended_heroes": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "wizard"
+      ],
+      "2": [
+        "barbarian",
+        "wizard"
+      ],
+      "3": [
+        "barbarian",
+        "wizard",
+        "dwarf"
+      ]
+    },
+    "hero_loadouts": {
+      "barbarian": {
+        "weapon": "broad_sword",
+        "armor": "hide_guard",
+        "combat_role": "frontline",
+        "items": [
+          "iron_ration"
+        ]
+      },
+      "wizard": {
+        "weapon": "ash_staff",
+        "spell_cards": [
+          "spark_lance",
+          "ward_circle",
+          "banner_reading"
+        ],
+        "combat_role": "caster",
+        "items": []
+      },
+      "elf": {
+        "weapon": "short_bow",
+        "spell_cards": [
+          "mend_wounds",
+          "quiet_step"
+        ],
+        "combat_role": "skirmisher",
+        "items": []
+      },
+      "dwarf": {
+        "weapon": "hand_axe",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "chalk_marks"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed",
+      "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+    },
+    "decks": {
+      "signal": [
+        {
+          "id": "watch_rotation",
+          "name": "Watch Rotation",
+          "type": "artifact",
+          "item": "watch_rotation",
+          "reward": 0.16
+        },
+        {
+          "id": "false_signal",
+          "name": "False Signal",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03
+        }
+      ],
+      "artifact": [
+        {
+          "id": "keep_key",
+          "name": "Keep Key",
+          "type": "artifact",
+          "item": "keep_key",
+          "reward": 0.15
+        }
+      ],
+      "supply": [
+        {
+          "id": "guard_salve",
+          "name": "Guard Salve",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08
+        },
+        {
+          "id": "keep_tokens",
+          "name": "Keep Tokens",
+          "type": "treasure",
+          "item": "coin_cache",
+          "treasure": 1,
+          "reward": 0.1
+        }
+      ],
+      "event": [
+        {
+          "id": "banner_alarm",
+          "name": "Banner Alarm",
+          "type": "event",
+          "alert": 2,
+          "reward": -0.05
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic_available": true
+    },
+    "mechanics": {
+      "marl_contract": {
+        "axis": "opponent-aware breach sequencing",
+        "tags": [
+          "threshold_control_against_a_tactical_defender"
+        ],
+        "core_failure_modes": [
+          "silent independent play",
+          "unclear role assignment",
+          "late extraction planning"
+        ]
+      },
+      "warden_policy": {
+        "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+        "pressure_budget_per_round": 1,
+        "preferred_tactics": [
+          "use thresholds, guards, and dread to punish bad breach order"
+        ],
+        "forbidden_tactics": [
+          "spawn pressure without a visible or scripted cue",
+          "use unrevealed map geometry for perfect counterplay",
+          "erase the dungeon-specific lesson with generic monster spam"
+        ]
+      },
+      "classic_dynamic": {
+        "warden": "use thresholds, guards, and dread to punish bad breach order",
+        "metric": "doorway_hold_turns and split_party_rounds",
+        "extraction": "objective extraction tests whether the breach lane stays open"
+      }
+    }
+  },
+  "warden_runbook": {
+    "axis_pressure": "fortress doors, multi-lane guards, alarm cultists, optional cache detours",
+    "fairness_notes": [
+      "Escalate pressure only after the relevant cue has been observable or communicated.",
+      "Preserve a counterplay route so failures identify coordination rather than impossible state."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "barbarian": [
+      "frontline",
+      "body_block",
+      "lane_hold"
+    ],
+    "wizard": [
+      "ranged_magic",
+      "rule_clues",
+      "warding"
+    ],
+    "elf": [
+      "scouting",
+      "ranged_cover",
+      "healing_support"
+    ],
+    "dwarf": [
+      "trap_disarm",
+      "secret_search",
+      "route_marking"
+    ]
+  },
+  "scripts": {
+    "family": "black_standard_keep"
+  }
+}

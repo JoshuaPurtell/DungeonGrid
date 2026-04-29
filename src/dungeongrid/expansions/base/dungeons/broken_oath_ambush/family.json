@@ -1,0 +1,201 @@
+{
+  "id": "broken_oath_ambush",
+  "title": "Broken Oath Ambush",
+  "metadata": {
+    "campaign_group": "base",
+    "maturity": "migration_draft",
+    "validation_status": "tier_migration_pending_review",
+    "objective_type": "retrieve_and_escape",
+    "marl_axis": "ambush recovery and mutual support",
+    "marl_purpose": "Tests rapid regrouping, threat calls, and support under surprise pressure.",
+    "coordination_skills": [
+      "call ambush direction immediately",
+      "collapse isolated heroes toward a defensible lane",
+      "prioritize rescue over private damage turns"
+    ],
+    "pressure_sources": [
+      "surprise flankers",
+      "split starts",
+      "cultist alarms",
+      "short time-to-contact"
+    ],
+    "review_metrics": [
+      "rounds isolated after ambush",
+      "messages on reveal",
+      "rescue/guard actions",
+      "damage before regroup"
+    ],
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_hero_attribution"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 20,
+    "recommended_heroes": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "wizard"
+      ],
+      "2": [
+        "barbarian",
+        "wizard"
+      ],
+      "3": [
+        "barbarian",
+        "wizard",
+        "dwarf"
+      ]
+    },
+    "hero_loadouts": {
+      "barbarian": {
+        "weapon": "broad_sword",
+        "armor": "hide_guard",
+        "combat_role": "frontline",
+        "items": [
+          "iron_ration"
+        ]
+      },
+      "wizard": {
+        "weapon": "ash_staff",
+        "spell_cards": [
+          "spark_lance",
+          "ward_circle",
+          "oath_glimpse"
+        ],
+        "combat_role": "caster",
+        "items": []
+      },
+      "elf": {
+        "weapon": "short_bow",
+        "spell_cards": [
+          "mend_wounds",
+          "quiet_step"
+        ],
+        "combat_role": "skirmisher",
+        "items": []
+      },
+      "dwarf": {
+        "weapon": "hand_axe",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "chalk_marks"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed",
+      "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+    },
+    "decks": {
+      "oath": [
+        {
+          "id": "ambush_clause",
+          "name": "Ambush Clause",
+          "type": "artifact",
+          "item": "ambush_clause",
+          "reward": 0.14
+        },
+        {
+          "id": "blood_seal_note",
+          "name": "Blood Seal Note",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03
+        }
+      ],
+      "supply": [
+        {
+          "id": "retreat_salve",
+          "name": "Retreat Salve",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08
+        }
+      ],
+      "artifact": [
+        {
+          "id": "oath_grip",
+          "name": "Oath Grip",
+          "type": "artifact",
+          "item": "oath_grip",
+          "reward": 0.15
+        }
+      ],
+      "event": [
+        {
+          "id": "witness_flame",
+          "name": "Witness Flame",
+          "type": "event",
+          "alert": 2,
+          "reward": -0.05
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic_available": true
+    },
+    "mechanics": {
+      "marl_contract": {
+        "axis": "contingency planning under hidden threat",
+        "tags": [
+          "bait-cover-fallback_protocol"
+        ],
+        "core_failure_modes": [
+          "silent independent play",
+          "unclear role assignment",
+          "late extraction planning"
+        ]
+      },
+      "warden_policy": {
+        "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+        "pressure_budget_per_round": 1,
+        "preferred_tactics": [
+          "pressure the declared MARL axis: contingency planning under hidden threat"
+        ],
+        "forbidden_tactics": [
+          "spawn pressure without a visible or scripted cue",
+          "use unrevealed map geometry for perfect counterplay",
+          "erase the dungeon-specific lesson with generic monster spam"
+        ]
+      }
+    }
+  },
+  "warden_runbook": {
+    "axis_pressure": "surprise flankers, split starts, cultist alarms, short time-to-contact",
+    "fairness_notes": [
+      "Escalate pressure only after the relevant cue has been observable or communicated.",
+      "Preserve a counterplay route so failures identify coordination rather than impossible state."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "barbarian": [
+      "frontline",
+      "body_block",
+      "lane_hold"
+    ],
+    "wizard": [
+      "ranged_magic",
+      "rule_clues",
+      "warding"
+    ],
+    "elf": [
+      "scouting",
+      "ranged_cover",
+      "healing_support"
+    ],
+    "dwarf": [
+      "trap_disarm",
+      "secret_search",
+      "route_marking"
+    ]
+  },
+  "scripts": {
+    "family": "broken_oath_ambush"
+  }
+}

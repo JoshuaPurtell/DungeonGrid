@@ -1,0 +1,363 @@
+{
+  "quest_id": "goblin:rookery_cipher_nest:lite",
+  "title": "Rookery Cipher Nest Lite",
+  "min_heroes": 2,
+  "max_heroes": 2,
+  "metadata": {
+    "size_tier": "lite",
+    "intended_num_heroes": 2,
+    "supported_hero_range": [
+      2,
+      2
+    ],
+    "room_count_target": "3",
+    "heist_focus": "messenger interception, bird-spook discipline, route concealment, and courier timing",
+    "coordination_problem": "information heist where scout sightlines, boggart decoys, and kobold mechanisms prevent alarm cascades",
+    "goblin_aesthetic": "angry mountain crows, wax seals, stolen quills, goblin feather cloaks, and purple whisper charms"
+  },
+  "map": {
+    "ascii": "###############\n#E.D..Q....I..#\n#..#..X..C....#\n#..#.....###..#\n#..D..U.......#\n#.....C.......#\n###############",
+    "width": 15,
+    "height": 7
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "courier_cipher",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      11,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_warren": {
+      "name": "Goblin Entry Warren",
+      "rect": [
+        1,
+        1,
+        4,
+        5
+      ],
+      "description": "A cramped goblin approach lined with angry mountain crows, wax seals, stolen quills, goblin feather cloaks, and purple whisper charms.",
+      "tags": [
+        "start",
+        "stealth",
+        "goblin"
+      ]
+    },
+    "mischief_lane": {
+      "name": "Mischief Lane",
+      "rect": [
+        3,
+        1,
+        9,
+        5
+      ],
+      "description": "The main coordination lane for messenger interception, bird-spook discipline, route concealment, and courier timing.",
+      "tags": [
+        "coordination",
+        "sneak",
+        "craft"
+      ]
+    },
+    "objective_hold": {
+      "name": "Courier Cipher Post",
+      "rect": [
+        8,
+        1,
+        13,
+        3
+      ],
+      "description": "Grab the courier cipher before the rookery sends a beard-sealed warning down-mountain.",
+      "tags": [
+        "objective",
+        "dwarf",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "nest_shadow_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Rook Nest Shadow",
+      "description": "Rook Nest Shadow supports messenger interception, bird-spook discipline, route concealment, and courier timing.",
+      "traits": [
+        "shadow",
+        "nest",
+        "cover"
+      ],
+      "cover": 2,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The scout wears a nest like a hat and somehow improves it.",
+            "trace_kind": "goblin_sneak"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Rook Nest Shadow breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "message_tube_1",
+      "pos": [
+        5,
+        1
+      ],
+      "category": "mechanism",
+      "name": "Message Tube Rack",
+      "description": "Message Tube Rack supports messenger interception, bird-spook discipline, route concealment, and courier timing.",
+      "traits": [
+        "tube",
+        "message",
+        "mechanism"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The kobold swaps the tubes so every warning goes to lunch.",
+            "trace_kind": "goblin_sabotage"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "message_tube_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Message Tube Rack breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "bird_bell_1",
+      "pos": [
+        7,
+        2
+      ],
+      "category": "signal",
+      "name": "Bird Bell",
+      "description": "Bird Bell supports messenger interception, bird-spook discipline, route concealment, and courier timing.",
+      "traits": [
+        "bell",
+        "bird",
+        "alarm"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The bell is muffled with feather fluff and stolen wax.",
+            "trace_kind": "bell_sabotaged"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "bird_bell_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Bird Bell breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "feather_decoy_1",
+      "pos": [
+        1,
+        1
+      ],
+      "category": "decoy",
+      "name": "Boggart Feather Decoy",
+      "description": "Boggart Feather Decoy supports messenger interception, bird-spook discipline, route concealment, and courier timing.",
+      "traits": [
+        "decoy",
+        "feather",
+        "magic"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "A fake crow insults a dwarf from the safest possible distance.",
+            "trace_kind": "goblin_distract"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Boggart Feather Decoy breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "dwarf_coin_roll",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "heist": "steal_courier_cipher",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
+    "tier": "lite",
+    "coordination_contract": "information heist where scout sightlines, boggart decoys, and kobold mechanisms prevent alarm cascades"
+  },
+  "achievements": [
+    {
+      "id": "rookery_cipher_nest_lite_quiet_toolwork",
+      "title": "Quiet Toolwork",
+      "description": "Resolve a mechanism or alarm feature in Rookery Cipher Nest lite without turning the run into a brawl.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_sabotage"
+      }
+    },
+    {
+      "id": "rookery_cipher_nest_lite_mischief_coordination",
+      "title": "Mischief Coordination",
+      "description": "Create a distraction or trap setup that opens the Rookery Cipher Nest route.",
+      "reward": 0.12,
+      "condition": {
+        "type": "any_trace_kind_happened",
+        "kinds": [
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "rookery_cipher_nest_lite_snack_tax",
+      "title": "Snack Tax With Interest",
+      "description": "Take optional loot while still completing the lite heist.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "optional_loot",
+        "count": 1
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "wake_on": "manual",
+      "sight_range": 0,
+      "attack": 0
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "wake_on": "manual",
+      "sight_range": 0,
+      "attack": 0
+    },
+    "dwarf_runekeeper_1": {
+      "activation": "dormant",
+      "wake_on": "manual",
+      "sight_range": 0,
+      "attack": 0
+    }
+  },
+  "torch": 20
+}

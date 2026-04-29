@@ -1,0 +1,117 @@
+{
+  "quest_id": "base:moonblade_vault:pico",
+  "title": "Moonblade Vault Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "moonblade_vault",
+    "maturity": "migration_draft",
+    "marl_axis": "specialist sequencing and greed control",
+    "coordination_skills": [
+      "wait for the specialist before opening vault hazards",
+      "announce optional loot before taking it",
+      "protect the key or blade carrier on exit"
+    ],
+    "pressure_sources": [
+      "vault locks",
+      "secret routes",
+      "optional treasure",
+      "carrier pursuit"
+    ],
+    "review_metrics": [
+      "specialist actions before vault open",
+      "treasure detours",
+      "carrier protection",
+      "messages before cache interactions"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the specialist sequencing and greed control signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..S..I..#\n#..#...#K.#\n#..C...Y..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "moonblade_silver_token",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first specialist sequencing and greed control choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on specialist sequencing and greed control without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache"
+  },
+  "scripts": {
+    "lite_design_note": "A compact vault where one hero scouts reflection, the other handles hazard, and the token may need a handoff.",
+    "warden_style": "scout-disarm-handoff",
+    "marl_axis": "specialist sequencing and greed control",
+    "family": "moonblade_vault",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_moonblade_vault_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Moonblade Vault variant while preserving the specialist sequencing and greed control signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

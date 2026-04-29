@@ -1,0 +1,118 @@
+{
+  "quest_id": "base:black_standard_keep:pico",
+  "title": "Black Standard Keep Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "black_standard_keep",
+    "maturity": "migration_draft",
+    "marl_axis": "lane assignment under fortress pressure",
+    "coordination_skills": [
+      "assign lanes before opening fortress doors",
+      "collapse to a rally point when pressure spikes",
+      "share status updates across separated rooms"
+    ],
+    "pressure_sources": [
+      "fortress doors",
+      "multi-lane guards",
+      "alarm cultists",
+      "optional cache detours"
+    ],
+    "review_metrics": [
+      "lane coverage",
+      "messages after new room reveal",
+      "turns isolated",
+      "alarm/alert growth"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the lane assignment under fortress pressure signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E.D...D.I#\n#..#...#..#\n#..C.B.C..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "black_standard_token",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      9,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first lane assignment under fortress pressure choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on lane assignment under fortress pressure without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "lite_design_note": "Four-room keep: two doors, one rally object, one sentinel, and a clear test of whether agents avoid opening both fronts.",
+    "warden_style": "threshold control against a tactical defender",
+    "marl_axis": "lane assignment under fortress pressure",
+    "family": "black_standard_keep",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_black_standard_keep_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Black Standard Keep variant while preserving the lane assignment under fortress pressure signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

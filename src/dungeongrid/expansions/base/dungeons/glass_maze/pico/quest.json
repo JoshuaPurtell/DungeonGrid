@@ -1,0 +1,117 @@
+{
+  "quest_id": "base:glass_maze:pico",
+  "title": "Glass Maze Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "glass_maze",
+    "maturity": "migration_draft",
+    "marl_axis": "shared map memory",
+    "coordination_skills": [
+      "name landmarks and dead ends in messages",
+      "avoid duplicate scouting of already-known branches",
+      "share secret-door and trap information before movement"
+    ],
+    "pressure_sources": [
+      "maze branches",
+      "mirror decoys",
+      "secret doors",
+      "limited line of sight"
+    ],
+    "review_metrics": [
+      "route-message count",
+      "repeated dead-end visits",
+      "secret searches after hints",
+      "tiles revealed per action"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the shared map memory signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..S..I..#\n#.#.#.#.#.#\n#..C.Y.G..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "glass_key_sliver",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first shared map memory choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on shared map memory without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache"
+  },
+  "scripts": {
+    "lite_design_note": "A secret-panel mazelet: one objective room, one optional shortcut, one decoy enemy, and a small lower route.",
+    "warden_style": "scout-report-map-update loop",
+    "marl_axis": "shared map memory",
+    "family": "glass_maze",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_glass_maze_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Glass Maze variant while preserving the shared map memory signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

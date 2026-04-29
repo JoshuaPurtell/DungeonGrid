@@ -1,0 +1,117 @@
+{
+  "quest_id": "base:veiled_castle:pico",
+  "title": "Veiled Castle Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "veiled_castle",
+    "maturity": "migration_draft",
+    "marl_axis": "stealth coordination and detection management",
+    "coordination_skills": [
+      "announce noisy actions before taking them",
+      "let scouts verify patrol lanes before group movement",
+      "coordinate regroup points after stealth breaks"
+    ],
+    "pressure_sources": [
+      "patrol sight lines",
+      "secret doors",
+      "alarm cultists",
+      "optional noisy loot"
+    ],
+    "review_metrics": [
+      "alert increments",
+      "messages before noisy actions",
+      "scout-before-group moves",
+      "regroup after detection"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the stealth coordination and detection management signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..S..I..#\n#..#...#K.#\n#..C...Y..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "veiled_castle_sigils",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      7,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first stealth coordination and detection management choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on stealth coordination and detection management without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache"
+  },
+  "scripts": {
+    "lite_design_note": "A four-room mini-finale with one decoy, one ranged threat, one objective, and enough doors to require explicit communication.",
+    "warden_style": "belief, clue, counterplay, and extraction composition",
+    "marl_axis": "stealth coordination and detection management",
+    "family": "veiled_castle",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_veiled_castle_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Veiled Castle variant while preserving the stealth coordination and detection management signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

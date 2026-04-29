@@ -1,0 +1,344 @@
+{
+  "id": "cinder_mage_tower",
+  "title": "Cinder Mage Tower",
+  "metadata": {
+    "campaign_group": "base",
+    "maturity": "migration_draft",
+    "validation_status": "tier_migration_pending_review",
+    "objective_type": "retrieve_and_escape",
+    "marl_axis": "target priority under ranged threat",
+    "marl_purpose": "Tests whether agents identify and neutralize ranged casters before spending turns on nearer but lower-priority targets.",
+    "coordination_skills": [
+      "call out ranged line-of-sight threats",
+      "focus fire high-priority casters",
+      "use cover, doors, and interrupts before advancing"
+    ],
+    "pressure_sources": [
+      "ranged cinder mages",
+      "line-of-sight corridors",
+      "screens of weak guards",
+      "torch/alert tempo"
+    ],
+    "review_metrics": [
+      "turns caster remains alive after reveal",
+      "focus-fire consistency",
+      "damage taken from range",
+      "cover/door use"
+    ],
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_hero_attribution"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 20,
+    "recommended_heroes": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "wizard"
+      ],
+      "2": [
+        "barbarian",
+        "wizard"
+      ],
+      "3": [
+        "barbarian",
+        "wizard",
+        "dwarf"
+      ]
+    },
+    "hero_loadouts": {
+      "barbarian": {
+        "weapon": "broad_sword",
+        "armor": "hide_guard",
+        "combat_role": "frontline",
+        "items": [
+          "iron_ration"
+        ]
+      },
+      "wizard": {
+        "weapon": "ash_staff",
+        "spell_cards": [
+          "spark_lance",
+          "ward_circle",
+          "cinder_reading"
+        ],
+        "combat_role": "caster",
+        "items": []
+      },
+      "elf": {
+        "weapon": "short_bow",
+        "spell_cards": [
+          "mend_wounds",
+          "blink_step"
+        ],
+        "combat_role": "skirmisher",
+        "items": []
+      },
+      "dwarf": {
+        "weapon": "hand_axe",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "chalk_marks"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed",
+      "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+    },
+    "decks": {
+      "spell": [
+        {
+          "id": "hush_flame_formula",
+          "name": "Hush Flame Formula",
+          "type": "spell",
+          "item": "hush_flame",
+          "reward": 0.14,
+          "rarity": "common"
+        },
+        {
+          "id": "ward_circle_diagram",
+          "name": "Ward Circle Diagram",
+          "type": "spell",
+          "item": "ward_circle",
+          "reward": 0.12,
+          "rarity": "common"
+        },
+        {
+          "id": "flare_misread",
+          "name": "Flare Misread",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03,
+          "rarity": "danger"
+        }
+      ],
+      "supply": [
+        {
+          "id": "cinder_key",
+          "name": "Cinder Key",
+          "type": "artifact",
+          "item": "cinder_key",
+          "reward": 0.15,
+          "rarity": "rare"
+        },
+        {
+          "id": "soot_salve",
+          "name": "Soot Salve",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08,
+          "rarity": "common"
+        },
+        {
+          "id": "warding_cloak_cache",
+          "name": "Warding Cloak Cache",
+          "type": "armor",
+          "item": "warding_cloak",
+          "rarity": "rare",
+          "reward": 0.12
+        }
+      ],
+      "artifact": [
+        {
+          "id": "cooled_valve_pin",
+          "name": "Cooled Valve Pin",
+          "type": "artifact",
+          "item": "cooled_valve_pin",
+          "reward": 0.14,
+          "rarity": "rare"
+        }
+      ],
+      "event": [
+        {
+          "id": "focus_flare",
+          "name": "Focus Flare",
+          "type": "event",
+          "alert": 2,
+          "reward": -0.05,
+          "rarity": "danger"
+        },
+        {
+          "id": "cinder_surge",
+          "name": "Cinder Surge",
+          "type": "event",
+          "rarity": "danger",
+          "reward": -0.07,
+          "effects": [
+            {
+              "type": "alert",
+              "amount": 2
+            },
+            {
+              "type": "damage",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic_available": true
+    },
+    "deck_policies": {
+      "event": {
+        "reshuffle": true,
+        "identity": "pressure"
+      },
+      "treasure": {
+        "reshuffle": false,
+        "identity": "finite_loot"
+      },
+      "artifact": {
+        "reshuffle": false,
+        "identity": "quest_counterplay"
+      },
+      "spell": {
+        "reshuffle": false,
+        "identity": "finite_spell_lessons"
+      }
+    },
+    "mechanics": {
+      "marl_contract": {
+        "axis": "target priority with asymmetric threat ranges",
+        "tags": [
+          "covering_advance_against_ranged_control"
+        ],
+        "core_failure_modes": [
+          "silent independent play",
+          "unclear role assignment",
+          "late extraction planning"
+        ]
+      },
+      "warden_policy": {
+        "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+        "pressure_budget_per_round": 1,
+        "preferred_tactics": [
+          "pressure the declared MARL axis: target priority with asymmetric threat ranges"
+        ],
+        "forbidden_tactics": [
+          "spawn pressure without a visible or scripted cue",
+          "use unrevealed map geometry for perfect counterplay",
+          "erase the dungeon-specific lesson with generic monster spam"
+        ]
+      }
+    },
+    "monster_overrides": {
+      "crypt_brute_1": {
+        "equipment": {
+          "boss": true,
+          "boss_name": "Cinder Focus Guardian",
+          "counter_flag": "focus_ring_broken",
+          "max_damage_without_counter": 1,
+          "phases": [
+            {
+              "id": "focus_backlash",
+              "hp_at_or_below": 2,
+              "attack_bonus": 1,
+              "alert": 1,
+              "status": [
+                "enraged"
+              ],
+              "message": "The focus guardian vents cinders as its shell cracks."
+            }
+          ]
+        },
+        "wake_on": "line_of_sight"
+      },
+      "cinder_mage_1": {
+        "wake_on": "line_of_sight",
+        "equipment": {
+          "attack_range": 6
+        }
+      }
+    },
+    "bosses": {
+      "crypt_brute_1": {
+        "name": "Cinder Focus Guardian",
+        "public_summary": "A heat-bound guardian whose focused ward caps heavy damage until the focus ring or furnace valve is broken.",
+        "counterplay_hint": "Use the lectern clue, focus ring, or furnace valve to disrupt the boss before trading blows.",
+        "damage_gate": {
+          "counter_flags": [
+            "focus_ring_broken",
+            "furnace_valve_broken"
+          ],
+          "max_damage_without_counter": 1,
+          "message": "The cinder focus bends the attack into harmless sparks."
+        },
+        "defeat_reward": 0.24,
+        "defeat_description": "Defeat the Cinder Focus Guardian after disrupting the tower focus.",
+        "on_defeated": [
+          {
+            "type": "set_flag",
+            "key": "cinder_focus_guardian_defeated",
+            "value": true
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1
+          },
+          {
+            "type": "emit",
+            "message": "The tower focus gutter-flares and goes dim."
+          }
+        ],
+        "phases": [
+          {
+            "id": "focus_backlash",
+            "hp_at_or_below": 2,
+            "attack_bonus": 1,
+            "alert": 1,
+            "status": [
+              "enraged"
+            ],
+            "message": "The focus guardian vents cinders as its shell cracks.",
+            "effects": [
+              {
+                "type": "hero_status",
+                "status": "scorched"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "warden_runbook": {
+    "axis_pressure": "ranged cinder mages, line-of-sight corridors, screens of weak guards, torch/alert tempo",
+    "fairness_notes": [
+      "Escalate pressure only after the relevant cue has been observable or communicated.",
+      "Preserve a counterplay route so failures identify coordination rather than impossible state."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "barbarian": [
+      "frontline",
+      "body_block",
+      "lane_hold"
+    ],
+    "wizard": [
+      "ranged_magic",
+      "rule_clues",
+      "warding"
+    ],
+    "elf": [
+      "scouting",
+      "ranged_cover",
+      "healing_support"
+    ],
+    "dwarf": [
+      "trap_disarm",
+      "secret_search",
+      "route_marking"
+    ]
+  },
+  "scripts": {
+    "family": "cinder_mage_tower"
+  }
+}

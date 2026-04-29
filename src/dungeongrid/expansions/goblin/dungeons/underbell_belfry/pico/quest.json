@@ -1,0 +1,309 @@
+{
+  "quest_id": "goblin:underbell_belfry:pico",
+  "title": "Underbell Belfry Pico",
+  "min_heroes": 1,
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "room_count_target": "3",
+    "heist_focus": "alarm suppression, rope cutting, vertical chokepoints, and synchronized bell silencing",
+    "coordination_problem": "alarm gauntlet where each role controls one failure mode: scouting, silence, blocking, or misdirection",
+    "goblin_aesthetic": "huge under-mountain bells, frayed ropes, mushroom wax, goblin knots, and purple false echoes"
+  },
+  "map": {
+    "ascii": "#############\n#E..D..Q.I..#\n#...#..X....#\n#...D.......#\n#...#..C....#\n#...........#\n#############",
+    "width": 13,
+    "height": 7
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "quiet_clapper",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      9,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_warren": {
+      "name": "Goblin Entry Warren",
+      "rect": [
+        1,
+        1,
+        4,
+        5
+      ],
+      "description": "A cramped goblin approach lined with huge under-mountain bells, frayed ropes, mushroom wax, goblin knots, and purple false echoes.",
+      "tags": [
+        "start",
+        "stealth",
+        "goblin"
+      ]
+    },
+    "mischief_lane": {
+      "name": "Mischief Lane",
+      "rect": [
+        2,
+        1,
+        8,
+        5
+      ],
+      "description": "The main coordination lane for alarm suppression, rope cutting, vertical chokepoints, and synchronized bell silencing.",
+      "tags": [
+        "coordination",
+        "sneak",
+        "craft"
+      ]
+    },
+    "objective_hold": {
+      "name": "Quiet Clapper Post",
+      "rect": [
+        6,
+        1,
+        11,
+        3
+      ],
+      "description": "Cut out the quiet clapper, the one bell part the dwarves use to signal silent lockdowns.",
+      "tags": [
+        "objective",
+        "dwarf",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "bell_shadow_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Bell-Mouth Shadow",
+      "description": "Bell-Mouth Shadow supports alarm suppression, rope cutting, vertical chokepoints, and synchronized bell silencing.",
+      "traits": [
+        "shadow",
+        "bell",
+        "cover"
+      ],
+      "cover": 2,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The scout disappears inside the bell's enormous mouth.",
+            "trace_kind": "goblin_sneak"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "bell_shadow_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Bell-Mouth Shadow breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "bell_rope_1",
+      "pos": [
+        1,
+        1
+      ],
+      "category": "signal",
+      "name": "Main Bell Rope",
+      "description": "Main Bell Rope supports alarm suppression, rope cutting, vertical chokepoints, and synchronized bell silencing.",
+      "traits": [
+        "bell",
+        "rope",
+        "alarm"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The bell rope is replaced with something more goblin and less useful.",
+            "trace_kind": "bell_sabotaged"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "bell_rope_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Main Bell Rope breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "clapper_pin_1",
+      "pos": [
+        6,
+        2
+      ],
+      "category": "mechanism",
+      "name": "Clapper Pin Rack",
+      "description": "Clapper Pin Rack supports alarm suppression, rope cutting, vertical chokepoints, and synchronized bell silencing.",
+      "traits": [
+        "pin",
+        "mechanism",
+        "noise"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The kobold swaps the clapper pin for a bent spoon.",
+            "trace_kind": "goblin_sabotage"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "clapper_pin_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Clapper Pin Rack breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "dwarf_coin_roll"
+  },
+  "scripts": {
+    "heist": "steal_quiet_clapper",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
+    "tier": "pico",
+    "coordination_contract": "alarm gauntlet where each role controls one failure mode: scouting, silence, blocking, or misdirection"
+  },
+  "achievements": [
+    {
+      "id": "underbell_belfry_pico_quiet_toolwork",
+      "title": "Quiet Toolwork",
+      "description": "Resolve a mechanism or alarm feature in Underbell Belfry pico without turning the run into a brawl.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_sabotage"
+      }
+    },
+    {
+      "id": "underbell_belfry_pico_mischief_coordination",
+      "title": "Mischief Coordination",
+      "description": "Create a distraction or trap setup that opens the Underbell Belfry route.",
+      "reward": 0.12,
+      "condition": {
+        "type": "any_trace_kind_happened",
+        "kinds": [
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "underbell_belfry_pico_snack_tax",
+      "title": "Snack Tax With Interest",
+      "description": "Take optional loot while still completing the pico heist.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "optional_loot",
+        "count": 1
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "wake_on": "manual",
+      "sight_range": 0,
+      "attack": 0
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "wake_on": "manual",
+      "sight_range": 0,
+      "attack": 0
+    }
+  },
+  "torch": 18
+}

@@ -1,0 +1,118 @@
+{
+  "quest_id": "base:trial_of_embers:pico",
+  "title": "Trial of Embers Pico",
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "variant_family": "trial_of_embers",
+    "maturity": "migration_draft",
+    "marl_axis": "hazard timing and shared risk budgeting",
+    "coordination_skills": [
+      "stage before crossing hazard lanes",
+      "communicate when traps or ember pulses are safe/unsafe",
+      "assign one hero to clear or mark hazards before the carrier moves"
+    ],
+    "pressure_sources": [
+      "traps",
+      "ember pulses",
+      "torch pressure",
+      "monsters that force movement"
+    ],
+    "review_metrics": [
+      "trap searches/disarms before crossings",
+      "hazard damage",
+      "messages about safe timing",
+      "carrier hazard exposure"
+    ],
+    "tier_test_focus": "Minimal single-agent probe for recognizing the hazard timing and shared risk budgeting signal without extra branches."
+  },
+  "map": {
+    "ascii": "###########\n#E..T..D.I#\n#..#...#..#\n#..C.P.C..#\n###########",
+    "width": 11,
+    "height": 5
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "ember_trial_mark",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      9,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_probe": {
+      "name": "Entry Probe",
+      "rect": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "description": "A compact start area that exposes the first hazard timing and shared risk budgeting choice immediately.",
+      "tags": [
+        "start",
+        "diagnostic"
+      ]
+    },
+    "axis_cell": {
+      "name": "Axis Cell",
+      "rect": [
+        5,
+        1,
+        9,
+        3
+      ],
+      "description": "Small objective cell focused on hazard timing and shared risk budgeting without extra branches.",
+      "tags": [
+        "objective",
+        "marl_axis"
+      ]
+    }
+  },
+  "furniture": [],
+  "chest_contents": {
+    "chest_1": "coin_cache",
+    "chest_2": "healing_draught"
+  },
+  "scripts": {
+    "lite_design_note": "A four-room proof sampler: one hazard, one combat threat, one optional restraint object, and a final ember token.",
+    "warden_style": "proof selection and resource preservation",
+    "marl_axis": "hazard timing and shared risk budgeting",
+    "family": "trial_of_embers",
+    "tier": "pico"
+  },
+  "achievements": [
+    {
+      "id": "pico_trial_of_embers_axis_probe",
+      "title": "Pico Axis Probe",
+      "description": "Make progress in the pico Trial of Embers variant while preserving the hazard timing and shared risk budgeting signal.",
+      "reward": 0.12,
+      "condition": {
+        "type": "objective_taken"
+      }
+    }
+  ],
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ]
+  },
+  "recommended_heroes": [
+    "wizard"
+  ]
+}

@@ -1,12 +1,13 @@
 {
   "quest_id": "goblin:ironroot_hold:lite",
   "title": "Ironroot Hold Lite",
+  "min_heroes": 2,
   "max_heroes": 2,
   "metadata": {
     "size_tier": "lite",
     "intended_num_heroes": 2,
     "supported_hero_range": [
-      1,
+      2,
       2
     ],
     "room_count_target": "3",

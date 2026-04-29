@@ -1,0 +1,199 @@
+{
+  "id": "frost_mirror_hold",
+  "title": "Frost Mirror Hold",
+  "metadata": {
+    "campaign_group": "base",
+    "maturity": "migration_draft",
+    "validation_status": "tier_migration_pending_review",
+    "objective_type": "retrieve_and_escape",
+    "marl_axis": "decoy discrimination and role confirmation",
+    "marl_purpose": "Tests whether heroes coordinate observations to distinguish real threats and objectives from mirrored decoys.",
+    "coordination_skills": [
+      "compare observations before attacking or opening",
+      "assign one scout to verify mirror rooms",
+      "hold resources until target identity is confirmed"
+    ],
+    "pressure_sources": [
+      "mirror adepts",
+      "decoy lanes",
+      "split observation",
+      "cold tempo pressure"
+    ],
+    "review_metrics": [
+      "verification messages",
+      "attacks on decoys",
+      "wrong-lane commitment",
+      "resource use before confirmation"
+    ],
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_per_hero_attribution"
+  },
+  "defaults": {
+    "difficulty": "starter",
+    "torch": 20,
+    "recommended_heroes": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "wizard"
+      ],
+      "2": [
+        "barbarian",
+        "wizard"
+      ],
+      "3": [
+        "barbarian",
+        "wizard",
+        "dwarf"
+      ]
+    },
+    "hero_loadouts": {
+      "barbarian": {
+        "weapon": "broad_sword",
+        "armor": "hide_guard",
+        "combat_role": "frontline",
+        "items": [
+          "iron_ration"
+        ]
+      },
+      "wizard": {
+        "weapon": "ash_staff",
+        "spell_cards": [
+          "spark_lance",
+          "ward_circle",
+          "frost_reading"
+        ],
+        "combat_role": "caster",
+        "items": []
+      },
+      "elf": {
+        "weapon": "short_bow",
+        "spell_cards": [
+          "mend_wounds",
+          "quiet_step"
+        ],
+        "combat_role": "skirmisher",
+        "items": []
+      },
+      "dwarf": {
+        "weapon": "hand_axe",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "chalk_marks"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed",
+      "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+    },
+    "decks": {
+      "frost": [
+        {
+          "id": "thaw_route",
+          "name": "Thaw Route",
+          "type": "artifact",
+          "item": "thaw_route",
+          "reward": 0.16
+        },
+        {
+          "id": "cold_echo",
+          "name": "Cold Echo",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03
+        }
+      ],
+      "supply": [
+        {
+          "id": "warm_lens",
+          "name": "Warm Lens",
+          "type": "artifact",
+          "item": "warm_lens",
+          "reward": 0.16
+        },
+        {
+          "id": "thaw_salve",
+          "name": "Thaw Salve",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08
+        }
+      ],
+      "event": [
+        {
+          "id": "mirror_freeze",
+          "name": "Mirror Freeze",
+          "type": "event",
+          "alert": 2,
+          "reward": -0.05
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic_available": true
+    },
+    "mechanics": {
+      "marl_contract": {
+        "axis": "belief-state fusion under decoys",
+        "tags": [
+          "shared_observation_and_verification"
+        ],
+        "core_failure_modes": [
+          "silent independent play",
+          "unclear role assignment",
+          "late extraction planning"
+        ]
+      },
+      "warden_policy": {
+        "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+        "pressure_budget_per_round": 1,
+        "preferred_tactics": [
+          "pressure the declared MARL axis: belief-state fusion under decoys"
+        ],
+        "forbidden_tactics": [
+          "spawn pressure without a visible or scripted cue",
+          "use unrevealed map geometry for perfect counterplay",
+          "erase the dungeon-specific lesson with generic monster spam"
+        ]
+      }
+    }
+  },
+  "warden_runbook": {
+    "axis_pressure": "mirror adepts, decoy lanes, split observation, cold tempo pressure",
+    "fairness_notes": [
+      "Escalate pressure only after the relevant cue has been observable or communicated.",
+      "Preserve a counterplay route so failures identify coordination rather than impossible state."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "barbarian": [
+      "frontline",
+      "body_block",
+      "lane_hold"
+    ],
+    "wizard": [
+      "ranged_magic",
+      "rule_clues",
+      "warding"
+    ],
+    "elf": [
+      "scouting",
+      "ranged_cover",
+      "healing_support"
+    ],
+    "dwarf": [
+      "trap_disarm",
+      "secret_search",
+      "route_marking"
+    ]
+  },
+  "scripts": {
+    "family": "frost_mirror_hold"
+  }
+}

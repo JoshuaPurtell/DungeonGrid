@@ -204,12 +204,7 @@ class GridEngine:
         rng = random.Random(seed)
         data = self.load_quest_data(quest_id, num_heroes=num_heroes)
         state_quest_id = str(data.get("quest_id", quest_id))
-        max_heroes = data.get("max_heroes")
-        if max_heroes is not None and num_heroes > int(max_heroes):
-            raise ValueError(
-                f"Quest {state_quest_id!r} supports at most {int(max_heroes)} heroes; "
-                f"requested {num_heroes}."
-            )
+        self._validate_party_size(data, quest_id=state_quest_id, num_heroes=num_heroes)
         resolved_ruleset = self._resolve_ruleset(data, ruleset)
         mode = game_mode_from_quest(data)
         ascii_map = data["map"]["ascii"]
@@ -507,6 +502,24 @@ class GridEngine:
                     break
         self._validate_roles(data, roles, num_heroes, apply_requirements=apply_requirements)
         return roles[:num_heroes]
+
+    def _validate_party_size(
+        self, data: dict[str, Any], *, quest_id: str, num_heroes: int
+    ) -> None:
+        if num_heroes < 1:
+            raise ValueError("num_heroes must be at least 1")
+        min_heroes = int(data.get("min_heroes", 1))
+        max_heroes = data.get("max_heroes")
+        if num_heroes < min_heroes:
+            raise ValueError(
+                f"Quest {quest_id!r} requires at least {min_heroes} heroes; "
+                f"requested {num_heroes}."
+            )
+        if max_heroes is not None and num_heroes > int(max_heroes):
+            raise ValueError(
+                f"Quest {quest_id!r} supports at most {int(max_heroes)} heroes; "
+                f"requested {num_heroes}."
+            )
 
     def _validate_roles(
         self, data: dict[str, Any], roles: list[str], num_heroes: int, *, apply_requirements: bool

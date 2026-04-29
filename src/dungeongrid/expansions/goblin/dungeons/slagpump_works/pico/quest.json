@@ -1,0 +1,304 @@
+{
+  "quest_id": "goblin:slagpump_works:pico",
+  "title": "Slagpump Works Pico",
+  "min_heroes": 1,
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "room_count_target": "3",
+    "heist_focus": "machine noise, rotating valves, steam cover, and delayed defender response",
+    "coordination_problem": "industrial timing puzzle where the kobold changes state, scout scouts, boggart redirects, and ogre blocks steam lanes",
+    "goblin_aesthetic": "slag pipes, hot rivets, wet stone, goblin soot handprints, and stolen pump grease"
+  },
+  "map": {
+    "ascii": "#############\n#E.D..Q..I..#\n#..#..X.....#\n#..#....C...#\n#..D........#\n#...........#\n#############",
+    "width": 13,
+    "height": 7
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "pump_master_crank",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      9,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_warren": {
+      "name": "Goblin Entry Warren",
+      "rect": [
+        1,
+        1,
+        4,
+        5
+      ],
+      "description": "A cramped goblin approach lined with slag pipes, hot rivets, wet stone, goblin soot handprints, and stolen pump grease.",
+      "tags": [
+        "start",
+        "stealth",
+        "goblin"
+      ]
+    },
+    "mischief_lane": {
+      "name": "Mischief Lane",
+      "rect": [
+        2,
+        1,
+        8,
+        5
+      ],
+      "description": "The main coordination lane for machine noise, rotating valves, steam cover, and delayed defender response.",
+      "tags": [
+        "coordination",
+        "sneak",
+        "craft"
+      ]
+    },
+    "objective_hold": {
+      "name": "Pump-Master Crank Post",
+      "rect": [
+        6,
+        1,
+        11,
+        3
+      ],
+      "description": "Steal the pump-master crank to make the whole lower hold flood at exactly the wrong time.",
+      "tags": [
+        "objective",
+        "dwarf",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "steam_shadow_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Steam Shadow Pocket",
+      "description": "Steam Shadow Pocket supports machine noise, rotating valves, steam cover, and delayed defender response.",
+      "traits": [
+        "shadow",
+        "steam",
+        "cover"
+      ],
+      "cover": 2,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "Steam wraps the scout in a suspiciously goblin-shaped cloud.",
+            "trace_kind": "goblin_sneak"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Steam Shadow Pocket breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "slag_valve_1",
+      "pos": [
+        4,
+        1
+      ],
+      "category": "mechanism",
+      "name": "Slag Valve Cluster",
+      "description": "Slag Valve Cluster supports machine noise, rotating valves, steam cover, and delayed defender response.",
+      "traits": [
+        "valve",
+        "slag",
+        "mechanism"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The kobold retunes the valve to squeal only after extraction.",
+            "trace_kind": "goblin_sabotage"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "slag_valve_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Slag Valve Cluster breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "pressure_whistle_1",
+      "pos": [
+        1,
+        1
+      ],
+      "category": "signal",
+      "name": "Pressure Whistle",
+      "description": "Pressure Whistle supports machine noise, rotating valves, steam cover, and delayed defender response.",
+      "traits": [
+        "whistle",
+        "alarm",
+        "steam"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "A wad of fungus cork makes the whistle reconsider its life.",
+            "trace_kind": "bell_sabotaged"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "pressure_whistle_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Pressure Whistle breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "dwarf_coin_roll"
+  },
+  "scripts": {
+    "heist": "steal_pump_master_crank",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
+    "tier": "pico",
+    "coordination_contract": "industrial timing puzzle where the kobold changes state, scout scouts, boggart redirects, and ogre blocks steam lanes"
+  },
+  "achievements": [
+    {
+      "id": "slagpump_works_pico_quiet_toolwork",
+      "title": "Quiet Toolwork",
+      "description": "Resolve a mechanism or alarm feature in Slagpump Works pico without turning the run into a brawl.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_sabotage"
+      }
+    },
+    {
+      "id": "slagpump_works_pico_mischief_coordination",
+      "title": "Mischief Coordination",
+      "description": "Create a distraction or trap setup that opens the Slagpump Works route.",
+      "reward": 0.12,
+      "condition": {
+        "type": "any_trace_kind_happened",
+        "kinds": [
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "slagpump_works_pico_snack_tax",
+      "title": "Snack Tax With Interest",
+      "description": "Take optional loot while still completing the pico heist.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "optional_loot",
+        "count": 1
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "wake_on": "manual",
+      "sight_range": 0,
+      "attack": 0
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "wake_on": "manual",
+      "sight_range": 0,
+      "attack": 0
+    }
+  },
+  "torch": 18
+}

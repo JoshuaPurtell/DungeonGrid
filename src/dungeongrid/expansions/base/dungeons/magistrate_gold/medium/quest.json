@@ -1,0 +1,680 @@
+{
+  "quest_id": "base:magistrate_gold:medium",
+  "title": "Magistrate Gold",
+  "difficulty": "starter",
+  "metadata": {
+    "campaign_group": "batch_b",
+    "quest_role": "treasure_evidence",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "objective",
+      "doors",
+      "traps",
+      "chests",
+      "furniture_search",
+      "combat",
+      "treasure",
+      "alarm",
+      "boss",
+      "pursuit"
+    ],
+    "hazard_profile": "light",
+    "monster_profile": [
+      "skitterlings",
+      "bone_guards",
+      "cultists",
+      "brute"
+    ],
+    "warden_pressure": "medium",
+    "post_objective_escalation": "moderate",
+    "route_structure": "branching_vault",
+    "role_affordances": {
+      "barbarian": [
+        "frontline",
+        "boss_damage",
+        "lane_holding"
+      ],
+      "wizard": [
+        "ranged_magic",
+        "rule_clues",
+        "warding"
+      ],
+      "elf": [
+        "scouting",
+        "ranged_cover",
+        "quick_search"
+      ],
+      "dwarf": [
+        "trap_disarm",
+        "route_marking",
+        "lock_hazard_specialist"
+      ]
+    },
+    "requires_specialist": false,
+    "best_party_sizes": [
+      "duo",
+      "trio",
+      "squad"
+    ],
+    "achievement_count": 7,
+    "global_progress_hooks": [
+      "doors",
+      "furniture",
+      "inventory",
+      "treasure",
+      "combat",
+      "objective_pickup",
+      "success"
+    ],
+    "quest_specific_achievement_types": [
+      "alarm_control",
+      "hazard_discovery",
+      "post_objective_escalation",
+      "treasure"
+    ],
+    "primary_score_emphasis": [
+      "treasure",
+      "search",
+      "objective"
+    ],
+    "reward_density": "dense",
+    "map_width": 17,
+    "map_height": 15,
+    "room_count": 7,
+    "door_count": 11,
+    "trap_count": 1,
+    "chest_count": 3,
+    "furniture_count": 4,
+    "initial_monster_count": 5,
+    "has_secret_doors": false,
+    "has_randomized_chests": false,
+    "has_custom_hooks": true,
+    "marl_axis": "mixed-motive social dilemma",
+    "coordination_type": "shared inventory accounting",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "shared_team_reward_with_optional_individual_temptations",
+    "warden_pressure_model": "bounded_warden_policy",
+    "classic_dynamic_role_dilemma": "balance optional treasure against Warden dread and extraction tempo",
+    "classic_dynamic_warden_pressure": "convert greedy treasure searches into dread and wandering pressure",
+    "classic_dynamic_extraction_hook": "greedy heroes can extract partially but lower team quality",
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      1,
+      3
+    ],
+    "variant_family": "magistrate_gold",
+    "maturity": "migration_draft",
+    "coordination_skills": [
+      "negotiate when optional treasure is worth the tempo cost",
+      "share healing and safety resources after risky searches",
+      "stop searching once team extraction becomes the dominant objective"
+    ],
+    "pressure_sources": [
+      "optional chests",
+      "greed-triggered threat",
+      "shared torch/alert budget",
+      "exit timing"
+    ],
+    "review_metrics": [
+      "treasure searches by hero",
+      "items given",
+      "objective delay after chest opens",
+      "messages about risk"
+    ],
+    "tier_test_focus": "Legacy full task geometry preserved as the canonical medium benchmark variant.",
+    "coordination_demands": [
+      "negotiate when optional treasure is worth the tempo cost",
+      "share healing and safety resources after risky searches",
+      "stop searching once team extraction becomes the dominant objective"
+    ],
+    "role_demands": {}
+  },
+  "max_heroes": 3,
+  "recommended_heroes": [
+    "barbarian",
+    "wizard",
+    "dwarf"
+  ],
+  "hero_loadouts": {
+    "barbarian": {
+      "weapon": "broad_sword",
+      "armor": "hide_guard",
+      "combat_role": "frontline",
+      "items": [
+        "iron_ration"
+      ]
+    },
+    "wizard": {
+      "weapon": "ash_staff",
+      "spell_cards": [
+        "spark_lance",
+        "ward_circle",
+        "seal_sense"
+      ],
+      "combat_role": "caster",
+      "items": []
+    },
+    "elf": {
+      "weapon": "short_bow",
+      "spell_cards": [
+        "mend_wounds",
+        "quiet_step"
+      ],
+      "combat_role": "skirmisher",
+      "items": []
+    },
+    "dwarf": {
+      "weapon": "hand_axe",
+      "tool": "trap_kit",
+      "combat_role": "hazard_specialist",
+      "items": [
+        "chalk_marks"
+      ]
+    }
+  },
+  "map": {
+    "ascii": "#################\n#E....D.....#...#\n#.###.###D###.C.#\n#...#.#.....#...#\n#G..D.#.K...D...#\n#...#.#.....#.###\n###.#.###D###...#\n#...#.....#.....#\n#.T.D..B..D..I.C#\n#...#.....#.....#\n#.###D#####.###D#\n#.....#...#.....#\n#..C..D.G.D..R..#\n#.....#...#.....#\n#################",
+    "width": 17,
+    "height": 15
+  },
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "sealed_strongbox",
+    "escape_tile": [
+      1,
+      1
+    ]
+  },
+  "chest_contents": {
+    "chest_1": {
+      "type": "bundle",
+      "contents": [
+        "audit_tokens",
+        {
+          "type": "table",
+          "entries": [
+            {
+              "type": "gold",
+              "amount": 1
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chest_2": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "weapon",
+          "item": "crossbow"
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            {
+              "type": "weapon",
+              "item": "crossbow"
+            },
+            {
+              "type": "trap",
+              "damage": 1
+            }
+          ]
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    "chest_3": {
+      "type": "table",
+      "entries": [
+        {
+          "type": "gold",
+          "amount": 2
+        },
+        {
+          "type": "trap",
+          "damage": 2
+        },
+        {
+          "type": "bundle",
+          "contents": [
+            "healing_draught",
+            {
+              "type": "gold",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rooms": {
+    "entry_gallery": {
+      "name": "Entry Gallery",
+      "rect": [
+        1,
+        1,
+        11,
+        3
+      ],
+      "description": "A tiled gallery opens toward a guard office and a quiet side treasury.",
+      "tags": [
+        "start",
+        "navigation"
+      ]
+    },
+    "watch_office": {
+      "name": "Watch Office",
+      "rect": [
+        1,
+        3,
+        4,
+        6
+      ],
+      "description": "A first guard watches the route into the magistrate vaults.",
+      "tags": [
+        "combat"
+      ]
+    },
+    "scribe_chamber": {
+      "name": "Scribe Chamber",
+      "rect": [
+        7,
+        3,
+        12,
+        5
+      ],
+      "description": "A cultist-accountant guards ledgers that point toward the real strongbox.",
+      "tags": [
+        "search",
+        "alarm"
+      ]
+    },
+    "north_treasury": {
+      "name": "North Treasury",
+      "rect": [
+        13,
+        1,
+        15,
+        6
+      ],
+      "description": "A small treasury tempts early treasure collection before the center is clear.",
+      "tags": [
+        "treasure",
+        "optional"
+      ]
+    },
+    "counting_floor": {
+      "name": "Counting Floor",
+      "rect": [
+        1,
+        7,
+        11,
+        9
+      ],
+      "description": "A trapped counting floor funnels heroes through a central guard.",
+      "tags": [
+        "hazard",
+        "combat",
+        "coordination"
+      ]
+    },
+    "strongbox_room": {
+      "name": "Strongbox Room",
+      "rect": [
+        13,
+        7,
+        15,
+        10
+      ],
+      "description": "The sealed strongbox sits in plain view, but taking it rings the vault seals.",
+      "tags": [
+        "objective",
+        "treasure"
+      ]
+    },
+    "lower_vault": {
+      "name": "Lower Vault",
+      "rect": [
+        1,
+        11,
+        15,
+        13
+      ],
+      "description": "The lower vault contains spare gold and a brute posted to cut off retreat.",
+      "tags": [
+        "boss",
+        "treasure",
+        "combat"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "ledger_table_1",
+      "name": "Ledger Table",
+      "category": "desk",
+      "pos": [
+        9,
+        4
+      ],
+      "deck": "ledger",
+      "description": "Wax tablets record which box is genuine and which are decoys."
+    },
+    {
+      "id": "coin_scale_1",
+      "name": "Coin Scale",
+      "category": "treasure",
+      "pos": [
+        14,
+        2
+      ],
+      "deck": "treasure",
+      "description": "A tiny brass scale rests beside stacked audit chips."
+    },
+    {
+      "id": "seal_plinth_1",
+      "name": "Seal Plinth",
+      "category": "altar",
+      "pos": [
+        14,
+        8
+      ],
+      "deck": "event",
+      "description": "The plinth holds the strongbox seal under a cold blue mark."
+    },
+    {
+      "id": "vault_rack_1",
+      "name": "Vault Rack",
+      "category": "supply",
+      "pos": [
+        3,
+        12
+      ],
+      "deck": "supply",
+      "description": "Heavy cloth bags and a wrapped tonic are wedged behind iron slats."
+    }
+  ],
+  "decks": {
+    "ledger": [
+      {
+        "id": "true_box_mark",
+        "name": "True Box Mark",
+        "type": "artifact",
+        "item": "true_box_mark",
+        "reward": 0.14
+      },
+      {
+        "id": "false_account",
+        "name": "False Account",
+        "type": "event",
+        "alert": 1,
+        "reward": -0.03
+      }
+    ],
+    "treasure": [
+      {
+        "id": "audit_tokens",
+        "name": "Audit Tokens",
+        "type": "treasure",
+        "item": "audit_tokens",
+        "treasure": 1,
+        "reward": 0.1
+      },
+      {
+        "id": "loose_gold",
+        "name": "Loose Gold",
+        "type": "treasure",
+        "item": "coin_cache",
+        "treasure": 1,
+        "reward": 0.1
+      }
+    ],
+    "supply": [
+      {
+        "id": "vault_tonic",
+        "name": "Vault Tonic",
+        "type": "healing",
+        "item": "battle_tonic",
+        "reward": 0.08
+      }
+    ],
+    "event": [
+      {
+        "id": "seal_chime",
+        "name": "Seal Chime",
+        "type": "event",
+        "alert": 2,
+        "reward": -0.05
+      }
+    ]
+  },
+  "achievements": [
+    {
+      "id": "open_vault_gallery",
+      "title": "Open the Vault Gallery",
+      "description": "Open the first door into the magistrate vault.",
+      "reward": 0.12,
+      "condition": {
+        "type": "door_opened",
+        "id": "door_1"
+      }
+    },
+    {
+      "id": "inspect_ledger",
+      "title": "Inspect the Ledger",
+      "description": "Search the ledger or another vault furnishing.",
+      "reward": 0.1,
+      "condition": {
+        "type": "furniture_searched"
+      }
+    },
+    {
+      "id": "find_true_box_mark",
+      "title": "Find the True Box Mark",
+      "description": "Recover the mark that identifies the real strongbox.",
+      "reward": 0.16,
+      "condition": {
+        "type": "inventory_contains",
+        "item": "true_box_mark"
+      }
+    },
+    {
+      "id": "collect_vault_gold",
+      "title": "Collect Vault Gold",
+      "description": "Recover any treasure from the vault.",
+      "reward": 0.12,
+      "condition": {
+        "type": "treasure_collected"
+      }
+    },
+    {
+      "id": "clear_vault_brute",
+      "title": "Clear the Vault Brute",
+      "description": "Defeat the brute guarding the lower vault.",
+      "reward": 0.2,
+      "condition": {
+        "type": "monster_defeated",
+        "role": "crypt_brute"
+      }
+    },
+    {
+      "id": "take_strongbox",
+      "title": "Take the Sealed Strongbox",
+      "description": "Pick up the magistrate strongbox objective.",
+      "reward": 0.3,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "escape_with_strongbox",
+      "title": "Escape With the Strongbox",
+      "description": "Return to the entry with the sealed strongbox.",
+      "reward": 0.65,
+      "condition": {
+        "type": "success"
+      }
+    },
+    {
+      "id": "classic_dynamic_extraction",
+      "title": "Classic Extraction Pressure",
+      "reward": 0.08,
+      "condition": {
+        "type": "extracted_heroes_at_least",
+        "count": 1
+      },
+      "description": "Extract at least one hero under classic dungeon-crawl dynamics."
+    }
+  ],
+  "scripts": {
+    "on_objective_taken": {
+      "message": "The strongbox seal screams like a struck glass. The vault knows it is being robbed.",
+      "effects": [
+        {
+          "type": "increase_alert",
+          "amount": 3
+        },
+        {
+          "type": "spawn",
+          "monster": "gloom_cultist",
+          "pos": [
+            7,
+            12
+          ]
+        }
+      ]
+    },
+    "round_limit_soft": 22,
+    "alert_reinforcement_threshold": 5,
+    "family": "magistrate_gold",
+    "tier": "medium",
+    "marl_axis": "mixed-motive social dilemma"
+  },
+  "torch": 20,
+  "hero_starts": [
+    [
+      4,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "monster_activation": {
+    "default": "dormant",
+    "wake_on": "room_revealed",
+    "notes": "Monsters remain hidden/inactive until their room is revealed or a hook/alarm wakes them."
+  },
+  "search_categories": {
+    "enabled": [
+      "traps",
+      "secrets",
+      "treasure",
+      "furniture"
+    ],
+    "notes": "Traps and secrets are area searches over visible room state; treasure and furniture searches target adjacent visible objects."
+  },
+  "ruleset": {
+    "classic_dynamic_available": true,
+    "treasure_risk": {
+      "enabled": true,
+      "default_treasure_deck": true
+    },
+    "extraction": {
+      "enabled": true,
+      "allow_partial": true
+    },
+    "warden_dread": {
+      "enabled": true,
+      "max": 6
+    }
+  },
+  "role_selection": {
+    "required_roles_by_party_size": {
+      "1": [
+        "dwarf"
+      ],
+      "2": [
+        "dwarf"
+      ]
+    }
+  },
+  "quest_notes": [
+    {
+      "id": "ledger_getaway",
+      "text": "The ledger suggests sharing the exit route before taking the strongbox.",
+      "trigger": {
+        "type": "furniture_searched",
+        "target": "ledger_1",
+        "roles": [
+          "dwarf",
+          "elf"
+        ]
+      }
+    }
+  ],
+  "mechanics": {
+    "marl_contract": {
+      "axis": "mixed-motive sequential social dilemma",
+      "tags": [
+        "shared_inventory_accounting"
+      ],
+      "core_failure_modes": [
+        "silent independent play",
+        "unclear role assignment",
+        "late extraction planning"
+      ]
+    },
+    "warden_policy": {
+      "hidden_information_access": "revealed_state_plus_authored_dungeon_memory",
+      "pressure_budget_per_round": 1,
+      "preferred_tactics": [
+        "convert greedy treasure searches into dread and wandering pressure"
+      ],
+      "forbidden_tactics": [
+        "spawn pressure without a visible or scripted cue",
+        "use unrevealed map geometry for perfect counterplay",
+        "erase the dungeon-specific lesson with generic monster spam"
+      ]
+    },
+    "classic_dynamic": {
+      "warden": "convert greedy treasure searches into dread and wandering pressure",
+      "metric": "hero_treasure and social_metrics.bad_treasure_draws",
+      "extraction": "greedy heroes can extract partially but lower team quality"
+    }
+  },
+  "recommended_heroes_by_party_size": {
+    "1": [
+      "wizard"
+    ],
+    "2": [
+      "barbarian",
+      "wizard"
+    ],
+    "3": [
+      "barbarian",
+      "wizard",
+      "dwarf"
+    ]
+  }
+}

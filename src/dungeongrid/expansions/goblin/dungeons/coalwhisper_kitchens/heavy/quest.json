@@ -1,0 +1,546 @@
+{
+  "quest_id": "goblin:coalwhisper_kitchens:heavy",
+  "title": "Coalwhisper Kitchens Heavy",
+  "min_heroes": 4,
+  "max_heroes": 4,
+  "metadata": {
+    "size_tier": "heavy",
+    "intended_num_heroes": 4,
+    "supported_hero_range": [
+      4,
+      4
+    ],
+    "room_count_target": "5+",
+    "heist_focus": "food distractions, greasy route control, pantry looting, and quiet passage through crowded service rooms",
+    "coordination_problem": "route-deception heist where the boggart and ogre can buy time for a scout-led objective grab",
+    "goblin_aesthetic": "stolen cheese, soot pots, mushroom gravy, clattering copper, and goblin snack-tax nonsense"
+  },
+  "map": {
+    "ascii": "#####################\n#E..D..Q..C......I..#\n#...#..X......###D###\n#...#.....C...#..U..#\n#...D..Z......#.....#\n#...#.....C...D..V..#\n#...#..Q......#.....#\n#...###D#######..C..#\n#.......X......Z....#\n#..C...............C#\n#####################",
+    "width": 21,
+    "height": 11
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      2
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "feast_ledger",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      17,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_warren": {
+      "name": "Goblin Entry Warren",
+      "rect": [
+        1,
+        1,
+        4,
+        9
+      ],
+      "description": "A cramped goblin approach lined with stolen cheese, soot pots, mushroom gravy, clattering copper, and goblin snack-tax nonsense.",
+      "tags": [
+        "start",
+        "stealth",
+        "goblin"
+      ]
+    },
+    "mischief_lane": {
+      "name": "Mischief Lane",
+      "rect": [
+        6,
+        1,
+        12,
+        9
+      ],
+      "description": "The main coordination lane for food distractions, greasy route control, pantry looting, and quiet passage through crowded service rooms.",
+      "tags": [
+        "coordination",
+        "sneak",
+        "craft"
+      ]
+    },
+    "objective_hold": {
+      "name": "Feast Ledger Post",
+      "rect": [
+        14,
+        1,
+        19,
+        3
+      ],
+      "description": "Steal the feast ledger so the goblin crew knows when every dwarf guard takes supper.",
+      "tags": [
+        "objective",
+        "dwarf",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "cheese_dark_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Cheese-Wheel Shadow",
+      "description": "Cheese-Wheel Shadow supports food distractions, greasy route control, pantry looting, and quiet passage through crowded service rooms.",
+      "traits": [
+        "shadow",
+        "cheese",
+        "cover"
+      ],
+      "cover": 2,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The scout hides behind enough cheese to be socially invisible.",
+            "trace_kind": "goblin_sneak"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Cheese-Wheel Shadow breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "soup_chain_1",
+      "pos": [
+        8,
+        1
+      ],
+      "category": "mechanism",
+      "name": "Soup Chain Pulley",
+      "description": "Soup Chain Pulley supports food distractions, greasy route control, pantry looting, and quiet passage through crowded service rooms.",
+      "traits": [
+        "chain",
+        "kettle",
+        "mechanism"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The kobold makes the soup chain cough instead of clang.",
+            "trace_kind": "goblin_sabotage"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "soup_chain_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Soup Chain Pulley breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "pie_decoy_1",
+      "pos": [
+        10,
+        2
+      ],
+      "category": "decoy",
+      "name": "Walking Pie Decoy",
+      "description": "Walking Pie Decoy supports food distractions, greasy route control, pantry looting, and quiet passage through crowded service rooms.",
+      "traits": [
+        "decoy",
+        "food",
+        "mischief"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The pie waddles away and every hungry dwarf believes it.",
+            "trace_kind": "goblin_distract"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Walking Pie Decoy breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "grease_barrel_1",
+      "pos": [
+        12,
+        5
+      ],
+      "category": "hazard",
+      "name": "Grease Barrel",
+      "description": "Grease Barrel supports food distractions, greasy route control, pantry looting, and quiet passage through crowded service rooms.",
+      "traits": [
+        "grease",
+        "trap",
+        "route"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The ogre tilts the barrel into a patrol-stopping slick.",
+            "trace_kind": "goblin_rig_trap"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "monster_status",
+            "role": "dwarf_sentry",
+            "status": "delayed"
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Grease Barrel breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "pantry_shelf_1",
+      "pos": [
+        9,
+        8
+      ],
+      "category": "supply",
+      "name": "Forbidden Pantry Shelf",
+      "description": "Forbidden Pantry Shelf supports food distractions, greasy route control, pantry looting, and quiet passage through crowded service rooms.",
+      "traits": [
+        "pantry",
+        "loot",
+        "searchable"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "item",
+            "item": "coin_cache",
+            "reward": 0.08
+          },
+          {
+            "type": "emit",
+            "message": "Snack tax collected with professional solemnity.",
+            "trace_kind": "optional_loot_taken"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "emit",
+            "message": "One more shiny thing joins the goblin retirement plan.",
+            "trace_kind": "optional_loot_taken"
+          }
+        ],
+        "treasure": [
+          {
+            "type": "item",
+            "item": "coin_cache",
+            "reward": 0.08
+          },
+          {
+            "type": "emit",
+            "message": "Snack tax collected with professional solemnity.",
+            "trace_kind": "optional_loot_taken"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "emit",
+            "message": "One more shiny thing joins the goblin retirement plan.",
+            "trace_kind": "optional_loot_taken"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Forbidden Pantry Shelf breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "copper_clatter_1",
+      "pos": [
+        1,
+        1
+      ],
+      "category": "signal",
+      "name": "Copper Clatter Stack",
+      "description": "Copper Clatter Stack supports food distractions, greasy route control, pantry looting, and quiet passage through crowded service rooms.",
+      "traits": [
+        "noise",
+        "alarm",
+        "pots"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "Rags and fungus corks turn the copper stack into a whisper.",
+            "trace_kind": "bell_sabotaged"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "copper_clatter_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Copper Clatter Stack breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "dwarf_coin_roll",
+    "chest_2": "healing_draught",
+    "chest_3": "coin_cache",
+    "chest_4": {
+      "type": "draw_deck",
+      "deck": "supply"
+    },
+    "chest_5": {
+      "type": "draw_deck",
+      "deck": "trick"
+    },
+    "chest_6": {
+      "type": "bundle",
+      "contents": [
+        "coin_cache",
+        "healing_draught"
+      ]
+    }
+  },
+  "scripts": {
+    "heist": "steal_feast_ledger",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
+    "tier": "heavy",
+    "coordination_contract": "route-deception heist where the boggart and ogre can buy time for a scout-led objective grab"
+  },
+  "achievements": [
+    {
+      "id": "coalwhisper_kitchens_heavy_quiet_toolwork",
+      "title": "Quiet Toolwork",
+      "description": "Resolve a mechanism or alarm feature in Coalwhisper Kitchens heavy without turning the run into a brawl.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_sabotage"
+      }
+    },
+    {
+      "id": "coalwhisper_kitchens_heavy_mischief_coordination",
+      "title": "Mischief Coordination",
+      "description": "Create a distraction or trap setup that opens the Coalwhisper Kitchens route.",
+      "reward": 0.12,
+      "condition": {
+        "type": "any_trace_kind_happened",
+        "kinds": [
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "coalwhisper_kitchens_heavy_snack_tax",
+      "title": "Snack Tax With Interest",
+      "description": "Take optional loot while still completing the heavy heist.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "optional_loot",
+        "count": 1
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_sentry_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_shieldbearer_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_shieldbearer_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 6,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_crossbow_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 6,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_runekeeper_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 5,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_warden_1": {
+      "activation": "alert",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "boss": true,
+        "boss_name": "Holdfast Warden",
+        "public_summary": "A stubborn dwarf elite guards the objective route.",
+        "counterplay_hint": "Use stealth tools and blockers before making the carrier run."
+      }
+    }
+  },
+  "torch": 24
+}
