@@ -9,7 +9,8 @@
       1,
       1
     ],
-    "room_count_target": "2"
+    "room_count_target": "2",
+    "heist_focus": "tutorial sneak, bell, seal, escape"
   },
   "map": {
     "ascii": "###########\n#E..D..I..#\n#...#..Q..#\n#..C#...X.#\n###########",
@@ -35,21 +36,22 @@
     ]
   },
   "rooms": {
-    "entry": {
-      "name": "Goblin Breach",
+    "breach": {
+      "name": "Mushroom Breach",
       "rect": [
         1,
         1,
         3,
         3
       ],
-      "description": "A cracked service tunnel opens into the dwarven hold.",
+      "description": "A cracked service tunnel with a soft shadow pocket.",
       "tags": [
         "start",
-        "breach"
+        "breach",
+        "shadow"
       ]
     },
-    "seal_room": {
+    "seal_niche": {
       "name": "Seal Niche",
       "rect": [
         5,
@@ -57,29 +59,186 @@
         9,
         3
       ],
-      "description": "A warden seal rests near a sentry and a crossbow perch.",
+      "description": "A dwarf seal alcove watched by a sentry and a crossbow perch.",
       "tags": [
         "objective",
+        "alarm",
         "pressure"
       ]
     }
   },
-  "furniture": [],
+  "furniture": [
+    {
+      "id": "shadow_alcove_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Sooty Shadow Alcove",
+      "description": "A blackened crawl pocket just goblin-sized.",
+      "traits": [
+        "shadow",
+        "cover",
+        "hide"
+      ],
+      "cover": 2
+    },
+    {
+      "id": "bell_rope_1",
+      "pos": [
+        6,
+        1
+      ],
+      "category": "bell_rope",
+      "name": "Low Bell Rope",
+      "description": "A fat alarm cord hangs low enough for tiny sabotage.",
+      "traits": [
+        "bell",
+        "alarm",
+        "rope"
+      ],
+      "sabotage_effects": [
+        {
+          "type": "increment_counter",
+          "key": "_social:bells_sabotaged",
+          "amount": 1
+        },
+        {
+          "type": "lower_alert",
+          "amount": 1
+        },
+        {
+          "type": "emit",
+          "message": "The bell rope is tied into a harmless knot.",
+          "trace_kind": "bell_sabotaged"
+        }
+      ]
+    },
+    {
+      "id": "decoy_junk_pile_1",
+      "pos": [
+        7,
+        3
+      ],
+      "category": "decoy_junk_pile",
+      "name": "Decoy Junk Pile",
+      "description": "Bent spoons, bottlecaps, and a perfect pebble for a fake footstep.",
+      "traits": [
+        "decoy",
+        "junk"
+      ],
+      "distract_effects": [
+        {
+          "type": "emit",
+          "message": "A clatter rolls away from the seal route.",
+          "trace_kind": "decoy_triggered"
+        }
+      ],
+      "rig_effects": [
+        {
+          "type": "emit",
+          "message": "The junk pile becomes a shin-snaring scatter.",
+          "trace_kind": "decoy_snare"
+        }
+      ]
+    }
+  ],
   "chest_contents": {
     "chest_1": "dwarf_coin_roll"
   },
   "scripts": {
+    "heist": "steal_warden_seal",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
     "tier": "pico"
   },
   "achievements": [
     {
-      "id": "pico_seal_snatch",
-      "title": "Tiny Tunnel Heist",
-      "description": "Recover the warden seal in the pico version.",
-      "reward": 0.15,
+      "id": "pico_first_pinched",
+      "title": "First Pinch",
+      "description": "Complete the tutorial seal snatch.",
+      "reward": 0.12,
       "condition": {
-        "type": "objective_taken"
+        "type": "success"
       }
     }
-  ]
+  ],
+  "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "equipment": {
+        "patrol_route": [
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            7,
+            2
+          ]
+        ]
+      },
+      "attack": 0,
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "attack": 0,
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_sentry_2": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_crossbow_2": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_runekeeper_1": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_runekeeper_2": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_runekeeper_3": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_shieldbearer_1": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_shieldbearer_2": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_warden_1": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    }
+  }
 }

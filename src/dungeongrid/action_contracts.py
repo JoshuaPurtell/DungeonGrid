@@ -9,6 +9,7 @@ from typing import Any
 
 class DungeonGridActionType(StrEnum):
     MOVE = "move"
+    SNEAK = "sneak"
     OPEN_DOOR = "open_door"
     ATTACK_MELEE = "attack_melee"
     ATTACK_RANGED = "attack_ranged"
@@ -22,6 +23,9 @@ class DungeonGridActionType(StrEnum):
     ATTACK_OBJECT = "attack_object"
     DISARM = "disarm"
     INTERACT = "interact"
+    DISTRACT = "distract"
+    SABOTAGE = "sabotage"
+    RIG_TRAP = "rig_trap"
     USE_ITEM = "use_item"
     EQUIP_ITEM = "equip_item"
     GIVE_ITEM = "give_item"
@@ -135,6 +139,12 @@ ACTION_CONTRACTS: tuple[DungeonGridActionContract, ...] = (
         "Move one tile in a cardinal direction.",
     ),
     DungeonGridActionContract(
+        DungeonGridActionType.SNEAK,
+        DungeonGridTargetKind.DIRECTION,
+        1,
+        "Goblin mode: move quietly one tile in a cardinal direction, reducing alarm risk around shadow or cover.",
+    ),
+    DungeonGridActionContract(
         DungeonGridActionType.OPEN_DOOR,
         DungeonGridTargetKind.OBJECT_ID,
         1,
@@ -212,6 +222,24 @@ ACTION_CONTRACTS: tuple[DungeonGridActionContract, ...] = (
         DungeonGridTargetKind.OBJECT_ID,
         1,
         "Interact with an adjacent visible object, objective, chest, furniture, or escape by id.",
+    ),
+    DungeonGridActionContract(
+        DungeonGridActionType.DISTRACT,
+        DungeonGridTargetKind.OBJECT_ID,
+        1,
+        "Goblin mode: distract a visible defender or trick object by id, luring or stalling patrols.",
+    ),
+    DungeonGridActionContract(
+        DungeonGridActionType.SABOTAGE,
+        DungeonGridTargetKind.OBJECT_ID,
+        2,
+        "Goblin mode: sabotage an adjacent bell, rune, grate, lock, gear, trap, or other trick object by id.",
+    ),
+    DungeonGridActionContract(
+        DungeonGridActionType.RIG_TRAP,
+        DungeonGridTargetKind.OBJECT_ID,
+        2,
+        "Goblin mode: rig an adjacent object or trap into a snare that delays defenders nonlethally.",
     ),
     DungeonGridActionContract(
         DungeonGridActionType.USE_ITEM,

@@ -596,6 +596,8 @@ def _action_phrase(action: Any) -> str:
     action_type = action.get("type", "?")
     if action_type == "move":
         return f"move {action.get('direction', '?')}"
+    if action_type == "sneak":
+        return f"sneak {action.get('direction', '?')}"
     if action_type == "open_door":
         return "open door"
     if action_type == "search":
@@ -610,6 +612,12 @@ def _action_phrase(action: Any) -> str:
         return f"search furniture {action.get('target', '')}".strip()
     if action_type == "attack_object":
         return f"break {action.get('target', '')}".strip()
+    if action_type == "distract":
+        return f"distract {action.get('target', '')}".strip()
+    if action_type == "sabotage":
+        return f"sabotage {action.get('target', '')}".strip()
+    if action_type == "rig_trap":
+        return f"rig trap {action.get('target', '')}".strip()
     if action_type == "equip_item":
         return f"equip {action.get('target', '')}".strip()
     if action_type == "give_item":

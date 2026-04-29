@@ -2,9 +2,19 @@
 
 DungeonGrid is a multi-agent benchmark for LLMs.
 
+## Sprite Replays
+
+Classic Lantern Crypt:
+
 ![DungeonGrid solo sprite replay](docs/assets/gpt54_nano_lantern_crypt_solo_sprite.gif)
 
 ![DungeonGrid duo sprite replay](docs/assets/gpt54_nano_lantern_crypt_duo_sprite.gif)
+
+Goblin Ironroot Hold:
+
+![Ironroot Hold solo goblin sprite replay](docs/assets/gpt41mini_ironroot_solo_sprite.gif)
+
+![Ironroot Hold crew goblin sprite replay](docs/assets/gpt41mini_ironroot_crew_sprite.gif)
 
 ## OpenEnv ReAct Example
 

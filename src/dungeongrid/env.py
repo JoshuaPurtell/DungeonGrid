@@ -613,10 +613,20 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             data["objective"] = self._public_objective_state(visible_tiles=visible)
             data["ruleset"] = {"enabled": bool(state.ruleset)}
             data["dread"] = None
+            public_metrics = [
+                "items_given",
+                "objective_passes",
+                "split_party_rounds",
+                "sneak_actions",
+                "distracts",
+                "sabotage_actions",
+                "rigged_traps",
+                "alarm_raises",
+                "nonlethal_knockouts",
+                "optional_loot",
+            ]
             data["social_metrics"] = {
-                "items_given": state.social_metrics.get("items_given", 0),
-                "objective_passes": state.social_metrics.get("objective_passes", 0),
-                "split_party_rounds": state.social_metrics.get("split_party_rounds", 0),
+                metric: state.social_metrics.get(metric, 0) for metric in public_metrics
             }
             data["per_hero_stats"] = self._public_per_hero_stats(data.get("per_hero_stats", {}))
         return data

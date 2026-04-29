@@ -3,24 +3,27 @@
   "title": "Ironroot Hold",
   "metadata": {
     "campaign_group": "goblin",
-    "maturity_tier": "prototype",
-    "maturity_label": "first_goblin_mode_slice",
-    "validation_status": "mode_refactor_content_slice",
+    "maturity_tier": "polished_first_goblin_heist",
+    "maturity_label": "ironroot_hold_richness_pass",
+    "validation_status": "rich_content_engine_primitive_pass",
     "quest_role": "inverted_dungeon_crawl",
     "objective_type": "retrieve_and_escape",
     "dominant_mechanics": [
       "objective",
-      "doors",
-      "traps",
-      "chests",
-      "dwarven_defenders",
-      "knockout_defeat",
-      "extraction"
+      "extraction",
+      "sneak",
+      "distract",
+      "sabotage",
+      "rig_trap",
+      "alarm_meter",
+      "patrol_routes",
+      "optional_loot",
+      "nonlethal_defender_control"
     ],
     "marl_axis": "monster-party role specialization against organized dwarven defenders",
     "coordination_type": "scout opens, ogre pins, kobold solves hazards, boggart disrupts",
     "information_structure": "decentralized_partial_observation",
-    "reward_structure": "shared_team_reward_with_per_raider_attribution"
+    "reward_structure": "heist_reward_with_alarm_optional_loot_and_nonlethal_attribution"
   },
   "defaults": {
     "difficulty": "starter",
@@ -192,6 +195,15 @@
         ]
       },
       "mode": "hard_in_classic_dynamic"
+    },
+    "metadata": {
+      "heist_family": "ironroot_hold",
+      "alarm_labels": [
+        "quiet",
+        "suspicious",
+        "alarmed",
+        "lockdown"
+      ]
     }
   },
   "catalog": {
@@ -223,14 +235,60 @@
         "type": "dwarf_warden",
         "pressure_role": "objective_guard"
       }
+    },
+    "objects": {
+      "bell_rope": {
+        "role": "alarm source",
+        "best_action": "sabotage"
+      },
+      "squeaky_grate": {
+        "role": "noise hazard",
+        "best_action": "sabotage"
+      },
+      "shadow_alcove": {
+        "role": "stealth cover",
+        "best_action": "sneak"
+      },
+      "rune_lamp": {
+        "role": "sight pressure",
+        "best_action": "sabotage"
+      },
+      "pantry_shelf": {
+        "role": "optional loot",
+        "best_action": "search_treasure"
+      },
+      "loose_floorboard": {
+        "role": "snare anchor",
+        "best_action": "rig_trap"
+      },
+      "gear_door": {
+        "role": "mechanism",
+        "best_action": "sabotage"
+      },
+      "sleeping_stool": {
+        "role": "patrol delay",
+        "best_action": "rig_trap"
+      },
+      "lockbox": {
+        "role": "optional loot",
+        "best_action": "sabotage"
+      },
+      "grease_barrel": {
+        "role": "route blocker",
+        "best_action": "rig_trap"
+      },
+      "decoy_junk_pile": {
+        "role": "misdirection",
+        "best_action": "distract"
+      }
     }
   },
   "shared_achievements": [
     {
       "id": "open_hold_gate",
-      "title": "Open the Hold Gate",
-      "description": "Open the first dwarven door out of the entry tunnel.",
-      "reward": 0.1,
+      "title": "Slip the Hold Gate",
+      "description": "Open the first dwarven door without making the heist about fighting.",
+      "reward": 0.08,
       "condition": {
         "type": "door_opened",
         "id": "door_1"
@@ -238,20 +296,130 @@
     },
     {
       "id": "snatch_warden_seal",
-      "title": "Snatch the Warden Seal",
-      "description": "Pick up the dwarven warden seal.",
-      "reward": 0.25,
+      "title": "Seal Pinched",
+      "description": "Steal the warden seal from the dwarven hold.",
+      "reward": 0.24,
       "condition": {
         "type": "objective_taken"
       }
     },
     {
       "id": "escape_with_warden_seal",
-      "title": "Back to the Tunnels",
+      "title": "Back Through the Breach",
       "description": "Escape with the warden seal.",
-      "reward": 0.5,
+      "reward": 0.45,
       "condition": {
         "type": "success"
+      }
+    },
+    {
+      "id": "quiet_little_menace",
+      "title": "Quiet Little Menace",
+      "description": "Escape before the hold reaches a true alarm state.",
+      "reward": 0.2,
+      "condition": {
+        "type": "alert_below_success",
+        "alert": 4
+      }
+    },
+    {
+      "id": "no_bells_today",
+      "title": "No Bells Today",
+      "description": "Cut or silence every bell source on the route before extracting.",
+      "reward": 0.12,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "bells_sabotaged",
+        "count": 1
+      }
+    },
+    {
+      "id": "snack_tax",
+      "title": "Snack Tax",
+      "description": "Steal pantry loot before extraction.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "optional_loot",
+        "count": 1
+      }
+    },
+    {
+      "id": "wrong_way_beardlings",
+      "title": "Wrong-Way Beardlings",
+      "description": "Lure a dwarf patrol away from the seal route.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_distract"
+      }
+    },
+    {
+      "id": "kobold_warranty_void",
+      "title": "Kobold Warranty Void",
+      "description": "Sabotage a rune, gear, grate, or lock mechanism.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_sabotage"
+      }
+    },
+    {
+      "id": "boggart_was_here",
+      "title": "Boggart Was Here",
+      "description": "Use a decoy or distraction to stall a defender.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "distracts",
+        "count": 1
+      }
+    },
+    {
+      "id": "ogre_doorstop",
+      "title": "Ogre Doorstop",
+      "description": "Block or gum up a patrol route with brute-force mischief.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "ogre_doorstop"
+      }
+    },
+    {
+      "id": "professional_nuisance",
+      "title": "Professional Nuisance",
+      "description": "Use sneak, distract, sabotage, and rig_trap in one Ironroot run.",
+      "reward": 0.2,
+      "condition": {
+        "type": "all_trace_kinds_happened",
+        "kinds": [
+          "goblin_sneak",
+          "goblin_distract",
+          "goblin_sabotage",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "quiet_heist",
+      "title": "Quiet Heist",
+      "description": "Win without knocking out a defender.",
+      "reward": 0.18,
+      "condition": {
+        "type": "social_metric_at_most_success",
+        "metric": "nonlethal_knockouts",
+        "count": 0
+      }
+    },
+    {
+      "id": "everything_not_nailed_down",
+      "title": "Everything Not Nailed Down",
+      "description": "Escape with the seal plus every optional loot cache in the hold.",
+      "reward": 0.22,
+      "condition": {
+        "type": "social_metric_at_least_success",
+        "metric": "optional_loot",
+        "count": 3
       }
     }
   ],

@@ -58,6 +58,10 @@ class RulesEngine:
                         actions.append(
                             {"type": "move", "direction": direction, "target": list(target)}
                         )
+                        if self._goblin_mode(state):
+                            actions.append(
+                                {"type": "sneak", "direction": direction, "target": list(target)}
+                            )
             if major_available:
                 for door in state.doors.values():
                     if (
@@ -131,6 +135,8 @@ class RulesEngine:
                                 {"type": "give_item", "target": ally_id, "payload": {"item": item}}
                             )
             actions.append({"type": "guard"})
+            if self._goblin_mode(state):
+                actions.extend(self._goblin_trick_actions(state, hero, visible, major_available))
         if ap >= 2 and major_available:
             for monster in state.monsters.values():
                 if monster.alive and monster.pos in visible:
@@ -215,6 +221,70 @@ class RulesEngine:
                 actions.append({"type": "search_secrets"})
         actions.append({"type": "end_turn"})
         return self._dedupe_actions(actions)
+
+    def _goblin_mode(self, state: GameState) -> bool:
+        return getattr(state.mode, "id", "") == "goblin"
+
+    def _goblin_trick_actions(
+        self,
+        state: GameState,
+        hero: Entity,
+        visible: set[Pos],
+        major_available: bool,
+    ) -> list[dict[str, Any]]:
+        actions: list[dict[str, Any]] = []
+        if state.ap_remaining.get(hero.id, 0) >= ACTION_COSTS["distract"]:
+            for monster in state.monsters.values():
+                if (
+                    monster.alive
+                    and monster.pos in visible
+                    and self.grid.manhattan(hero.pos, monster.pos) <= 5
+                    and self.grid.line_clear(state, hero.pos, monster.pos)
+                ):
+                    actions.append({"type": "distract", "target": monster.id})
+            for furniture in state.furniture.values():
+                if self._adjacent_visible_furniture(state, hero, furniture, visible) and (
+                    furniture.distract_effects is not None or "decoy" in furniture.traits
+                ):
+                    actions.append({"type": "distract", "target": furniture.id})
+        if not major_available:
+            return actions
+        if state.ap_remaining.get(hero.id, 0) >= ACTION_COSTS["sabotage"]:
+            for furniture in state.furniture.values():
+                if self._adjacent_visible_furniture(state, hero, furniture, visible) and (
+                    furniture.sabotage_effects is not None
+                    or set(furniture.traits)
+                    & {"alarm", "bell", "rune", "gear", "grate", "lock", "mechanism"}
+                ):
+                    actions.append({"type": "sabotage", "target": furniture.id})
+            for trap in state.traps.values():
+                if trap.armed and self.grid.manhattan(hero.pos, trap.pos) <= 1:
+                    actions.append({"type": "sabotage", "target": trap.id})
+        if state.ap_remaining.get(hero.id, 0) >= ACTION_COSTS["rig_trap"]:
+            for furniture in state.furniture.values():
+                if self._adjacent_visible_furniture(state, hero, furniture, visible) and (
+                    furniture.rig_effects is not None
+                    or set(furniture.traits)
+                    & {"decoy", "grease", "junk", "trap", "grate", "door", "stool", "loose"}
+                ):
+                    actions.append({"type": "rig_trap", "target": furniture.id})
+            for trap in state.traps.values():
+                if self.grid.manhattan(hero.pos, trap.pos) <= 1:
+                    actions.append({"type": "rig_trap", "target": trap.id})
+            for door in state.doors.values():
+                if door.pos in self.grid.adjacent_positions(hero.pos):
+                    actions.append({"type": "rig_trap", "target": door.id})
+        return actions
+
+    def _adjacent_visible_furniture(
+        self, state: GameState, hero: Entity, furniture: Any, visible: set[Pos]
+    ) -> bool:
+        return (
+            furniture.visible
+            and not furniture.destroyed
+            and furniture.pos in visible
+            and self.grid.manhattan(hero.pos, furniture.pos) <= 1
+        )
 
     def _warden_legal_actions(self, state: GameState) -> list[dict[str, Any]]:
         actions = [{"type": "warden_auto"}]
@@ -387,10 +457,10 @@ class RulesEngine:
                 "insufficient_ap",
                 f"{action_type} requires more AP than {agent_id} has remaining.",
             )
-        if action_type == "move":
+        if action_type in {"move", "sneak"}:
             direction = action.get("direction")
             if direction not in DIRECTIONS:
-                return "missing_target", "Move requires a cardinal direction."
+                return "missing_target", f"{action_type} requires a cardinal direction."
             dx, dy = DIRECTIONS[direction]
             target = (hero.pos[0] + dx, hero.pos[1] + dy) if hero else (0, 0)
             if not self.grid.is_walkable(state, target):
@@ -404,6 +474,9 @@ class RulesEngine:
                 "cast",
                 "disarm",
                 "interact",
+                "distract",
+                "sabotage",
+                "rig_trap",
                 "search_treasure",
                 "search_furniture",
                 "attack_object",
@@ -419,6 +492,8 @@ class RulesEngine:
             "search_treasure",
             "search_furniture",
             "disarm",
+            "sabotage",
+            "rig_trap",
         }:
             guidance = self._proximity_guidance(state, hero, str(action_type), action.get("target"))
             if guidance:
@@ -443,7 +518,7 @@ class RulesEngine:
             if door.pos not in visible_tiles or (door.secret and not door.discovered):
                 return None
             target_pos = door.pos
-        elif action_type in {"search_treasure", "search_furniture"}:
+        elif action_type in {"search_treasure", "search_furniture", "sabotage", "rig_trap"}:
             if target_id in state.chests:
                 chest = state.chests[target_id]
                 if chest.pos not in visible_tiles:
@@ -454,6 +529,10 @@ class RulesEngine:
                 if not furniture.visible or furniture.pos not in visible_tiles:
                     return None
                 target_pos = furniture.pos
+            elif target_id in state.traps:
+                target_pos = state.traps[target_id].pos
+            elif target_id in state.doors:
+                target_pos = state.doors[target_id].pos
         elif action_type == "disarm" and target_id in state.traps:
             trap = state.traps[target_id]
             if not trap.revealed or trap.pos not in visible_tiles:
@@ -503,7 +582,7 @@ class RulesEngine:
                 continue
             if "direction" in candidate and action.get("direction") != candidate.get("direction"):
                 continue
-            if atype == "move" and action.get("target") is None:
+            if atype in {"move", "sneak"} and action.get("target") is None:
                 return True
             if "target" in candidate and action.get("target") != candidate.get("target"):
                 # Target coordinates may arrive as tuple/list.

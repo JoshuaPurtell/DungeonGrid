@@ -269,6 +269,7 @@ class AchievementEngine:
             "objective_recovered": state.objective.recovered,
             "done": state.done,
             "winner": state.winner,
+            "alert": state.alert,
             "living_heroes": len(state.living_heroes()),
             "hero_count": len(state.heroes),
             "doors": {
@@ -378,6 +379,12 @@ class AchievementEngine:
             return before.get("objective_carrier") is None and state.objective.carrier is not None
         if condition_type == "success":
             return state.done and state.winner == "heroes"
+        if condition_type == "alert_below_success":
+            return (
+                state.done
+                and state.winner == "heroes"
+                and state.alert < int(condition.get("alert", condition.get("max", 1)))
+            )
         if condition_type == "all_heroes_survive_success":
             return (
                 state.done
@@ -395,6 +402,24 @@ class AchievementEngine:
             else:
                 total = int(value)
             return total >= int(condition.get("count", 1))
+        if condition_type == "social_metric_at_least_success":
+            value = state.social_metrics.get(str(condition.get("metric", "")), 0)
+            if isinstance(value, dict):
+                total = sum(int(item) for item in value.values())
+            else:
+                total = int(value)
+            return (
+                state.done and state.winner == "heroes" and total >= int(condition.get("count", 1))
+            )
+        if condition_type == "social_metric_at_most_success":
+            value = state.social_metrics.get(str(condition.get("metric", "")), 0)
+            if isinstance(value, dict):
+                total = sum(int(item) for item in value.values())
+            else:
+                total = int(value)
+            return (
+                state.done and state.winner == "heroes" and total <= int(condition.get("count", 0))
+            )
         if condition_type == "messages_sent_at_least":
             if len(state.heroes) < int(condition.get("min_heroes", 1)):
                 return False

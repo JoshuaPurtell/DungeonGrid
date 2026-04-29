@@ -77,6 +77,31 @@ class Move(Effect):
 
 
 @dataclass(slots=True)
+class SneakMove(Effect):
+    entity_id: str = ""
+    to: Pos = (0, 0)
+    direction: str = ""
+
+
+@dataclass(slots=True)
+class Distract(Effect):
+    actor_id: str = ""
+    target_id: str = ""
+
+
+@dataclass(slots=True)
+class Sabotage(Effect):
+    actor_id: str = ""
+    target_id: str = ""
+
+
+@dataclass(slots=True)
+class RigTrap(Effect):
+    actor_id: str = ""
+    target_id: str = ""
+
+
+@dataclass(slots=True)
 class Damage(Effect):
     source_id: str = ""
     target_id: str = ""

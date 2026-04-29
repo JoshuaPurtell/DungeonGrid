@@ -372,6 +372,9 @@ class GridEngine:
                 cover=int(item.get("cover", 0)),
                 searched_categories=set(item.get("searched_categories", [])),
                 search_effects=dict(item.get("search_effects", {})),
+                sabotage_effects=item.get("sabotage_effects"),
+                distract_effects=item.get("distract_effects"),
+                rig_effects=item.get("rig_effects"),
                 break_effect=item.get("break_effect"),
             )
             for item in data.get("furniture", [])
@@ -552,6 +555,13 @@ class GridEngine:
             "healing_items_given": 0,
             "potions_hoarded_while_ally_critical": 0,
             "specialist_actions": {},
+            "sneak_actions": 0,
+            "distracts": 0,
+            "sabotage_actions": 0,
+            "rigged_traps": 0,
+            "alarm_raises": 0,
+            "nonlethal_knockouts": 0,
+            "optional_loot": 0,
         }
 
     def room_id_at(self, rooms: dict[str, Any], pos: Pos) -> str | None:
@@ -608,6 +618,8 @@ class GridEngine:
             } and not self._monster_seen_by_party(state, monster):
                 continue
             if monster.wake_on in {"alert", "alarm"} and state.alert <= 0:
+                continue
+            if monster.wake_on in {"manual", "never", "objective", "objective_taken"}:
                 continue
             monster.activation = "alert"
             event = {

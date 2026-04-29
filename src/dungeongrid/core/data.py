@@ -223,6 +223,16 @@ def game_mode_from_quest(data: dict[str, Any]) -> GameModeSpec:
     return game_mode_from_mapping(raw)
 
 
+def alarm_state_for_alert(alert: int) -> str:
+    if alert >= 6:
+        return "lockdown"
+    if alert >= 4:
+        return "alarmed"
+    if alert >= 2:
+        return "suspicious"
+    return "quiet"
+
+
 DIRECTIONS: dict[str, Pos] = {
     "north": (0, -1),
     "south": (0, 1),
@@ -232,6 +242,7 @@ DIRECTIONS: dict[str, Pos] = {
 
 ACTION_COSTS: dict[str, int] = {
     "move": 1,
+    "sneak": 1,
     "open_door": 1,
     "attack_melee": 2,
     "attack_ranged": 2,
@@ -245,6 +256,9 @@ ACTION_COSTS: dict[str, int] = {
     "attack_object": 2,
     "disarm": 2,
     "interact": 1,
+    "distract": 1,
+    "sabotage": 2,
+    "rig_trap": 2,
     "use_item": 1,
     "equip_item": 1,
     "give_item": 1,
@@ -270,6 +284,8 @@ MAJOR_ACTION_TYPES: set[str] = {
     "attack_object",
     "disarm",
     "interact",
+    "sabotage",
+    "rig_trap",
 }
 
 CLASSIC_DYNAMIC_RULESET: dict[str, Any] = {
@@ -829,6 +845,9 @@ class Furniture:
     cover: int = 0
     searched_categories: set[str] = field(default_factory=set)
     search_effects: dict[str, Any] = field(default_factory=dict)
+    sabotage_effects: Any = None
+    distract_effects: Any = None
+    rig_effects: Any = None
     break_effect: Any = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -851,6 +870,9 @@ class Furniture:
             "cover": self.cover,
             "searched_categories": sorted(self.searched_categories),
             "search_effects": dict(self.search_effects),
+            "sabotage_effects": self.sabotage_effects,
+            "distract_effects": self.distract_effects,
+            "rig_effects": self.rig_effects,
             "break_effect": self.break_effect,
         }
 
@@ -965,6 +987,10 @@ class GameState:
         status = self.defeat_status(entity)
         if status and status not in entity.status:
             entity.status.append(status)
+        if entity.team == "dungeon" and status == "knocked_out":
+            self.social_metrics["nonlethal_knockouts"] = (
+                int(self.social_metrics.get("nonlethal_knockouts", 0)) + 1
+            )
         return status
 
     def entity_at(self, pos: Pos, alive_only: bool = True) -> Entity | None:
@@ -1005,6 +1031,7 @@ class GameState:
             "ruleset": dict(self.ruleset),
             "game_mode": self.mode.to_dict(),
             "alert": self.alert,
+            "alarm_state": alarm_state_for_alert(self.alert),
             "dread": self.dread,
             "torch": self.torch,
             "done": self.done,

@@ -9,10 +9,11 @@
       1,
       3
     ],
-    "room_count_target": "4"
+    "room_count_target": "4",
+    "heist_focus": "patrol loop, shadow alcoves, rune lamp sabotage, decoy route"
   },
   "map": {
-    "ascii": "###################\n#E..D....C....#...#\n#...#..Q...X..#...#\n#...#..###D####.T.#\n#...T..#..I..Z#...#\n#......#..U...#...#\n###D########D###.##\n#....C....Q....X..#\n#.........#....V..#\n###################",
+    "ascii": "###################\n#E..D....C...#....#\n#...#..Q..IX.#....#\n#...#..###D###....#\n#...D..#.....#....#\n#...#..#..U..#....#\n###D########D###.##\n#....C.....Q...X..#\n#..........#......#\n###################",
     "width": 19,
     "height": 10
   },
@@ -22,12 +23,12 @@
       1
     ],
     [
-      1,
+      2,
       2
     ],
     [
-      2,
-      1
+      1,
+      3
     ]
   ],
   "objective": {
@@ -39,36 +40,51 @@
     ],
     "start_pos": [
       10,
-      4
+      2
     ]
   },
   "rooms": {
     "breach": {
-      "name": "Goblin Breach",
+      "name": "Coal Breach",
       "rect": [
         1,
         1,
         5,
         5
       ],
-      "description": "The crew enters through a maintenance crack under the brewery floor.",
+      "description": "A sooty approach with shadows and grates.",
       "tags": [
         "start",
-        "trap"
+        "shadow",
+        "breach"
       ]
     },
     "barracks": {
-      "name": "Shield Barracks",
+      "name": "Bolt Barracks",
       "rect": [
         7,
         1,
-        13,
+        12,
         2
       ],
-      "description": "The first organized response forms around ranged cover.",
+      "description": "A patrol loop crosses the barracks.",
       "tags": [
-        "combat",
+        "patrol",
         "ranged"
+      ]
+    },
+    "rune_sidecut": {
+      "name": "Rune Sidecut",
+      "rect": [
+        15,
+        1,
+        17,
+        5
+      ],
+      "description": "Rune light punishes obvious routes.",
+      "tags": [
+        "rune",
+        "trap"
       ]
     },
     "seal_vault": {
@@ -76,110 +92,357 @@
       "rect": [
         8,
         4,
-        13,
+        12,
         5
       ],
-      "description": "A rune-lit alcove holds the seal.",
+      "description": "The seal rests under a rune lamp and a dwarven route flag.",
       "tags": [
         "objective",
         "support"
       ]
     },
-    "warden_patrol": {
-      "name": "Warden Patrol",
+    "lower_patrol": {
+      "name": "Lower Patrol Run",
       "rect": [
         1,
         7,
         17,
         8
       ],
-      "description": "A lower patrol route can cut off sloppy exits.",
+      "description": "A loop that can be redirected by junk and grease.",
       "tags": [
-        "pressure",
-        "boss"
+        "patrol",
+        "loot"
       ]
     }
   },
   "furniture": [
     {
-      "id": "armory_rack_1",
+      "id": "bell_rope_1",
       "pos": [
-        10,
+        6,
         1
       ],
-      "category": "armory",
-      "name": "Dwarven Armory Rack",
-      "description": "Orderly axes and shields line the wall.",
-      "deck": "supply",
+      "category": "bell_rope",
+      "name": "Barracks Bell Rope",
       "traits": [
-        "armory",
-        "searchable"
+        "bell",
+        "alarm",
+        "rope"
       ],
-      "hp": 2,
-      "max_hp": 2,
-      "destructible": true
+      "sabotage_effects": [
+        {
+          "type": "increment_counter",
+          "key": "_social:bells_sabotaged",
+          "amount": 1
+        },
+        {
+          "type": "lower_alert",
+          "amount": 1
+        },
+        {
+          "type": "emit",
+          "message": "The barracks bell is cut and pocketed.",
+          "trace_kind": "bell_sabotaged"
+        }
+      ]
     },
     {
-      "id": "ledger_desk_1",
+      "id": "shadow_alcove_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Coal Shadow Alcove",
+      "traits": [
+        "shadow",
+        "cover",
+        "hide"
+      ],
+      "cover": 2
+    },
+    {
+      "id": "squeaky_grate_1",
+      "pos": [
+        5,
+        8
+      ],
+      "category": "squeaky_grate",
+      "name": "Old Drain Grate",
+      "traits": [
+        "grate",
+        "noise",
+        "mechanism"
+      ],
+      "sabotage_effects": [
+        {
+          "type": "lower_alert",
+          "amount": 1
+        },
+        {
+          "type": "emit",
+          "message": "The drain grate stops squealing.",
+          "trace_kind": "grate_silenced"
+        }
+      ]
+    },
+    {
+      "id": "rune_lamp_1",
+      "pos": [
+        16,
+        2
+      ],
+      "category": "rune_lamp",
+      "name": "Blue Rune Lamp",
+      "traits": [
+        "rune",
+        "alarm",
+        "light",
+        "mechanism"
+      ],
+      "sabotage_effects": [
+        {
+          "type": "increment_counter",
+          "key": "_social:runes_sabotaged",
+          "amount": 1
+        },
+        {
+          "type": "lower_alert",
+          "amount": 1
+        },
+        {
+          "type": "emit",
+          "message": "The rune lamp gutters into harmless blue smoke.",
+          "trace_kind": "rune_sabotaged"
+        }
+      ]
+    },
+    {
+      "id": "gear_door_1",
+      "pos": [
+        10,
+        3
+      ],
+      "category": "gear_door",
+      "name": "Gear-Locked Vault Door",
+      "traits": [
+        "gear",
+        "lock",
+        "mechanism"
+      ],
+      "sabotage_effects": [
+        {
+          "type": "increment_counter",
+          "key": "_social:gears_sabotaged",
+          "amount": 1
+        },
+        {
+          "type": "set_flag",
+          "key": "gear_door_open_route",
+          "value": true
+        },
+        {
+          "type": "emit",
+          "message": "The gear door clicks into the wrong timetable.",
+          "trace_kind": "gear_sabotaged"
+        }
+      ]
+    },
+    {
+      "id": "pantry_shelf_1",
       "pos": [
         5,
         7
       ],
-      "category": "desk",
-      "name": "Shift Ledger Desk",
-      "description": "Patrol notes are written in impossibly neat dwarven script.",
-      "deck": "treasure",
+      "category": "pantry_shelf",
+      "name": "Lower Pantry Shelf",
+      "deck": "supply",
       "traits": [
-        "records",
+        "pantry",
+        "loot",
         "searchable"
+      ],
+      "search_effects": {
+        "treasure": [
+          {
+            "type": "increment_counter",
+            "key": "_social:optional_loot",
+            "amount": 1
+          },
+          {
+            "type": "item",
+            "item": "healing_draught"
+          },
+          {
+            "type": "emit",
+            "message": "A snack cache disappears into goblin pockets.",
+            "trace_kind": "optional_loot_taken"
+          }
+        ]
+      }
+    },
+    {
+      "id": "decoy_junk_pile_1",
+      "pos": [
+        10,
+        7
+      ],
+      "category": "decoy_junk_pile",
+      "name": "Decoy Junk Pile",
+      "traits": [
+        "decoy",
+        "junk"
+      ],
+      "distract_effects": [
+        {
+          "type": "emit",
+          "message": "The patrol follows fake boot scrapes toward the lower run.",
+          "trace_kind": "decoy_route_lured"
+        }
       ]
     },
     {
-      "id": "rune_plinth_1",
+      "id": "loose_floorboard_1",
       "pos": [
-        11,
-        5
+        12,
+        8
       ],
-      "category": "shrine",
-      "name": "Rune Plinth",
-      "description": "A defensive rune hums under the runekeeper's watch.",
+      "category": "loose_floorboard",
+      "name": "Loose Floorboard",
       "traits": [
-        "rune",
-        "cover"
+        "loose",
+        "trap"
       ],
-      "cover": 1
+      "rig_effects": [
+        {
+          "type": "emit",
+          "message": "The board flips into a shin-biting snare.",
+          "trace_kind": "floorboard_snare"
+        }
+      ]
     }
   ],
   "chest_contents": {
-    "chest_1": "coin_cache",
-    "chest_2": "cell_key"
+    "chest_1": "coin_cache"
   },
   "scripts": {
+    "heist": "steal_warden_seal",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
     "tier": "medium"
   },
   "achievements": [
     {
-      "id": "medium_open_patrol_route",
-      "title": "Risk the Patrol Route",
-      "description": "Open the patrol-route door before extracting.",
-      "reward": 0.1,
+      "id": "medium_patrol_fooled",
+      "title": "Loop De Loop",
+      "description": "Complete the medium hold after manipulating a patrol.",
+      "reward": 0.16,
       "condition": {
-        "type": "door_opened",
-        "id": "door_3"
+        "type": "trace_kind_happened",
+        "kind": "defender_stalled"
       }
     }
   ],
   "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "equipment": {
+        "patrol_route": [
+          [
+            7,
+            2
+          ],
+          [
+            10,
+            2
+          ],
+          [
+            10,
+            4
+          ],
+          [
+            7,
+            2
+          ]
+        ]
+      },
+      "attack": 0,
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_sentry_2": {
+      "activation": "dormant",
+      "equipment": {
+        "patrol_route": [
+          [
+            12,
+            7
+          ],
+          [
+            15,
+            7
+          ],
+          [
+            12,
+            7
+          ],
+          [
+            10,
+            7
+          ]
+        ]
+      },
+      "attack": 0,
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "attack": 0,
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_crossbow_2": {
+      "activation": "dormant",
+      "attack": 0,
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_runekeeper_1": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_runekeeper_2": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_runekeeper_3": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_shieldbearer_1": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
+    "dwarf_shieldbearer_2": {
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
+    },
     "dwarf_warden_1": {
-      "activation": "alert"
-    }
-  },
-  "bosses": {
-    "dwarf_warden_1": {
-      "name": "Captain Stonebrow",
-      "phase": "base",
-      "defeat_reward": 0.25,
-      "counterplay_hint": "Avoid the patrol route unless the ogre can pin the lane."
+      "attack": 0,
+      "activation": "dormant",
+      "sight_range": 0,
+      "wake_on": "manual"
     }
   }
 }

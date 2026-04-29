@@ -35,6 +35,7 @@ from .effects import (
     Damage,
     DamageFurniture,
     DisarmTrap,
+    Distract,
     DrawCard,
     Effect,
     EmitEvent,
@@ -60,9 +61,12 @@ from .effects import (
     RemoveStatus,
     RevealSecretDoor,
     RevealTrap,
+    RigTrap,
+    Sabotage,
     SearchArea,
     SearchFurniture,
     SetFlag,
+    SneakMove,
     SpawnMonster,
     SpawnMonsterNear,
     SpendMovement,
@@ -192,6 +196,14 @@ class EffectResolver:
                     ),
                 ]
             return []
+        if isinstance(effect, SneakMove):
+            return self._resolve_sneak_move(ctx, effect)
+        if isinstance(effect, Distract):
+            return self._resolve_distract(ctx, effect)
+        if isinstance(effect, Sabotage):
+            return self._resolve_sabotage(ctx, effect)
+        if isinstance(effect, RigTrap):
+            return self._resolve_rig_trap(ctx, effect)
         if isinstance(effect, OpenDoor):
             state = ctx.state
             hero = state.heroes.get(effect.actor_id)
@@ -203,7 +215,18 @@ class EffectResolver:
             self.runtime.grid.update_revealed_rooms(
                 state, reason="door_opened", opener_id=effect.actor_id
             )
+            old_alert = state.alert
             state.alert += 1
+            self.runtime.increment_social_metric(state, "alarm_raises")
+            state.trace.append(
+                {
+                    "kind": "alarm_state_changed",
+                    "round": state.round,
+                    "from": old_alert,
+                    "to": state.alert,
+                    "reason": "door_opened",
+                }
+            )
             if effect.actor_id in state.heroes:
                 stats = state.per_hero_stats.setdefault(
                     effect.actor_id, default_per_hero_stats(state.heroes[effect.actor_id])
@@ -1137,6 +1160,225 @@ class EffectResolver:
             )
         ]
 
+    def _resolve_sneak_move(self, ctx: ResolverContext, effect: SneakMove) -> list[Effect]:
+        entity = ctx.state.heroes.get(effect.entity_id)
+        if not entity:
+            return []
+        old = entity.pos
+        entity.pos = effect.to
+        self.runtime.increment_social_metric(ctx.state, "sneak_actions")
+        if "sneaking" not in entity.status:
+            entity.status.append("sneaking")
+        ctx.state.trace.append(
+            {
+                "kind": "goblin_sneak",
+                "round": ctx.state.round,
+                "agent_id": entity.id,
+                "from": list(old),
+                "to": list(effect.to),
+                "direction": effect.direction,
+            }
+        )
+        ctx.emit_text(f"{entity.role} sneaks {effect.direction}.")
+        ctx.add_reward(0.04)
+        followups: list[Effect] = []
+        if self._goblin_cover_at(ctx.state, effect.to):
+            followups.append(ModifyAlert(amount=-1))
+        trap = ctx.state.trap_at(effect.to)
+        if trap and trap.armed:
+            followups.extend(
+                [
+                    RevealTrap(trap_id=trap.id, disarm=True),
+                    Damage(
+                        source_id=trap.id,
+                        target_id=entity.id,
+                        amount=max(0, trap.damage - 1),
+                        source="trap",
+                    ),
+                ]
+            )
+        return followups
+
+    def _resolve_distract(self, ctx: ResolverContext, effect: Distract) -> list[Effect]:
+        state = ctx.state
+        actor = state.heroes.get(effect.actor_id)
+        target = state.monsters.get(effect.target_id)
+        self.runtime.increment_social_metric(state, "distracts")
+        if target and target.alive:
+            for status in ("distracted", "lured", "confused"):
+                if status not in target.status:
+                    target.status.append(status)
+            target.activation = "alert"
+            target.equipment["skip_next_action"] = True
+            state.trace.append(
+                {
+                    "kind": "goblin_distract",
+                    "round": state.round,
+                    "agent_id": effect.actor_id,
+                    "target_id": target.id,
+                    "target_role": target.role,
+                }
+            )
+            ctx.emit_text(f"{actor.role if actor else effect.actor_id} distracts {target.role}.")
+            ctx.add_reward(
+                0.09 if actor and actor.role in {"goblin_scout", "boggart_trickster"} else 0.06
+            )
+            return []
+        furniture = state.furniture.get(effect.target_id)
+        if furniture:
+            furniture.searched_categories.add("distract")
+            furniture.searched = True
+            state.trace.append(
+                {
+                    "kind": "goblin_distract",
+                    "round": state.round,
+                    "agent_id": effect.actor_id,
+                    "furniture_id": furniture.id,
+                    "category": furniture.category,
+                }
+            )
+            ctx.emit_text(
+                f"{actor.role if actor else effect.actor_id} makes a decoy of {furniture.name}."
+            )
+            ctx.add_reward(0.06)
+            return self.raw_effects(effect.actor_id, furniture.id, furniture.distract_effects or [])
+        return []
+
+    def _resolve_sabotage(self, ctx: ResolverContext, effect: Sabotage) -> list[Effect]:
+        state = ctx.state
+        actor = state.heroes.get(effect.actor_id)
+        self.runtime.increment_social_metric(state, "sabotage_actions")
+        trace: dict[str, Any] = {
+            "kind": "goblin_sabotage",
+            "round": state.round,
+            "agent_id": effect.actor_id,
+            "target_id": effect.target_id,
+        }
+        followups: list[Effect] = []
+        furniture = state.furniture.get(effect.target_id)
+        if furniture:
+            furniture.searched_categories.add("sabotage")
+            furniture.searched = True
+            state.scripts[f"sabotaged:{furniture.id}"] = True
+            trace.update({"category": furniture.category, "traits": list(furniture.traits)})
+            ctx.emit_text(f"{actor.role if actor else effect.actor_id} sabotages {furniture.name}.")
+            if set(furniture.traits) & {
+                "bell",
+                "alarm",
+                "rune",
+                "gear",
+                "grate",
+                "lock",
+                "mechanism",
+            }:
+                followups.append(ModifyAlert(amount=-1))
+            followups.extend(
+                self.raw_effects(effect.actor_id, furniture.id, furniture.sabotage_effects or [])
+            )
+            ctx.add_reward(0.10 if actor and actor.role == "kobold_tinkerer" else 0.07)
+        elif effect.target_id in state.traps:
+            trap = state.traps[effect.target_id]
+            trace["trap_id"] = trap.id
+            ctx.emit_text(
+                f"{actor.role if actor else effect.actor_id} clips the works out of {trap.id}."
+            )
+            followups.append(RevealTrap(trap_id=trap.id, disarm=True))
+            ctx.add_reward(0.10 if actor and actor.role == "kobold_tinkerer" else 0.06)
+        elif effect.target_id in state.doors:
+            door = state.doors[effect.target_id]
+            state.scripts[f"sabotaged:{door.id}"] = True
+            trace["door_id"] = door.id
+            ctx.emit_text(f"{actor.role if actor else effect.actor_id} jams {door.id}.")
+            ctx.add_reward(0.05)
+        state.trace.append(trace)
+        return followups
+
+    def _resolve_rig_trap(self, ctx: ResolverContext, effect: RigTrap) -> list[Effect]:
+        state = ctx.state
+        actor = state.heroes.get(effect.actor_id)
+        self.runtime.increment_social_metric(state, "rigged_traps")
+        state.scripts[f"rigged:{effect.target_id}"] = True
+        trace = {
+            "kind": "goblin_rig_trap",
+            "round": state.round,
+            "agent_id": effect.actor_id,
+            "target_id": effect.target_id,
+        }
+        followups: list[Effect] = []
+        target_pos: Pos | None = None
+        furniture = state.furniture.get(effect.target_id)
+        if furniture:
+            furniture.searched_categories.add("rig")
+            furniture.searched = True
+            target_pos = furniture.pos
+            trace.update({"category": furniture.category, "traits": list(furniture.traits)})
+            followups.extend(
+                self.raw_effects(effect.actor_id, furniture.id, furniture.rig_effects or [])
+            )
+            ctx.emit_text(
+                f"{actor.role if actor else effect.actor_id} rigs {furniture.name} into a snare."
+            )
+        elif effect.target_id in state.traps:
+            trap = state.traps[effect.target_id]
+            target_pos = trap.pos
+            trace["trap_id"] = trap.id
+            followups.append(RevealTrap(trap_id=trap.id, disarm=True))
+            ctx.emit_text(
+                f"{actor.role if actor else effect.actor_id} reverses {trap.id} into a goblin snare."
+            )
+        elif effect.target_id in state.doors:
+            door = state.doors[effect.target_id]
+            target_pos = door.pos
+            trace["door_id"] = door.id
+            ctx.emit_text(
+                f"{actor.role if actor else effect.actor_id} wedges {door.id} for a messy delay."
+            )
+        snared = self._nearest_defender(state, target_pos, max_distance=4)
+        if snared:
+            for status in ("snared", "confused"):
+                if status not in snared.status:
+                    snared.status.append(status)
+            snared.equipment["skip_next_action"] = True
+            trace["snared_target"] = snared.id
+        state.trace.append(trace)
+        ctx.add_reward(0.09)
+        return followups
+
+    def _goblin_cover_at(self, state: GameState, pos: Pos) -> bool:
+        furniture = self.runtime.grid.furniture_at(state, pos)
+        if furniture and (
+            furniture.cover > 0
+            or furniture.category == "shadow_alcove"
+            or set(furniture.traits) & {"cover", "shadow", "hide"}
+        ):
+            return True
+        for room in state.rooms.values():
+            if not isinstance(room, dict):
+                continue
+            rect = room.get("rect")
+            if not isinstance(rect, list) or len(rect) != 4:
+                continue
+            x1, y1, x2, y2 = [int(item) for item in rect]
+            if x1 <= pos[0] <= x2 and y1 <= pos[1] <= y2:
+                return bool(set(room.get("tags", [])) & {"shadow", "cover", "crawlspace"})
+        return False
+
+    def _nearest_defender(
+        self, state: GameState, pos: Pos | None, *, max_distance: int
+    ) -> Entity | None:
+        if pos is None:
+            return None
+        candidates = [
+            monster
+            for monster in state.monsters.values()
+            if monster.alive and self.runtime.grid.manhattan(pos, monster.pos) <= max_distance
+        ]
+        return (
+            min(candidates, key=lambda monster: self.runtime.grid.manhattan(pos, monster.pos))
+            if candidates
+            else None
+        )
+
     def _resolve_equip_item(self, ctx: ResolverContext, effect: EquipItem) -> list[Effect]:
         hero = ctx.state.heroes.get(effect.actor_id)
         if not hero or effect.item_id not in hero.inventory:
@@ -1370,6 +1612,36 @@ class EffectResolver:
         monster = state.monsters.get(effect.monster_id)
         if not monster or not monster.alive:
             return []
+        stalled_statuses = ("snared", "distracted", "lured", "confused", "locked_out")
+        if monster.equipment.pop("skip_next_action", False):
+            for status in stalled_statuses:
+                if status in monster.status:
+                    monster.status.remove(status)
+                    break
+            state.trace.append(
+                {
+                    "kind": "defender_stalled",
+                    "round": state.round,
+                    "monster_id": monster.id,
+                    "role": monster.role,
+                }
+            )
+            ctx.emit_text(f"{monster.role} loses time to goblin mischief.")
+            return []
+        for status in stalled_statuses:
+            if status in monster.status:
+                monster.status.remove(status)
+                state.trace.append(
+                    {
+                        "kind": "defender_stalled",
+                        "round": state.round,
+                        "monster_id": monster.id,
+                        "role": monster.role,
+                        "status": status,
+                    }
+                )
+                ctx.emit_text(f"{monster.role} is delayed by {status}.")
+                return []
         heroes = [h for h in state.heroes.values() if h.alive]
         if not heroes:
             return []
@@ -1384,6 +1656,32 @@ class EffectResolver:
             if self.runtime.grid.manhattan(monster.pos, h.pos) <= monster.sight_range
             and self.runtime.grid.line_clear(state, monster.pos, h.pos)
         ]
+        patrol_route = monster.equipment.get("patrol_route")
+        if (
+            isinstance(patrol_route, list)
+            and patrol_route
+            and (not visible_targets or state.alert < 4)
+        ):
+            index = int(monster.equipment.get("patrol_index", 0)) % len(patrol_route)
+            raw_pos = patrol_route[index]
+            waypoint = tuple(raw_pos) if isinstance(raw_pos, list) and len(raw_pos) == 2 else None
+            monster.equipment["patrol_index"] = index + 1
+            if waypoint and self.runtime.grid.is_walkable(state, waypoint):
+                path = self.runtime.grid.find_path(
+                    state, monster.pos, waypoint, ignore_entities=True
+                )
+                if len(path) > 1 and not state.entity_at(path[1]):
+                    monster.pos = path[1]
+                    state.trace.append(
+                        {
+                            "kind": "defender_patrol",
+                            "round": state.round,
+                            "monster_id": monster.id,
+                            "to": list(monster.pos),
+                        }
+                    )
+                    ctx.emit_text(f"{monster.role} follows its patrol route.")
+                    return []
         if (
             monster.role == "cinder_mage" or monster.equipment.get("attack_range")
         ) and visible_targets:
@@ -1405,7 +1703,7 @@ class EffectResolver:
                 ]
         target = (
             state.heroes.get(state.objective.carrier)
-            if monster.behavior == "hunt_objective_carrier"
+            if (monster.behavior == "hunt_objective_carrier" or state.alert >= 6)
             and state.objective.carrier in state.heroes
             else None
         )
@@ -1969,6 +2267,18 @@ class ActionTranslator:
                     entity_id=hero.id, to=(hero.pos[0] + dx, hero.pos[1] + dy), direction=direction
                 )
             )
+        elif action_type == "sneak":
+            direction = str(action.get("direction"))
+            dx, dy = DIRECTIONS[direction]
+            if self.runtime.classic_enabled(state):
+                effects.append(SpendMovement(entity_id=hero.id, amount=1))
+            effects.append(
+                SneakMove(
+                    entity_id=hero.id,
+                    to=(hero.pos[0] + dx, hero.pos[1] + dy),
+                    direction=direction,
+                )
+            )
         elif action_type == "open_door":
             effects.append(OpenDoor(actor_id=hero.id, door_id=str(action.get("target"))))
         elif action_type in {"attack_melee", "attack_ranged"}:
@@ -2044,6 +2354,12 @@ class ActionTranslator:
                         via_interact=True,
                     )
                 )
+        elif action_type == "distract":
+            effects.append(Distract(actor_id=hero.id, target_id=str(action.get("target"))))
+        elif action_type == "sabotage":
+            effects.append(Sabotage(actor_id=hero.id, target_id=str(action.get("target"))))
+        elif action_type == "rig_trap":
+            effects.append(RigTrap(actor_id=hero.id, target_id=str(action.get("target"))))
         elif action_type == "use_item":
             effects.append(UseItem(actor_id=hero.id, item_id=str(action.get("target"))))
         elif action_type == "equip_item":
@@ -2426,6 +2742,16 @@ class EngineRuntime:
             old_alert = state.alert
             state.alert = max(0, state.alert + delta)
             if old_alert != state.alert:
+                if delta > 0:
+                    self.increment_social_metric(state, "alarm_raises", amount=delta)
+                state.trace.append(
+                    {
+                        "kind": "alarm_state_changed",
+                        "round": state.round,
+                        "from": old_alert,
+                        "to": state.alert,
+                    }
+                )
                 ctx.emit_text(f"Alert changes from {old_alert} to {state.alert}.")
         if "_treasure_delta" in state.scripts:
             amount = int(state.scripts.pop("_treasure_delta"))

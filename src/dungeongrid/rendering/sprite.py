@@ -128,6 +128,7 @@ def render_sprite_html(
     path.parent.mkdir(parents=True, exist_ok=True)
     title = title or _title_from_frames(frames)
     rows = "\n".join(_html_frame(frame, index) for index, frame in enumerate(frames))
+    summary = _html_summary(frames)
     gif_name = path.with_suffix(".gif").name
     html = f"""<!doctype html>
 <html lang="en">
@@ -148,6 +149,9 @@ main {{ padding: 18px; display: grid; gap: 14px; }}
 .hero {{ border: 1px solid #4a3c2e; background: #17120f; border-radius: 8px; padding: 12px; }}
 .hero img {{ max-width: 100%; height: auto; image-rendering: pixelated; border-radius: 6px; }}
 section {{ border: 1px solid #4a3c2e; background: #17120f; border-radius: 8px; padding: 12px; }}
+.summary {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }}
+.summary div {{ border: 1px solid #3d3228; border-radius: 6px; padding: 10px; background: #201a17; }}
+.label {{ color: #9d8a70; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }}
 .meta {{ color: #9d8a70; font-size: 13px; margin-bottom: 8px; }}
 pre {{ white-space: pre-wrap; margin: 0; color: #efe2c7; font-size: 12px; }}
 </style>
@@ -156,6 +160,7 @@ pre {{ white-space: pre-wrap; margin: 0; color: #efe2c7; font-size: 12px; }}
 <header><h1>{escape(title)}</h1></header>
 <main>
 <div class="hero"><img src="{escape(gif_name)}" alt="{escape(title)}"></div>
+{summary}
 {rows}
 </main>
 </body>
@@ -320,6 +325,53 @@ def _paint_furniture(sprite, category: str, destroyed: bool) -> None:
         sprite.point((10, 2), fill=STONE_LIGHT)
     elif category == "hazard":
         _paint_marker(sprite, "trap")
+    elif category == "bell_rope":
+        sprite.line((8, 2, 8, 14), fill=(139, 100, 56))
+        sprite.ellipse((5, 3, 11, 8), fill=GOLD, outline=OUTLINE)
+        sprite.rectangle((7, 8, 9, 11), fill=(139, 100, 56))
+    elif category == "squeaky_grate":
+        sprite.rectangle((3, 5, 13, 12), fill=(45, 49, 50), outline=OUTLINE)
+        for x in (5, 8, 11):
+            sprite.line((x, 5, x, 12), fill=STONE_LIGHT)
+        sprite.line((3, 8, 13, 8), fill=STONE_LIGHT)
+    elif category == "shadow_alcove":
+        sprite.rectangle((2, 2, 14, 14), fill=(20, 22, 24), outline=(56, 60, 64))
+        sprite.arc((3, 3, 13, 15), 180, 360, fill=(75, 78, 82))
+    elif category == "rune_lamp":
+        sprite.rectangle((6, 5, 10, 14), fill=STONE, outline=OUTLINE)
+        sprite.ellipse((4, 2, 12, 8), fill=BLUE, outline=OUTLINE)
+        sprite.point((8, 4), fill=(204, 242, 255))
+    elif category == "pantry_shelf":
+        sprite.rectangle((3, 4, 13, 13), fill=WOOD, outline=OUTLINE)
+        for y in (6, 10):
+            sprite.line((4, y, 12, y), fill=WOOD_LIGHT)
+        sprite.ellipse((5, 7, 8, 10), fill=(220, 181, 91), outline=OUTLINE)
+        sprite.rectangle((9, 7, 11, 10), fill=(127, 80, 43), outline=OUTLINE)
+    elif category == "loose_floorboard":
+        sprite.rectangle((2, 6, 14, 12), fill=WOOD_DARK, outline=OUTLINE)
+        sprite.polygon([(4, 5), (12, 4), (13, 7), (5, 8)], fill=WOOD_LIGHT, outline=OUTLINE)
+    elif category == "gear_door":
+        sprite.rectangle((3, 3, 13, 14), fill=STONE, outline=OUTLINE)
+        sprite.ellipse((5, 5, 11, 11), fill=(81, 72, 60), outline=GOLD)
+        sprite.rectangle((7, 7, 9, 9), fill=OUTLINE)
+    elif category == "sleeping_stool":
+        sprite.rectangle((5, 6, 11, 10), fill=WOOD, outline=OUTLINE)
+        sprite.line((6, 10, 4, 14), fill=WOOD_DARK)
+        sprite.line((10, 10, 12, 14), fill=WOOD_DARK)
+        sprite.text((11, 2), "z", fill=GOLD)
+    elif category == "lockbox":
+        sprite.rectangle((3, 6, 13, 13), fill=(62, 57, 52), outline=OUTLINE)
+        sprite.rectangle((5, 4, 11, 7), fill=STONE_LIGHT, outline=OUTLINE)
+        sprite.rectangle((7, 8, 9, 11), fill=GOLD)
+    elif category == "grease_barrel":
+        sprite.ellipse((4, 3, 12, 6), fill=WOOD_LIGHT, outline=OUTLINE)
+        sprite.rectangle((4, 5, 12, 12), fill=WOOD, outline=OUTLINE)
+        sprite.ellipse((3, 11, 13, 14), fill=(42, 52, 36), outline=GREEN)
+    elif category == "decoy_junk_pile":
+        sprite.polygon([(4, 12), (7, 5), (12, 12)], fill=(91, 84, 78), outline=OUTLINE)
+        sprite.point((6, 8), fill=GOLD)
+        sprite.point((10, 10), fill=BLUE)
+        sprite.line((5, 11, 12, 7), fill=STONE_LIGHT)
     else:
         sprite.rectangle((3, 6, 13, 10), fill=WOOD, outline=OUTLINE)
         sprite.rectangle((4, 10, 5, 13), fill=WOOD_DARK)
@@ -656,7 +708,7 @@ def _draw_action_trails(
         return
     heroes = state.get("heroes") or {}
     for action in actions[-3:]:
-        if not isinstance(action, dict) or action.get("type") != "move":
+        if not isinstance(action, dict) or action.get("type") not in {"move", "sneak"}:
             continue
         agent_id = action.get("agent_id") or events.get("agent_id")
         hero = heroes.get(agent_id)
@@ -811,6 +863,19 @@ def _draw_monster(
         monster.get("hp", 1),
         monster.get("max_hp", monster.get("hp", 1)),
     )
+    statuses = set(monster.get("status") or [])
+    marker = ""
+    color = GOLD
+    if "snared" in statuses:
+        marker, color = "@", (232, 205, 143)
+    elif "distracted" in statuses or "lured" in statuses:
+        marker, color = "?", (237, 217, 118)
+    elif "confused" in statuses:
+        marker, color = "~", (162, 214, 196)
+    elif "locked_out" in statuses:
+        marker, color = "!", (255, 142, 128)
+    if marker:
+        draw.text((x1 + tile - 13, y1 + 3), marker, fill=color)
 
 
 def _draw_knocked_out(
@@ -870,11 +935,15 @@ def _draw_hud(
     active = state.get("active_agent")
     movement = (state.get("movement_remaining") or {}).get(active, "-")
     major = (state.get("major_action_used") or {}).get(active, False)
+    metrics = state.get("social_metrics") or {}
+    alarm_label = str(state.get("alarm_state") or state.get("alert", "-")).upper()
     lines = [
         f"Objective: {objective.get('id', '-')}",
         f"Carrier: {objective.get('carrier') or '-'}",
         f"Move: {movement}  Major: {'used' if major else 'ready'}",
-        f"Dread: {state.get('dread', '-')}",
+        f"Alarm: {alarm_label}",
+        f"Tricks: S{metrics.get('sneak_actions', 0)} D{metrics.get('distracts', 0)} "
+        f"X{metrics.get('sabotage_actions', 0)} R{metrics.get('rigged_traps', 0)}",
         f"Extracted: {len(state.get('extracted_heroes') or [])}",
         f"Reward this turn: {events.get('reward', 0)}",
         "",
@@ -986,6 +1055,8 @@ def _action_phrase(action: Any) -> str:
     action_type = action.get("type", "?")
     if action_type == "move":
         return f"move {action.get('direction', '?')}"
+    if action_type == "sneak":
+        return f"sneak {action.get('direction', '?')}"
     if action_type == "open_door":
         return "open door"
     if action_type == "search":
@@ -1000,6 +1071,12 @@ def _action_phrase(action: Any) -> str:
         return f"search furniture {action.get('target', '')}".strip()
     if action_type == "attack_object":
         return f"break {action.get('target', '')}".strip()
+    if action_type == "distract":
+        return f"distract {action.get('target', '')}".strip()
+    if action_type == "sabotage":
+        return f"sabotage {action.get('target', '')}".strip()
+    if action_type == "rig_trap":
+        return f"rig trap {action.get('target', '')}".strip()
     if action_type == "equip_item":
         return f"equip {action.get('target', '')}".strip()
     if action_type == "give_item":
@@ -1040,4 +1117,53 @@ def _html_frame(frame: dict[str, Any], index: int) -> str:
     return f"""<section>
 <div class="meta">Frame {index}</div>
 <pre>{escape(chr(10).join(lines))}</pre>
+</section>"""
+
+
+def _html_summary(frames: list[dict[str, Any]]) -> str:
+    final_state = frames[-1].get("state") if frames else {}
+    if not isinstance(final_state, dict):
+        return ""
+    metrics = final_state.get("social_metrics") or {}
+    alarm_seen = []
+    for frame in frames:
+        state = frame.get("state") if isinstance(frame, dict) else {}
+        if not isinstance(state, dict):
+            continue
+        label = str(state.get("alarm_state") or state.get("alert") or "-")
+        if not alarm_seen or alarm_seen[-1] != label:
+            alarm_seen.append(label)
+    achievements = final_state.get("achievement_events_tail") or []
+    achievement_text = ", ".join(
+        str(item.get("title") or item.get("id"))
+        for item in achievements[-6:]
+        if isinstance(item, dict)
+    )
+    last_trick = "-"
+    for frame in reversed(frames):
+        for action in reversed(frame.get("executed_actions") or []):
+            if isinstance(action, dict) and action.get("type") in {
+                "sneak",
+                "distract",
+                "sabotage",
+                "rig_trap",
+            }:
+                last_trick = _action_phrase(action)
+                break
+        if last_trick != "-":
+            break
+    outcome = final_state.get("termination_reason") or final_state.get("winner") or "in_progress"
+    heist_metrics = "sneak={} distract={} sabotage={} rig={} loot={}".format(
+        metrics.get("sneak_actions", 0),
+        metrics.get("distracts", 0),
+        metrics.get("sabotage_actions", 0),
+        metrics.get("rigged_traps", 0),
+        metrics.get("optional_loot", 0),
+    )
+    return f"""<section class="summary">
+<div><div class="label">Outcome</div><strong>{escape(str(outcome))}</strong></div>
+<div><div class="label">Alarm Timeline</div>{escape(" -> ".join(alarm_seen) or "-")}</div>
+<div><div class="label">Last Trick</div>{escape(last_trick)}</div>
+<div><div class="label">Heist Metrics</div>{escape(heist_metrics)}</div>
+<div><div class="label">Achievements</div>{escape(achievement_text or "-")}</div>
 </section>"""
