@@ -1,0 +1,401 @@
+{
+  "id": "coalwhisper_kitchens",
+  "title": "Coalwhisper Kitchens",
+  "metadata": {
+    "campaign_group": "goblin",
+    "maturity_tier": "goblin_mode_second_wave_polished",
+    "validation_status": "content_catalog_json_validated",
+    "quest_role": "inverted_dungeon_coordination_heist",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "distract",
+      "optional_loot",
+      "grease_route",
+      "sneak",
+      "supply_pressure",
+      "nonlethal_defender_control"
+    ],
+    "marl_axis": "agents must choose between stealing supplies and staying silent while defenders patrol around edible decoys",
+    "coordination_type": "route-deception heist where the boggart and ogre can buy time for a scout-led objective grab",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "heist_reward_with_alarm_optional_loot_and_nonlethal_attribution",
+    "goblin_aesthetic": "stolen cheese, soot pots, mushroom gravy, clattering copper, and goblin snack-tax nonsense"
+  },
+  "defaults": {
+    "difficulty": "second_wave",
+    "torch": 22,
+    "game_mode": {
+      "id": "goblin"
+    },
+    "recommended_heroes": [
+      "goblin_scout",
+      "ogre_bruiser",
+      "kobold_tinkerer",
+      "boggart_trickster"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "goblin_scout"
+      ],
+      "2": [
+        "goblin_scout",
+        "kobold_tinkerer"
+      ],
+      "3": [
+        "goblin_scout",
+        "kobold_tinkerer",
+        "boggart_trickster"
+      ],
+      "4": [
+        "goblin_scout",
+        "ogre_bruiser",
+        "kobold_tinkerer",
+        "boggart_trickster"
+      ]
+    },
+    "hero_loadouts": {
+      "goblin_scout": {
+        "weapon": "sling",
+        "combat_role": "scout",
+        "items": [
+          "sling_stones",
+          "stolen_map"
+        ]
+      },
+      "ogre_bruiser": {
+        "weapon": "ogre_club",
+        "combat_role": "frontline",
+        "items": [
+          "ogre_ration"
+        ]
+      },
+      "kobold_tinkerer": {
+        "weapon": "wrench_spear",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "spare_springs"
+        ]
+      },
+      "boggart_trickster": {
+        "weapon": "boggart_hook",
+        "combat_role": "controller",
+        "items": [
+          "curse_charm"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "decks": {
+      "treasure": [
+        {
+          "id": "coalwhisper_kitchens_dwarf_coin_roll",
+          "name": "Dwarf Coin Roll",
+          "type": "treasure",
+          "item": "coin_cache",
+          "treasure": 1,
+          "reward": 0.1,
+          "rarity": "common"
+        },
+        {
+          "id": "coalwhisper_kitchens_shiny_decoy",
+          "name": "Too-Shiny Decoy",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03,
+          "rarity": "danger"
+        }
+      ],
+      "supply": [
+        {
+          "id": "coalwhisper_kitchens_mushroom_biscuit",
+          "name": "Mushroom Biscuit",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08,
+          "rarity": "common"
+        },
+        {
+          "id": "coalwhisper_kitchens_spare_spring",
+          "name": "Spare Spring",
+          "type": "artifact",
+          "item": "spare_springs",
+          "reward": 0.1,
+          "rarity": "uncommon"
+        }
+      ],
+      "trick": [
+        {
+          "id": "coalwhisper_kitchens_false_footsteps",
+          "name": "False Footsteps",
+          "type": "event",
+          "reward": 0.05,
+          "rarity": "trick",
+          "effects": [
+            {
+              "type": "lower_alert",
+              "amount": 1
+            },
+            {
+              "type": "emit",
+              "message": "False footsteps wander away from the real goblins.",
+              "trace_kind": "goblin_distract"
+            }
+          ]
+        },
+        {
+          "id": "coalwhisper_kitchens_squeak",
+          "name": "Unplanned Squeak",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03,
+          "rarity": "danger"
+        }
+      ],
+      "event": [
+        {
+          "id": "coalwhisper_kitchens_patrol_whistle",
+          "name": "Patrol Whistle",
+          "type": "event",
+          "alert": 2,
+          "reward": -0.05,
+          "rarity": "danger"
+        },
+        {
+          "id": "coalwhisper_kitchens_wandering_sentry",
+          "name": "Wandering Sentry",
+          "type": "event",
+          "rarity": "danger",
+          "reward": -0.06,
+          "effects": [
+            {
+              "type": "alert",
+              "amount": 1,
+              "reward": -0.02
+            },
+            {
+              "type": "spawn_monster",
+              "id": "wandering_coalwhisper_kitchens_sentry_1",
+              "role": "dwarf_sentry"
+            }
+          ]
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic": {
+        "warden_pressure": "dwarven_hold_response",
+        "dread_hooks": [
+          "objective_taken",
+          "noisy_break",
+          "split_party",
+          "alarm_unresolved"
+        ],
+        "safe_room_search_required": true,
+        "partial_extraction": false
+      }
+    },
+    "role_selection": {
+      "required_roles_by_party_size": {
+        "1": [
+          "goblin_scout"
+        ],
+        "2": [
+          "goblin_scout",
+          "kobold_tinkerer"
+        ],
+        "3": [
+          "goblin_scout",
+          "kobold_tinkerer",
+          "boggart_trickster"
+        ],
+        "4": [
+          "goblin_scout",
+          "ogre_bruiser",
+          "kobold_tinkerer",
+          "boggart_trickster"
+        ]
+      },
+      "mode": "recommended_in_classic_dynamic"
+    }
+  },
+  "catalog": {
+    "objectives": {
+      "feast_ledger": {
+        "type": "objective",
+        "objective_kind": "recover_and_extract",
+        "public_hint": "Steal the feast ledger so the goblin crew knows when every dwarf guard takes supper."
+      }
+    },
+    "monsters": {
+      "sentry": {
+        "type": "dwarf_sentry",
+        "pressure_role": "patrol_guard"
+      },
+      "shieldbearer": {
+        "type": "dwarf_shieldbearer",
+        "pressure_role": "line_blocker"
+      },
+      "crossbow": {
+        "type": "dwarf_crossbow",
+        "pressure_role": "sightline_pressure"
+      },
+      "runekeeper": {
+        "type": "dwarf_runekeeper",
+        "pressure_role": "alarm_support"
+      },
+      "warden": {
+        "type": "dwarf_warden",
+        "pressure_role": "objective_guard"
+      }
+    },
+    "objects": {
+      "cheese_dark": {
+        "role": "shadow_alcove",
+        "traits": [
+          "shadow",
+          "cheese",
+          "cover"
+        ],
+        "trace_kind": "goblin_sneak"
+      },
+      "soup_chain": {
+        "role": "mechanism",
+        "traits": [
+          "chain",
+          "kettle",
+          "mechanism"
+        ],
+        "trace_kind": "goblin_sabotage"
+      },
+      "pie_decoy": {
+        "role": "decoy",
+        "traits": [
+          "decoy",
+          "food",
+          "mischief"
+        ],
+        "trace_kind": "goblin_distract"
+      },
+      "grease_barrel": {
+        "role": "hazard",
+        "traits": [
+          "grease",
+          "trap",
+          "route"
+        ],
+        "trace_kind": "goblin_rig_trap"
+      },
+      "pantry_shelf": {
+        "role": "supply",
+        "traits": [
+          "pantry",
+          "loot",
+          "searchable"
+        ],
+        "trace_kind": "optional_loot_taken"
+      },
+      "copper_clatter": {
+        "role": "signal",
+        "traits": [
+          "noise",
+          "alarm",
+          "pots"
+        ],
+        "trace_kind": "bell_sabotaged"
+      }
+    }
+  },
+  "shared_achievements": [
+    {
+      "id": "coalwhisper_kitchens_objective_pinched",
+      "title": "Prize Pinched",
+      "description": "Steal the Feast Ledger.",
+      "reward": 0.24,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "coalwhisper_kitchens_clean_escape",
+      "title": "Back Into the Walls",
+      "description": "Escape Coalwhisper Kitchens with the objective.",
+      "reward": 0.45,
+      "condition": {
+        "type": "success"
+      }
+    },
+    {
+      "id": "coalwhisper_kitchens_quiet_alarm",
+      "title": "Nobody Heard the Important Bits",
+      "description": "Succeed before the hold reaches lockdown-level alert.",
+      "reward": 0.2,
+      "condition": {
+        "type": "alert_below_success",
+        "alert": 4
+      }
+    },
+    {
+      "id": "coalwhisper_kitchens_all_roles",
+      "title": "Every Little Menace Has a Job",
+      "description": "Use sneak, sabotage, distract, and trapcraft-style effects in one run.",
+      "reward": 0.22,
+      "condition": {
+        "type": "all_trace_kinds_happened",
+        "kinds": [
+          "goblin_sneak",
+          "goblin_sabotage",
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "coalwhisper_kitchens_no_knockouts",
+      "title": "Soft Paws, Soft Clubs",
+      "description": "Win without knocking out a dwarven defender.",
+      "reward": 0.18,
+      "condition": {
+        "type": "social_metric_at_most_success",
+        "metric": "nonlethal_knockouts",
+        "count": 0
+      }
+    }
+  ],
+  "warden_runbook": {
+    "axis_pressure": "route-deception heist where the boggart and ogre can buy time for a scout-led objective grab",
+    "fairness_notes": [
+      "Dwarves are defenders and should be narrated as knocked out, never killed.",
+      "Pressure should preserve counterplay through visible doors, furniture effects, and reversible alarms.",
+      "Reward stealthy solutions at least as much as nonlethal combat solutions."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "goblin_scout": [
+      "scouting",
+      "safe_route_marking",
+      "carrier_timing"
+    ],
+    "ogre_bruiser": [
+      "frontline",
+      "route_blocking",
+      "carrier_protection"
+    ],
+    "kobold_tinkerer": [
+      "trapcraft",
+      "mechanism_sabotage",
+      "hazard_specialist"
+    ],
+    "boggart_trickster": [
+      "misdirection",
+      "control",
+      "alarm_confusion"
+    ]
+  },
+  "scripts": {
+    "family": "coalwhisper_kitchens"
+  }
+}

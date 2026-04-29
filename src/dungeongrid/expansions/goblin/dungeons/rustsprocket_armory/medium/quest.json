@@ -1,0 +1,459 @@
+{
+  "quest_id": "goblin:rustsprocket_armory:medium",
+  "title": "Rustsprocket Armory Medium",
+  "min_heroes": 3,
+  "max_heroes": 3,
+  "metadata": {
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      3,
+      3
+    ],
+    "room_count_target": "4",
+    "heist_focus": "weapon-rack hazards, shield-wall bypassing, noisy forge suppression, and tactical loot denial",
+    "coordination_problem": "combat-adjacent heist where the ogre opens lanes while stealth roles prevent the alarm from compounding",
+    "goblin_aesthetic": "stolen bolts, goblin dents in polished shields, oily forge smoke, and racks of dwarf-sized inconvenience"
+  },
+  "map": {
+    "ascii": "#################\n#E..D..Z....U.I.#\n#...#..Q..C.....#\n#...#..X..###D###\n#...D..Z..#.....#\n#...#.....#..X..#\n#...#..C..D..C..#\n#.....Q.........#\n#################",
+    "width": 17,
+    "height": 9
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      2
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "anvil_plan",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      14,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_warren": {
+      "name": "Goblin Entry Warren",
+      "rect": [
+        1,
+        1,
+        4,
+        7
+      ],
+      "description": "A cramped goblin approach lined with stolen bolts, goblin dents in polished shields, oily forge smoke, and racks of dwarf-sized inconvenience.",
+      "tags": [
+        "start",
+        "stealth",
+        "goblin"
+      ]
+    },
+    "mischief_lane": {
+      "name": "Mischief Lane",
+      "rect": [
+        4,
+        1,
+        10,
+        7
+      ],
+      "description": "The main coordination lane for weapon-rack hazards, shield-wall bypassing, noisy forge suppression, and tactical loot denial.",
+      "tags": [
+        "coordination",
+        "sneak",
+        "craft"
+      ]
+    },
+    "objective_hold": {
+      "name": "Anvil Plan Post",
+      "rect": [
+        11,
+        1,
+        15,
+        3
+      ],
+      "description": "Swipe the anvil plan so the goblins know which dwarven locks fit which stolen hammers.",
+      "tags": [
+        "objective",
+        "dwarf",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "shield_shadow_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Shield-Stack Shadow",
+      "description": "Shield-Stack Shadow supports weapon-rack hazards, shield-wall bypassing, noisy forge suppression, and tactical loot denial.",
+      "traits": [
+        "shadow",
+        "shield",
+        "cover"
+      ],
+      "cover": 2,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The scout hides among shields too polished to be trustworthy.",
+            "trace_kind": "goblin_sneak"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Shield-Stack Shadow breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "forge_bellows_1",
+      "pos": [
+        6,
+        1
+      ],
+      "category": "mechanism",
+      "name": "Forge Bellows",
+      "description": "Forge Bellows supports weapon-rack hazards, shield-wall bypassing, noisy forge suppression, and tactical loot denial.",
+      "traits": [
+        "forge",
+        "bellows",
+        "noise"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The kobold teaches the bellows to wheeze quietly.",
+            "trace_kind": "goblin_sabotage"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Forge Bellows breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "bolt_bucket_1",
+      "pos": [
+        8,
+        2
+      ],
+      "category": "supply",
+      "name": "Bolt Bucket",
+      "description": "Bolt Bucket supports weapon-rack hazards, shield-wall bypassing, noisy forge suppression, and tactical loot denial.",
+      "traits": [
+        "bolt",
+        "loot",
+        "searchable"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "item",
+            "item": "coin_cache",
+            "reward": 0.08
+          },
+          {
+            "type": "emit",
+            "message": "Enough bolts vanish to make every crossbowman suspicious.",
+            "trace_kind": "optional_loot_taken"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "emit",
+            "message": "One more shiny thing joins the goblin retirement plan.",
+            "trace_kind": "optional_loot_taken"
+          }
+        ],
+        "treasure": [
+          {
+            "type": "item",
+            "item": "coin_cache",
+            "reward": 0.08
+          },
+          {
+            "type": "emit",
+            "message": "Enough bolts vanish to make every crossbowman suspicious.",
+            "trace_kind": "optional_loot_taken"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "emit",
+            "message": "One more shiny thing joins the goblin retirement plan.",
+            "trace_kind": "optional_loot_taken"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Bolt Bucket breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "helmet_goblin_1",
+      "pos": [
+        1,
+        1
+      ],
+      "category": "decoy",
+      "name": "Talking Helmet Decoy",
+      "description": "Talking Helmet Decoy supports weapon-rack hazards, shield-wall bypassing, noisy forge suppression, and tactical loot denial.",
+      "traits": [
+        "decoy",
+        "helmet",
+        "voice"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The helmet claims to be a promotion inspector.",
+            "trace_kind": "goblin_distract"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Talking Helmet Decoy breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "rack_snare_1",
+      "pos": [
+        2,
+        1
+      ],
+      "category": "hazard",
+      "name": "Rack Snare",
+      "description": "Rack Snare supports weapon-rack hazards, shield-wall bypassing, noisy forge suppression, and tactical loot denial.",
+      "traits": [
+        "rack",
+        "trap",
+        "weapons"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The ogre turns a spear rack into a hallway argument.",
+            "trace_kind": "goblin_rig_trap"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "monster_status",
+            "role": "dwarf_sentry",
+            "status": "delayed"
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Rack Snare breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "dwarf_coin_roll",
+    "chest_2": "healing_draught",
+    "chest_3": "coin_cache"
+  },
+  "scripts": {
+    "heist": "steal_anvil_plan",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
+    "tier": "medium",
+    "coordination_contract": "combat-adjacent heist where the ogre opens lanes while stealth roles prevent the alarm from compounding"
+  },
+  "achievements": [
+    {
+      "id": "rustsprocket_armory_medium_quiet_toolwork",
+      "title": "Quiet Toolwork",
+      "description": "Resolve a mechanism or alarm feature in Rustsprocket Armory medium without turning the run into a brawl.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_sabotage"
+      }
+    },
+    {
+      "id": "rustsprocket_armory_medium_mischief_coordination",
+      "title": "Mischief Coordination",
+      "description": "Create a distraction or trap setup that opens the Rustsprocket Armory route.",
+      "reward": 0.12,
+      "condition": {
+        "type": "any_trace_kind_happened",
+        "kinds": [
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "rustsprocket_armory_medium_snack_tax",
+      "title": "Snack Tax With Interest",
+      "description": "Take optional loot while still completing the medium heist.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "optional_loot",
+        "count": 1
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_sentry_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_shieldbearer_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_shieldbearer_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 6,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_crossbow_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 6,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_runekeeper_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 5,
+        "patrol_role": "watch_lane"
+      }
+    }
+  },
+  "torch": 22
+}

@@ -48,12 +48,17 @@ def validate_dungeons(
 
 
 def _hero_counts_for_quest(env: DungeonGridEnvironment, quest_id: str) -> tuple[int, ...]:
-    if quest_id.startswith("base:"):
+    if _is_tiered_quest_id(quest_id):
         data = env.grid.load_quest_data(quest_id)
         intended = data.get("metadata", {}).get("intended_num_heroes")
         if intended:
             return (int(intended),)
     return (1, 2, 3, 4)
+
+
+def _is_tiered_quest_id(quest_id: str) -> bool:
+    parts = quest_id.split(":")
+    return len(parts) == 3 and parts[2] in {"pico", "lite", "medium", "heavy"}
 
 
 def main() -> None:
@@ -66,12 +71,12 @@ def main() -> None:
     parser.add_argument(
         "--include-tiered",
         action="store_true",
-        help="Also validate tiered base expansion quests.",
+        help="Also validate tiered expansion quests.",
     )
     parser.add_argument(
         "--tiered-only",
         action="store_true",
-        help="Validate only tiered base expansion quests.",
+        help="Validate only tiered expansion quests.",
     )
     args = parser.parse_args()
     result = validate_dungeons(

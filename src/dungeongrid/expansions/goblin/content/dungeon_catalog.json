@@ -1,0 +1,138 @@
+{
+  "id": "goblin_second_wave_catalog",
+  "title": "Goblin Mode Dungeon Catalog: Second Wave",
+  "families": [
+    {
+      "id": "mushroom_sluice",
+      "title": "Mushroom Sluice",
+      "objective": "sluice_clapper_key",
+      "focus": "crawl-space scouting, valve timing, wet-noise masking, and split-lane extraction",
+      "coordination": "two-front infiltration with a timed valve route and a noisy fallback route",
+      "goblin_aesthetic": "glowing mushrooms, waxed grates, wet rope, stolen crumbs, and ankle-deep dwarven runoff",
+      "tiers": [
+        "pico",
+        "lite",
+        "medium",
+        "heavy"
+      ]
+    },
+    {
+      "id": "beardglass_lampworks",
+      "title": "Beardglass Lampworks",
+      "objective": "ember_lens",
+      "focus": "light-cone avoidance, rune-lamp sabotage, mirror-route handoffs, and synchronized scouting",
+      "coordination": "visibility puzzle with optional alarms that reward simultaneous lamp sabotage and distraction",
+      "goblin_aesthetic": "brass lanterns, soot-black mirrors, stolen wick wax, purple boggart shadows, and dwarf beardglass prisms",
+      "tiers": [
+        "pico",
+        "lite",
+        "medium",
+        "heavy"
+      ]
+    },
+    {
+      "id": "coalwhisper_kitchens",
+      "title": "Coalwhisper Kitchens",
+      "objective": "feast_ledger",
+      "focus": "food distractions, greasy route control, pantry looting, and quiet passage through crowded service rooms",
+      "coordination": "route-deception heist where the boggart and ogre can buy time for a scout-led objective grab",
+      "goblin_aesthetic": "stolen cheese, soot pots, mushroom gravy, clattering copper, and goblin snack-tax nonsense",
+      "tiers": [
+        "pico",
+        "lite",
+        "medium",
+        "heavy"
+      ]
+    },
+    {
+      "id": "tinwhistle_lockhouse",
+      "title": "Tinwhistle Lockhouse",
+      "objective": "master_keyring",
+      "focus": "door timing, key routing, fake prisoner noises, and divided jail corridors",
+      "coordination": "split party lock puzzle with scout information, kobold mechanisms, boggart decoys, and ogre body-blocking",
+      "goblin_aesthetic": "ringing keyhooks, low cell doors, stolen lock oil, goblin chalk marks, and whispering jail vents",
+      "tiers": [
+        "pico",
+        "lite",
+        "medium",
+        "heavy"
+      ]
+    },
+    {
+      "id": "underbell_belfry",
+      "title": "Underbell Belfry",
+      "objective": "quiet_clapper",
+      "focus": "alarm suppression, rope cutting, vertical chokepoints, and synchronized bell silencing",
+      "coordination": "alarm gauntlet where each role controls one failure mode: scouting, silence, blocking, or misdirection",
+      "goblin_aesthetic": "huge under-mountain bells, frayed ropes, mushroom wax, goblin knots, and purple false echoes",
+      "tiers": [
+        "pico",
+        "lite",
+        "medium",
+        "heavy"
+      ]
+    },
+    {
+      "id": "slagpump_works",
+      "title": "Slagpump Works",
+      "objective": "pump_master_crank",
+      "focus": "machine noise, rotating valves, steam cover, and delayed defender response",
+      "coordination": "industrial timing puzzle where the kobold changes state, scout scouts, boggart redirects, and ogre blocks steam lanes",
+      "goblin_aesthetic": "slag pipes, hot rivets, wet stone, goblin soot handprints, and stolen pump grease",
+      "tiers": [
+        "pico",
+        "lite",
+        "medium",
+        "heavy"
+      ]
+    },
+    {
+      "id": "rustsprocket_armory",
+      "title": "Rustsprocket Armory",
+      "objective": "anvil_plan",
+      "focus": "weapon-rack hazards, shield-wall bypassing, noisy forge suppression, and tactical loot denial",
+      "coordination": "combat-adjacent heist where the ogre opens lanes while stealth roles prevent the alarm from compounding",
+      "goblin_aesthetic": "stolen bolts, goblin dents in polished shields, oily forge smoke, and racks of dwarf-sized inconvenience",
+      "tiers": [
+        "pico",
+        "lite",
+        "medium",
+        "heavy"
+      ]
+    },
+    {
+      "id": "rookery_cipher_nest",
+      "title": "Rookery Cipher Nest",
+      "objective": "courier_cipher",
+      "focus": "messenger interception, bird-spook discipline, route concealment, and courier timing",
+      "coordination": "information heist where scout sightlines, boggart decoys, and kobold mechanisms prevent alarm cascades",
+      "goblin_aesthetic": "angry mountain crows, wax seals, stolen quills, goblin feather cloaks, and purple whisper charms",
+      "tiers": [
+        "pico",
+        "lite",
+        "medium",
+        "heavy"
+      ]
+    },
+    {
+      "id": "nine_nails_treasury",
+      "title": "Nine-Nails Treasury",
+      "objective": "nail_crown_relic",
+      "focus": "vault locks, pressure plates, decoy loot, exact extraction timing, and multi-role trap discipline",
+      "coordination": "capstone stealth-heist with simultaneous switches, decoys, optional loot, and a dangerous extraction route",
+      "goblin_aesthetic": "brass nail crowns, tiny goblin lock picks, cursed purple coin smoke, mushroom wax seals, and too many shiny things",
+      "tiers": [
+        "pico",
+        "lite",
+        "medium",
+        "heavy"
+      ]
+    }
+  ],
+  "design_principles": [
+    "Use dwarven defenders as organized pressure, not lethal targets.",
+    "Make the best lines require multi-agent information sharing and timing.",
+    "Prefer sneak, sabotage, distraction, trap reversal, and route blocking over direct fighting.",
+    "Let optional loot tempt agents into noisy or greedy failures."
+  ]
+}

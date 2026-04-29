@@ -61,6 +61,11 @@
     "classic_dynamic_extraction_hook": "coordinate extraction once the objective is secured",
     "size_tier": "lite",
     "intended_num_heroes": 2,
+    "eval_contract": {
+      "max_steps": 400,
+      "step_unit": "active_actor_turn",
+      "basis": "temporary gpt-4.1-mini Lantern par probe cap; not a par claim until LLM completions are observed"
+    },
     "variant_family": "lantern_crypt",
     "maturity": "migration_draft",
     "coordination_skills": [

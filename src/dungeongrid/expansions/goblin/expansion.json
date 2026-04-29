@@ -1,0 +1,19 @@
+{
+  "id": "goblin",
+  "title": "Goblin Mode",
+  "description": "An inverted DungeonGrid expansion where a monster-party raids dwarven holds and defeats defenders by knocking them out.",
+  "version": "0.2.0",
+  "default_game_mode": "goblin",
+  "families": [
+    "ironroot_hold",
+    "mushroom_sluice",
+    "beardglass_lampworks",
+    "coalwhisper_kitchens",
+    "tinwhistle_lockhouse",
+    "underbell_belfry",
+    "slagpump_works",
+    "rustsprocket_armory",
+    "rookery_cipher_nest",
+    "nine_nails_treasury"
+  ]
+}

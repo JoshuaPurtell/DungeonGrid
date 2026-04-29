@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import random
 from collections import deque
 from collections.abc import Iterable
@@ -30,18 +31,32 @@ from .data import (
     Pos,
     Trap,
     default_per_hero_stats,
+    game_mode_from_quest,
 )
 from .message_protocol import configure_message_state, normalize_protocol_config
 
 TIER_ORDER = ("pico", "lite", "medium", "heavy")
 TIER_BY_PARTY_SIZE = {1: "pico", 2: "lite", 3: "medium", 4: "heavy"}
+EXPANSION_CONTENT_FILES = ("monsters.json", "items.json", "terrain.json", "assets.json")
 
 
 class GridEngine:
     """Loads quests, parses ASCII grids, computes visibility, and renders maps."""
 
-    def __init__(self, quest_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        quest_dir: str | Path | None = None,
+        expansion_paths: Iterable[str | Path] | None = None,
+    ) -> None:
         self.quest_dir = Path(quest_dir) if quest_dir else None
+        self.expansion_paths = tuple(
+            Path(path).expanduser()
+            for path in (
+                expansion_paths
+                if expansion_paths is not None
+                else self._expansion_paths_from_env()
+            )
+        )
 
     def available_quests(self, *, include_tiered: bool = False) -> list[str]:
         if self.quest_dir:
@@ -57,22 +72,24 @@ class GridEngine:
         return quest_ids
 
     def available_tiered_quests(self) -> list[str]:
-        """Return bundled tiered base expansion quest ids."""
+        """Return bundled and externally-mounted tiered expansion quest ids."""
         if self.quest_dir:
             return []
-        base = resources.files("dungeongrid").joinpath("expansions", "base", "dungeons")
-        try:
-            if not base.is_dir():
-                return []
-            return sorted(
-                f"base:{family.name}:{tier}"
-                for family in base.iterdir()
-                if family.is_dir()
-                for tier in TIER_ORDER
-                if family.joinpath(tier, "quest.json").is_file()
-            )
-        except (FileNotFoundError, ModuleNotFoundError):
-            return []
+        quest_ids: list[str] = []
+        for namespace, layout, root in self._iter_expansion_layouts():
+            try:
+                if not root.is_dir():
+                    continue
+                quest_ids.extend(
+                    f"{namespace}:{family.name}:{tier}"
+                    for family in root.iterdir()
+                    if family.is_dir()
+                    for tier in TIER_ORDER
+                    if family.joinpath(tier, "quest.json").is_file()
+                )
+            except (FileNotFoundError, ModuleNotFoundError):
+                continue
+        return sorted(set(quest_ids))
 
     def load_quest_data(self, quest_id: str) -> dict[str, Any]:
         quest_id = self._canonical_quest_id(quest_id)
@@ -82,15 +99,24 @@ class GridEngine:
                 raise FileNotFoundError(f"Quest not found: {quest_id}")
             return json.loads(path.read_text(encoding="utf-8"))
         if self._is_tiered_quest_id(quest_id):
-            _, family, tier = quest_id.split(":", 2)
+            namespace, family, tier = quest_id.split(":", 2)
             try:
-                text = (
-                    resources.files("dungeongrid")
-                    .joinpath("expansions", "base", "dungeons", family, tier, "quest.json")
-                    .read_text(encoding="utf-8")
-                )
+                expansion_root, family_root = self._tiered_family_root(namespace, family)
+                text = family_root.joinpath(tier, "quest.json").read_text(encoding="utf-8")
                 data = json.loads(text)
+                family_manifest = family_root.joinpath("family.json")
+                if family_manifest.is_file():
+                    family_data = json.loads(family_manifest.read_text(encoding="utf-8"))
+                    data = self._merge_family_quest(
+                        family_data=family_data,
+                        quest=data,
+                        quest_id=quest_id,
+                        namespace=namespace,
+                        family=family,
+                        tier=tier,
+                    )
                 data["quest_id"] = quest_id
+                self._attach_expansion_content(data, namespace, expansion_root)
                 return data
             except FileNotFoundError as exc:
                 raise FileNotFoundError(f"Quest not found: {quest_id}") from exc
@@ -116,6 +142,8 @@ class GridEngine:
         rng = random.Random(seed)
         quest_id = self._canonical_quest_id(quest_id, num_heroes=num_heroes)
         data = self.load_quest_data(quest_id)
+        self._validate_party_size(data, quest_id=quest_id, num_heroes=num_heroes)
+        mode = game_mode_from_quest(data)
         resolved_ruleset = self._resolve_ruleset(data, ruleset)
         ascii_map = data["map"]["ascii"]
         lines = [line.rstrip("\n") for line in ascii_map.strip("\n").splitlines()]
@@ -140,6 +168,7 @@ class GridEngine:
         monster_activation = data.get("monster_activation", {})
         default_activation = str(monster_activation.get("default", "dormant"))
         default_wake_on = str(monster_activation.get("wake_on", "room_revealed"))
+        monster_glyphs, monster_types = self._monster_content(data)
 
         for y, line in enumerate(lines):
             row: list[str] = []
@@ -174,12 +203,12 @@ class GridEngine:
                 elif char == "I":
                     row.append(".")
                     objective_pos = pos
-                elif char in MONSTER_GLYPHS:
+                elif char in monster_glyphs:
                     row.append(".")
-                    role = MONSTER_GLYPHS[char]
+                    role = monster_glyphs[char]
                     monster_counts[role] = monster_counts.get(role, 0) + 1
                     monster_id = f"{role}_{monster_counts[role]}"
-                    spec = MONSTER_TYPES[role]
+                    spec = monster_types[role]
                     monster = Entity(
                         id=monster_id,
                         team="dungeon",
@@ -195,7 +224,11 @@ class GridEngine:
                         sight_range=int(spec.get("sight_range", 6)),
                         activation=str(spec.get("activation", default_activation)),
                         wake_on=str(spec.get("wake_on", default_wake_on)),
-                        equipment={key: spec[key] for key in ("attack_range",) if key in spec},
+                        equipment={
+                            key: spec[key]
+                            for key in ("attack_range", "render_glyph")
+                            if key in spec
+                        },
                     )
                     self._apply_monster_override(monster, data.get("monster_overrides", {}))
                     self._apply_boss_config(monster, data.get("bosses", {}))
@@ -345,6 +378,7 @@ class GridEngine:
             },
             social_metrics=self._initial_social_metrics(heroes),
             communication_protocol=protocol_config,
+            mode=mode,
             torch=int(data.get("torch", 20)),
         )
         configure_message_state(state, protocol_config)
@@ -362,11 +396,15 @@ class GridEngine:
             return quest_id
         if self._is_tiered_quest_id(quest_id):
             return quest_id
-        tiered_families = self._tiered_families()
+        tiered_families = self._tiered_families("base")
         if quest_id.count(":") == 1:
-            family, tier = quest_id.split(":", 1)
-            if family in tiered_families and tier in TIER_ORDER:
-                return f"base:{family}:{tier}"
+            left, right = quest_id.split(":", 1)
+            namespaces = self._tiered_namespaces()
+            if left in namespaces and right in self._tiered_families(left):
+                if num_heroes in TIER_BY_PARTY_SIZE:
+                    return f"{left}:{right}:{TIER_BY_PARTY_SIZE[int(num_heroes)]}"
+            if left in tiered_families and right in TIER_ORDER:
+                return f"base:{left}:{right}"
         if quest_id.endswith("_lite"):
             family = quest_id.removesuffix("_lite")
             if family in tiered_families:
@@ -375,13 +413,224 @@ class GridEngine:
             return f"base:{quest_id}:{TIER_BY_PARTY_SIZE[int(num_heroes)]}"
         return quest_id
 
-    def _tiered_families(self) -> set[str]:
-        return {quest_id.split(":", 2)[1] for quest_id in self.available_tiered_quests()}
+    def _tiered_families(self, namespace: str) -> set[str]:
+        return {
+            family
+            for quest_id in self.available_tiered_quests()
+            for ns, family, _tier in [quest_id.split(":", 2)]
+            if ns == namespace
+        }
+
+    def _tiered_namespaces(self) -> set[str]:
+        return {quest_id.split(":", 1)[0] for quest_id in self.available_tiered_quests()}
+
+    def _is_tiered_quest_id(self, quest_id: str) -> bool:
+        parts = quest_id.split(":")
+        if len(parts) != 3 or parts[2] not in TIER_ORDER:
+            return False
+        return parts[0] in self._tiered_namespaces() or parts[0] == "base"
+
+    def _iter_expansion_layouts(self) -> Iterable[tuple[str, str, Any]]:
+        try:
+            bundled_root = resources.files("dungeongrid").joinpath("expansions")
+            if bundled_root.is_dir():
+                for expansion_root in bundled_root.iterdir():
+                    if not expansion_root.is_dir():
+                        continue
+                    layout = self._expansion_layout(expansion_root)
+                    if layout:
+                        yield (
+                            self._expansion_namespace(expansion_root),
+                            layout,
+                            expansion_root.joinpath(layout),
+                        )
+        except (FileNotFoundError, ModuleNotFoundError):
+            pass
+        for namespace, root in self._iter_external_expansion_roots():
+            layout = self._expansion_layout(root)
+            if layout:
+                yield namespace, layout, root / layout
+
+    def _tiered_family_root(self, namespace: str, family: str) -> tuple[Any, Any]:
+        for current_namespace, _layout, family_root in self._iter_expansion_layouts():
+            if current_namespace != namespace:
+                continue
+            root = family_root.joinpath(family)
+            if root.joinpath("pico", "quest.json").is_file() or root.is_dir():
+                return family_root.parent, root
+        raise FileNotFoundError(f"Quest family not found: {namespace}:{family}")
+
+    def _merge_family_quest(
+        self,
+        *,
+        family_data: dict[str, Any],
+        quest: dict[str, Any],
+        quest_id: str,
+        namespace: str,
+        family: str,
+        tier: str,
+    ) -> dict[str, Any]:
+        data = self._deep_merge(dict(family_data.get("defaults", {})), dict(quest))
+        data["quest_id"] = quest_id
+        data.setdefault("title", family_data.get("title", quest_id))
+        metadata = self._deep_merge(dict(family_data.get("metadata", {})), data.get("metadata", {}))
+        metadata.update(
+            {
+                "expansion": namespace,
+                "variant_family": family,
+                "size_tier": tier,
+                "canonical_quest_id": quest_id,
+            }
+        )
+        data["metadata"] = metadata
+        for key in ("catalog", "warden_runbook", "role_demand_vocabulary"):
+            if family_data.get(key):
+                data.setdefault(key if key != "catalog" else "family_catalog", family_data[key])
+        for key in ("scripts", "decks", "hero_loadouts"):
+            data[key] = self._deep_merge(dict(family_data.get(key, {})), data.get(key, {}))
+        shared_achievements = list(family_data.get("shared_achievements", []))
+        if shared_achievements:
+            seen: set[str] = set()
+            achievements: list[dict[str, Any]] = []
+            for raw in [*shared_achievements, *data.get("achievements", [])]:
+                if not isinstance(raw, dict):
+                    continue
+                achievement_id = str(raw.get("id", ""))
+                if not achievement_id or achievement_id in seen:
+                    continue
+                seen.add(achievement_id)
+                achievements.append(dict(raw))
+            data["achievements"] = achievements
+        return data
+
+    def _deep_merge(self, base: dict[str, Any], update: dict[str, Any]) -> dict[str, Any]:
+        merged = dict(base)
+        for key, value in update.items():
+            if isinstance(value, dict) and isinstance(merged.get(key), dict):
+                merged[key] = self._deep_merge(dict(merged[key]), value)
+            else:
+                merged[key] = value
+        return merged
+
+    def _iter_external_expansion_roots(self) -> Iterable[tuple[str, Path]]:
+        seen: set[Path] = set()
+        for path in self.expansion_paths:
+            if not path.exists():
+                continue
+            candidates = [path] if self._expansion_layout(path) else []
+            candidates.extend(
+                child
+                for child in sorted(path.iterdir())
+                if child.is_dir() and self._expansion_layout(child)
+            )
+            for candidate in candidates:
+                resolved = candidate.resolve()
+                if resolved in seen:
+                    continue
+                seen.add(resolved)
+                yield self._expansion_namespace(candidate), candidate
 
     @staticmethod
-    def _is_tiered_quest_id(quest_id: str) -> bool:
-        parts = quest_id.split(":")
-        return len(parts) == 3 and parts[0] == "base" and parts[2] in TIER_ORDER
+    def _expansion_paths_from_env() -> tuple[Path, ...]:
+        raw = os.environ.get("DUNGEONGRID_EXPANSION_PATHS", "")
+        return tuple(Path(part) for part in raw.split(os.pathsep) if part)
+
+    @staticmethod
+    def _expansion_layout(root: Path) -> str | None:
+        for layout in ("dungeons", "missions"):
+            if root.joinpath(layout).is_dir():
+                return layout
+        return None
+
+    @staticmethod
+    def _expansion_namespace(root: Path) -> str:
+        for filename in ("manifest.json", "expansion.json"):
+            path = root / filename
+            if not path.is_file():
+                continue
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                continue
+            namespace = data.get("namespace") or data.get("id")
+            if namespace:
+                return str(namespace)
+        return root.name
+
+    def _attach_expansion_content(
+        self, data: dict[str, Any], namespace: str, expansion_root: Any
+    ) -> None:
+        if namespace == "base":
+            return
+        content: dict[str, Any] = {}
+        for filename in EXPANSION_CONTENT_FILES:
+            try:
+                resource = expansion_root.joinpath("content", filename)
+                if not resource.is_file():
+                    resource = expansion_root.joinpath(filename)
+                if resource.is_file():
+                    content[filename.removesuffix(".json")] = json.loads(
+                        resource.read_text(encoding="utf-8")
+                    )
+            except FileNotFoundError:
+                continue
+        data["_expansion_namespace"] = namespace
+        if content:
+            data["_expansion_content"] = content
+            self._register_expansion_monsters(namespace, content.get("monsters", []))
+
+    def _monster_content(self, data: dict[str, Any]) -> tuple[dict[str, str], dict[str, dict[str, Any]]]:
+        monster_glyphs = dict(MONSTER_GLYPHS)
+        monster_types = {role: dict(spec) for role, spec in MONSTER_TYPES.items()}
+        namespace = str(data.get("_expansion_namespace", ""))
+        monsters = data.get("_expansion_content", {}).get("monsters", [])
+        if isinstance(monsters, list):
+            for raw in monsters:
+                if not isinstance(raw, dict) or not raw.get("id"):
+                    continue
+                role = self._namespaced_content_id(namespace, str(raw["id"]))
+                spec = self._monster_spec_from_expansion(raw)
+                monster_types[role] = spec
+                if raw.get("glyph"):
+                    monster_glyphs[str(raw["glyph"])] = role
+        return monster_glyphs, monster_types
+
+    def _register_expansion_monsters(self, namespace: str, monsters: Any) -> None:
+        if not isinstance(monsters, list):
+            return
+        for raw in monsters:
+            if not isinstance(raw, dict) or not raw.get("id"):
+                continue
+            role = self._namespaced_content_id(namespace, str(raw["id"]))
+            spec = self._monster_spec_from_expansion(raw)
+            MONSTER_TYPES[role] = spec
+            if raw.get("glyph"):
+                MONSTER_GLYPHS[str(raw["glyph"])] = role
+            if spec.get("render_glyph"):
+                MONSTER_RENDER_GLYPHS[role] = str(spec["render_glyph"])
+
+    @staticmethod
+    def _namespaced_content_id(namespace: str, content_id: str) -> str:
+        if not namespace or "." in content_id:
+            return content_id
+        return f"{namespace}.{content_id}"
+
+    @staticmethod
+    def _monster_spec_from_expansion(raw: dict[str, Any]) -> dict[str, Any]:
+        spec: dict[str, Any] = {
+            "hp": int(raw.get("hp", 1)),
+            "attack": int(raw.get("attack", 1)),
+            "guard": int(raw.get("guard", 0)),
+            "speed": int(raw.get("speed", 3)),
+            "behavior": str(raw.get("behavior", "guard")),
+        }
+        for key in ("sight_range", "attack_range"):
+            if raw.get(key) is not None:
+                spec[key] = int(raw[key])
+        for key in ("activation", "wake_on", "render_glyph"):
+            if raw.get(key) is not None:
+                spec[key] = str(raw[key])
+        return spec
 
     def _resolve_ruleset(
         self, data: dict[str, Any], ruleset: str | dict[str, Any] | None
@@ -432,6 +681,22 @@ class GridEngine:
                     break
         self._validate_roles(data, roles, num_heroes, apply_requirements=apply_requirements)
         return roles[:num_heroes]
+
+    def _validate_party_size(
+        self, data: dict[str, Any], *, quest_id: str, num_heroes: int
+    ) -> None:
+        if num_heroes < 1:
+            raise ValueError("num_heroes must be at least 1")
+        min_heroes = int(data.get("min_heroes", 1))
+        max_heroes = data.get("max_heroes")
+        if num_heroes < min_heroes:
+            raise ValueError(
+                f"Quest {quest_id!r} requires at least {min_heroes} heroes; got {num_heroes}"
+            )
+        if max_heroes is not None and num_heroes > int(max_heroes):
+            raise ValueError(
+                f"Quest {quest_id!r} supports at most {int(max_heroes)} heroes; got {num_heroes}"
+            )
 
     def _validate_roles(
         self, data: dict[str, Any], roles: list[str], num_heroes: int, *, apply_requirements: bool
@@ -839,10 +1104,12 @@ class GridEngine:
         ent = state.entity_at(pos)
         if ent:
             if ent.team == "heroes":
-                return HERO_GLYPHS.get(ent.id, ROLE_GLYPHS.get(ent.role, "@"))
+                return state.mode.glyph_for(team=ent.team, role=ent.role, entity_id=ent.id)
             if agent_id != "warden" and ent.activation == "dormant":
                 return "." if self.terrain_at(state, pos) == "." else "#"
-            return MONSTER_RENDER_GLYPHS.get(ent.role, "m")
+            if ent.equipment.get("render_glyph"):
+                return str(ent.equipment["render_glyph"])
+            return state.mode.glyph_for(team=ent.team, role=ent.role, entity_id=ent.id)
         if (
             state.objective.pos == pos
             and state.objective.carrier is None

@@ -1,0 +1,59 @@
+{
+  "party_roles": {
+    "goblin_scout": {
+      "display_name": "Goblin Scout",
+      "archetype": "skirmisher",
+      "glyph": "G",
+      "summary": "Fast opener, scout, and ranged harasser with sling stones."
+    },
+    "ogre_bruiser": {
+      "display_name": "Ogre Bruiser",
+      "archetype": "frontline",
+      "glyph": "O",
+      "summary": "Slow but durable club carrier for shield walls and boss pressure."
+    },
+    "kobold_tinkerer": {
+      "display_name": "Kobold Tinkerer",
+      "archetype": "hazard_specialist",
+      "glyph": "K",
+      "summary": "Trap kit specialist who keeps the goblin crew from wasting turns on dwarven mechanisms."
+    },
+    "boggart_trickster": {
+      "display_name": "Boggart Trickster",
+      "archetype": "controller",
+      "glyph": "B",
+      "summary": "Eerie support raider whose charm and hook sell the mischievous monster-hero fantasy."
+    }
+  },
+  "opponent_roles": {
+    "dwarf_sentry": {
+      "display_name": "Dwarf Sentry",
+      "glyph": "d",
+      "summary": "Basic dwarven guard."
+    },
+    "dwarf_shieldbearer": {
+      "display_name": "Dwarf Shieldbearer",
+      "glyph": "s",
+      "summary": "Blocker with high guard."
+    },
+    "dwarf_crossbow": {
+      "display_name": "Dwarf Crossbow",
+      "glyph": "c",
+      "summary": "Ranged defender with long sight lines."
+    },
+    "dwarf_runekeeper": {
+      "display_name": "Dwarf Runekeeper",
+      "glyph": "r",
+      "summary": "Rune-lit support defender."
+    },
+    "dwarf_warden": {
+      "display_name": "Dwarf Warden",
+      "glyph": "v",
+      "summary": "Elite objective guardian."
+    }
+  },
+  "defeat_semantics": {
+    "dungeon_team_zero_hp": "knocked_out",
+    "narration": "Dwarven defenders reduced to 0 HP are knocked out, not killed."
+  }
+}

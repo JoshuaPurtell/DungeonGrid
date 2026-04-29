@@ -8,6 +8,218 @@ from typing import Any, Literal
 Pos = tuple[int, int]
 Team = Literal["heroes", "dungeon"]
 
+
+@dataclass(slots=True)
+class GameModeSpec:
+    """Presentation and semantic mode for a DungeonGrid quest.
+
+    ``ruleset`` still controls mechanics such as classic_dynamic movement and
+    major actions.  ``GameModeSpec`` controls which side the player party is,
+    how roles are named/rendered, and what zero-HP means in narration.
+    """
+
+    id: str = "classic"
+    party_label: str = "heroes"
+    opponent_label: str = "monsters"
+    party_collective: str = "party"
+    opponent_collective: str = "dungeon"
+    party_defeat_status: str = "downed"
+    party_defeat_text: str = "{role} is downed."
+    opponent_defeat_status: str = "defeated"
+    opponent_defeat_text: str = "{role} is defeated."
+    role_display_names: dict[str, str] = field(default_factory=dict)
+    party_glyphs: dict[str, str] = field(default_factory=dict)
+    opponent_glyphs: dict[str, str] = field(default_factory=dict)
+    legend: str = (
+        "B/W/E/D heroes, g/b/k/r/w/p/n/m/f/y/h monsters, D closed door, / open door, "
+        "C chest, A/a/d/v/l/s/$/f furniture, T revealed trap, I objective, E exit."
+    )
+    quest_brief_template: str = (
+        "Quest brief: recover the {item_name} from the dungeon, then bring the carrier "
+        "back to the escape tile at {escape_tile}. Explore unopened doors and unrevealed "
+        "rooms until the objective glyph I is visible."
+    )
+
+    def display_role(self, role: str) -> str:
+        return self.role_display_names.get(role, _humanize_role(role))
+
+    def team_label(self, team: Team) -> str:
+        return self.party_label if team == "heroes" else self.opponent_label
+
+    def glyph_for(self, *, team: Team, role: str, entity_id: str | None = None) -> str:
+        if team == "heroes":
+            return self.party_glyphs.get(role, ROLE_GLYPHS.get(role, HERO_GLYPHS.get(entity_id or "", "@")))
+        return self.opponent_glyphs.get(role, MONSTER_RENDER_GLYPHS.get(role, "m"))
+
+    def defeat_status_for(self, team: Team) -> str:
+        return self.party_defeat_status if team == "heroes" else self.opponent_defeat_status
+
+    def defeat_text_for(self, *, team: Team, role: str) -> str:
+        template = self.party_defeat_text if team == "heroes" else self.opponent_defeat_text
+        return template.format(role=self.display_role(role), raw_role=role)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "party_label": self.party_label,
+            "opponent_label": self.opponent_label,
+            "party_collective": self.party_collective,
+            "opponent_collective": self.opponent_collective,
+            "party_defeat_status": self.party_defeat_status,
+            "opponent_defeat_status": self.opponent_defeat_status,
+            "role_display_names": dict(self.role_display_names),
+            "party_glyphs": dict(self.party_glyphs),
+            "opponent_glyphs": dict(self.opponent_glyphs),
+            "legend": self.legend,
+            "quest_brief_template": self.quest_brief_template,
+        }
+
+
+def _humanize_role(value: str) -> str:
+    return str(value).replace("_", " ").strip().title() or "Unknown"
+
+
+def _deep_merge_dicts(base: dict[str, Any], update: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(base)
+    for key, value in update.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge_dicts(dict(merged[key]), value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def _game_mode_presets() -> dict[str, dict[str, Any]]:
+    return {
+        "classic": {
+            "id": "classic",
+            "party_label": "heroes",
+            "opponent_label": "monsters",
+            "party_collective": "party",
+            "opponent_collective": "dungeon",
+            "party_defeat_status": "downed",
+            "party_defeat_text": "{role} is downed.",
+            "opponent_defeat_status": "defeated",
+            "opponent_defeat_text": "{role} is defeated.",
+            "role_display_names": {
+                "barbarian": "Barbarian",
+                "wizard": "Wizard",
+                "elf": "Elf",
+                "dwarf": "Dwarf",
+            },
+            "party_glyphs": {
+                "barbarian": "B",
+                "wizard": "W",
+                "elf": "E",
+                "dwarf": "D",
+            },
+            "opponent_glyphs": {},
+            "legend": (
+                "B/W/E/D heroes, g/b/k/r/w/p/n/m/f/y/h monsters, D closed door, / open door, "
+                "C chest, A/a/d/v/l/s/$/f furniture, T revealed trap, I objective, E exit."
+            ),
+            "quest_brief_template": (
+                "Quest brief: recover the {item_name} from the dungeon, then bring the carrier "
+                "back to the escape tile at {escape_tile}. Explore unopened doors and unrevealed "
+                "rooms until the objective glyph I is visible."
+            ),
+        },
+        "goblin": {
+            "id": "goblin",
+            "party_label": "raiders",
+            "opponent_label": "dwarven defenders",
+            "party_collective": "goblin crew",
+            "opponent_collective": "hold defenders",
+            "party_defeat_status": "downed",
+            "party_defeat_text": "{role} is downed.",
+            "opponent_defeat_status": "knocked_out",
+            "opponent_defeat_text": "{role} is knocked out.",
+            "role_display_names": {
+                "goblin_scout": "Goblin Scout",
+                "ogre_bruiser": "Ogre Bruiser",
+                "kobold_tinkerer": "Kobold Tinkerer",
+                "boggart_trickster": "Boggart Trickster",
+                "dwarf_sentry": "Dwarf Sentry",
+                "dwarf_shieldbearer": "Dwarf Shieldbearer",
+                "dwarf_crossbow": "Dwarf Crossbow",
+                "dwarf_runekeeper": "Dwarf Runekeeper",
+                "dwarf_warden": "Dwarf Warden",
+            },
+            "party_glyphs": {
+                "goblin_scout": "G",
+                "ogre_bruiser": "O",
+                "kobold_tinkerer": "K",
+                "boggart_trickster": "B",
+            },
+            "opponent_glyphs": {
+                "dwarf_sentry": "d",
+                "dwarf_shieldbearer": "s",
+                "dwarf_crossbow": "c",
+                "dwarf_runekeeper": "r",
+                "dwarf_warden": "v",
+            },
+            "legend": (
+                "G/O/K/B raiders, d/s/c/r/v dwarven defenders, D closed door, / open door, "
+                "C chest, A/a/d/v/l/s/$/f furniture, T revealed trap, I objective, E exit. "
+                "Dwarves reduced to 0 HP are knocked out, not killed."
+            ),
+            "quest_brief_template": (
+                "Quest brief: raid the dwarven hold, recover the {item_name}, and bring the carrier "
+                "back to the escape tile at {escape_tile}. Dwarven defenders are knocked out at 0 HP; "
+                "avoid lethal language and keep the run playable as an inverted dungeon crawl."
+            ),
+        },
+    }
+
+
+def classic_game_mode() -> GameModeSpec:
+    return game_mode_from_mapping({"id": "classic"})
+
+
+def game_mode_from_mapping(raw: dict[str, Any] | str | None) -> GameModeSpec:
+    if isinstance(raw, str):
+        raw_data: dict[str, Any] = {"id": raw}
+    elif isinstance(raw, dict):
+        raw_data = dict(raw)
+    else:
+        raw_data = {}
+    mode_id = str(raw_data.get("id") or raw_data.get("mode") or "classic")
+    presets = _game_mode_presets()
+    preset = presets.get(mode_id, presets["classic"])
+    merged = _deep_merge_dicts(dict(preset), raw_data)
+    glyphs = merged.get("glyphs") if isinstance(merged.get("glyphs"), dict) else {}
+    party_glyphs = _deep_merge_dicts(
+        dict(merged.get("party_glyphs", {})), dict(glyphs.get("party", {}))
+    )
+    opponent_glyphs = _deep_merge_dicts(
+        dict(merged.get("opponent_glyphs", {})),
+        dict(glyphs.get("opponents", glyphs.get("dungeon", {}))),
+    )
+    return GameModeSpec(
+        id=str(merged.get("id", mode_id)),
+        party_label=str(merged.get("party_label", "heroes")),
+        opponent_label=str(merged.get("opponent_label", "monsters")),
+        party_collective=str(merged.get("party_collective", "party")),
+        opponent_collective=str(merged.get("opponent_collective", "dungeon")),
+        party_defeat_status=str(merged.get("party_defeat_status", "downed")),
+        party_defeat_text=str(merged.get("party_defeat_text", "{role} is downed.")),
+        opponent_defeat_status=str(merged.get("opponent_defeat_status", "defeated")),
+        opponent_defeat_text=str(merged.get("opponent_defeat_text", "{role} is defeated.")),
+        role_display_names=dict(merged.get("role_display_names", {})),
+        party_glyphs=party_glyphs,
+        opponent_glyphs=opponent_glyphs,
+        legend=str(merged.get("legend", "")),
+        quest_brief_template=str(merged.get("quest_brief_template", "")),
+    )
+
+
+def game_mode_from_quest(data: dict[str, Any]) -> GameModeSpec:
+    raw = data.get("game_mode")
+    metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else {}
+    if raw is None:
+        raw = metadata.get("game_mode")
+    return game_mode_from_mapping(raw)
+
 DIRECTIONS: dict[str, Pos] = {
     "north": (0, -1),
     "south": (0, 1),
@@ -181,6 +393,40 @@ WEAPON_ITEMS: dict[str, dict[str, Any]] = {
         "roles": ["barbarian", "elf", "dwarf"],
         "bonus_damage_on_hit": 1,
     },
+    "rusty_dagger": {
+        "name": "Rusty Dagger",
+        "melee_dice": 2,
+        "ranged_dice": 1,
+        "range": 3,
+        "roles": ["goblin_scout", "kobold_tinkerer", "boggart_trickster"],
+    },
+    "sling": {
+        "name": "Sling",
+        "melee_dice": 1,
+        "ranged_dice": 3,
+        "range": 5,
+        "roles": ["goblin_scout"],
+    },
+    "ogre_club": {
+        "name": "Ogre Club",
+        "melee_dice": 5,
+        "range": 1,
+        "roles": ["ogre_bruiser"],
+        "bonus_damage_on_hit": 1,
+    },
+    "wrench_spear": {
+        "name": "Wrench-Spear",
+        "melee_dice": 2,
+        "range": 1,
+        "roles": ["kobold_tinkerer"],
+    },
+    "boggart_hook": {
+        "name": "Boggart Hook",
+        "melee_dice": 2,
+        "ranged_dice": 2,
+        "range": 4,
+        "roles": ["boggart_trickster"],
+    },
 }
 
 ARMOR_ITEMS: dict[str, dict[str, Any]] = {
@@ -300,6 +546,10 @@ HERO_ARCHETYPES: dict[str, dict[str, Any]] = {
     "wizard": {"hp": 5, "speed": 3, "attack": 1, "guard": 1, "focus": 5, "ability": "spark_lance"},
     "elf": {"hp": 6, "speed": 4, "attack": 2, "guard": 2, "focus": 3, "ability": "quick_search"},
     "dwarf": {"hp": 7, "speed": 3, "attack": 2, "guard": 3, "focus": 2, "ability": "trapcraft"},
+    "goblin_scout": {"hp": 4, "speed": 5, "attack": 2, "guard": 1, "focus": 2, "ability": "skulk"},
+    "ogre_bruiser": {"hp": 9, "speed": 2, "attack": 5, "guard": 2, "focus": 1, "ability": "slam"},
+    "kobold_tinkerer": {"hp": 5, "speed": 4, "attack": 2, "guard": 1, "focus": 4, "ability": "trapcraft"},
+    "boggart_trickster": {"hp": 5, "speed": 4, "attack": 2, "guard": 1, "focus": 4, "ability": "trickery"},
 }
 
 MONSTER_TYPES: dict[str, dict[str, Any]] = {
@@ -328,6 +578,27 @@ MONSTER_TYPES: dict[str, dict[str, Any]] = {
     },
     "mirror_adept": {"hp": 2, "attack": 2, "guard": 1, "speed": 3, "behavior": "decoy_trickster"},
     "hollow_knight": {"hp": 3, "attack": 2, "guard": 2, "speed": 2, "behavior": "revive_guard"},
+    "dwarf_sentry": {"hp": 3, "attack": 2, "guard": 1, "speed": 3, "behavior": "hold_room"},
+    "dwarf_shieldbearer": {"hp": 5, "attack": 2, "guard": 3, "speed": 2, "behavior": "hold_chokepoint"},
+    "dwarf_crossbow": {
+        "hp": 3,
+        "attack": 2,
+        "guard": 1,
+        "speed": 2,
+        "behavior": "ranged_alert",
+        "attack_range": 6,
+        "sight_range": 7,
+    },
+    "dwarf_runekeeper": {
+        "hp": 4,
+        "attack": 2,
+        "guard": 2,
+        "speed": 2,
+        "behavior": "ranged_alert",
+        "attack_range": 5,
+        "sight_range": 7,
+    },
+    "dwarf_warden": {"hp": 7, "attack": 3, "guard": 3, "speed": 2, "behavior": "protect_objective"},
 }
 
 MONSTER_GLYPHS = {
@@ -342,6 +613,11 @@ MONSTER_GLYPHS = {
     "F": "cinder_mage",
     "Y": "mirror_adept",
     "H": "hollow_knight",
+    "Q": "dwarf_sentry",
+    "Z": "dwarf_shieldbearer",
+    "X": "dwarf_crossbow",
+    "U": "dwarf_runekeeper",
+    "V": "dwarf_warden",
 }
 
 HERO_GLYPHS = {
@@ -356,6 +632,10 @@ ROLE_GLYPHS = {
     "wizard": "W",
     "elf": "E",
     "dwarf": "D",
+    "goblin_scout": "G",
+    "ogre_bruiser": "O",
+    "kobold_tinkerer": "K",
+    "boggart_trickster": "B",
 }
 
 MONSTER_RENDER_GLYPHS = {
@@ -370,6 +650,11 @@ MONSTER_RENDER_GLYPHS = {
     "cinder_mage": "f",
     "mirror_adept": "y",
     "hollow_knight": "h",
+    "dwarf_sentry": "d",
+    "dwarf_shieldbearer": "s",
+    "dwarf_crossbow": "c",
+    "dwarf_runekeeper": "r",
+    "dwarf_warden": "v",
 }
 
 
@@ -582,6 +867,7 @@ class GameState:
     doors: dict[str, Door]
     traps: dict[str, Trap]
     chests: dict[str, Chest]
+    mode: GameModeSpec = field(default_factory=classic_game_mode)
     furniture: dict[str, Furniture] = field(default_factory=dict)
     rooms: dict[str, Any] = field(default_factory=dict)
     decks: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
@@ -648,6 +934,21 @@ class GameState:
     def all_entities(self) -> dict[str, Entity]:
         return {**self.heroes, **self.monsters}
 
+
+    def defeat_status(self, entity: Entity) -> str:
+        return self.mode.defeat_status_for(entity.team)
+
+    def defeat_message(self, entity: Entity) -> str:
+        return self.mode.defeat_text_for(team=entity.team, role=entity.role)
+
+    def mark_defeated(self, entity: Entity) -> str:
+        entity.alive = False
+        entity.hp = 0
+        status = self.defeat_status(entity)
+        if status and status not in entity.status:
+            entity.status.append(status)
+        return status
+
     def entity_at(self, pos: Pos, alive_only: bool = True) -> Entity | None:
         for ent in self.all_entities().values():
             if ent.pos == pos and (ent.alive or not alive_only):
@@ -684,6 +985,7 @@ class GameState:
             "movement_rolls": dict(self.movement_rolls),
             "major_action_used": dict(self.major_action_used),
             "ruleset": dict(self.ruleset),
+            "game_mode": self.mode.to_dict(),
             "alert": self.alert,
             "dread": self.dread,
             "torch": self.torch,

@@ -1,0 +1,299 @@
+{
+  "quest_id": "goblin:tinwhistle_lockhouse:pico",
+  "title": "Tinwhistle Lockhouse Pico",
+  "min_heroes": 1,
+  "max_heroes": 1,
+  "metadata": {
+    "size_tier": "pico",
+    "intended_num_heroes": 1,
+    "supported_hero_range": [
+      1,
+      1
+    ],
+    "room_count_target": "3",
+    "heist_focus": "door timing, key routing, fake prisoner noises, and divided jail corridors",
+    "coordination_problem": "split party lock puzzle with scout information, kobold mechanisms, boggart decoys, and ogre body-blocking",
+    "goblin_aesthetic": "ringing keyhooks, low cell doors, stolen lock oil, goblin chalk marks, and whispering jail vents"
+  },
+  "map": {
+    "ascii": "#############\n#E.D..Q..I..#\n#..#..X.....#\n#..D........#\n#..#..C.....#\n#...........#\n#############",
+    "width": 13,
+    "height": 7
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "master_keyring",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      9,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_warren": {
+      "name": "Goblin Entry Warren",
+      "rect": [
+        1,
+        1,
+        4,
+        5
+      ],
+      "description": "A cramped goblin approach lined with ringing keyhooks, low cell doors, stolen lock oil, goblin chalk marks, and whispering jail vents.",
+      "tags": [
+        "start",
+        "stealth",
+        "goblin"
+      ]
+    },
+    "mischief_lane": {
+      "name": "Mischief Lane",
+      "rect": [
+        2,
+        1,
+        8,
+        5
+      ],
+      "description": "The main coordination lane for door timing, key routing, fake prisoner noises, and divided jail corridors.",
+      "tags": [
+        "coordination",
+        "sneak",
+        "craft"
+      ]
+    },
+    "objective_hold": {
+      "name": "Master Keyring Post",
+      "rect": [
+        6,
+        1,
+        11,
+        3
+      ],
+      "description": "Lift the master keyring from the lock captain's peg and get out before the whole lockhouse wakes.",
+      "tags": [
+        "objective",
+        "dwarf",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "chalk_shadow_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Goblin Chalk Shadow",
+      "description": "Goblin Chalk Shadow supports door timing, key routing, fake prisoner noises, and divided jail corridors.",
+      "traits": [
+        "shadow",
+        "chalk",
+        "cover"
+      ],
+      "cover": 2,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "A chalk arrow tells the next goblin where not to squeak.",
+            "trace_kind": "goblin_sneak"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Goblin Chalk Shadow breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "key_peg_1",
+      "pos": [
+        4,
+        1
+      ],
+      "category": "mechanism",
+      "name": "Whistling Key Peg",
+      "description": "Whistling Key Peg supports door timing, key routing, fake prisoner noises, and divided jail corridors.",
+      "traits": [
+        "keys",
+        "noise",
+        "mechanism"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The key peg stops whistling and starts lying.",
+            "trace_kind": "goblin_sabotage"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "key_peg_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Whistling Key Peg breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "cell_echo_1",
+      "pos": [
+        1,
+        1
+      ],
+      "category": "decoy",
+      "name": "Cell Echo Vent",
+      "description": "Cell Echo Vent supports door timing, key routing, fake prisoner noises, and divided jail corridors.",
+      "traits": [
+        "decoy",
+        "vent",
+        "voice"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The vent repeats a dwarf-sized complaint in the wrong corridor.",
+            "trace_kind": "goblin_distract"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Cell Echo Vent breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "dwarf_coin_roll"
+  },
+  "scripts": {
+    "heist": "steal_master_keyring",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
+    "tier": "pico",
+    "coordination_contract": "split party lock puzzle with scout information, kobold mechanisms, boggart decoys, and ogre body-blocking"
+  },
+  "achievements": [
+    {
+      "id": "tinwhistle_lockhouse_pico_quiet_toolwork",
+      "title": "Quiet Toolwork",
+      "description": "Resolve a mechanism or alarm feature in Tinwhistle Lockhouse pico without turning the run into a brawl.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_sabotage"
+      }
+    },
+    {
+      "id": "tinwhistle_lockhouse_pico_mischief_coordination",
+      "title": "Mischief Coordination",
+      "description": "Create a distraction or trap setup that opens the Tinwhistle Lockhouse route.",
+      "reward": 0.12,
+      "condition": {
+        "type": "any_trace_kind_happened",
+        "kinds": [
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "tinwhistle_lockhouse_pico_snack_tax",
+      "title": "Snack Tax With Interest",
+      "description": "Take optional loot while still completing the pico heist.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "optional_loot",
+        "count": 1
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "wake_on": "manual",
+      "sight_range": 0,
+      "attack": 0
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "wake_on": "manual",
+      "sight_range": 0,
+      "attack": 0
+    }
+  },
+  "torch": 18
+}

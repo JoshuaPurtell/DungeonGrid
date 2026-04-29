@@ -1,0 +1,426 @@
+{
+  "quest_id": "goblin:mushroom_sluice:medium",
+  "title": "Mushroom Sluice Medium",
+  "min_heroes": 3,
+  "max_heroes": 3,
+  "metadata": {
+    "size_tier": "medium",
+    "intended_num_heroes": 3,
+    "supported_hero_range": [
+      3,
+      3
+    ],
+    "room_count_target": "4",
+    "heist_focus": "crawl-space scouting, valve timing, wet-noise masking, and split-lane extraction",
+    "coordination_problem": "two-front infiltration with a timed valve route and a noisy fallback route",
+    "goblin_aesthetic": "glowing mushrooms, waxed grates, wet rope, stolen crumbs, and ankle-deep dwarven runoff"
+  },
+  "map": {
+    "ascii": "#################\n#E..D.....Q...I.#\n#...#..C..X.....#\n#...#.....###D###\n#...D..Z..#.....#\n#...#.....#..U..#\n#...#..C..D..C..#\n#.....Q.........#\n#################",
+    "width": 17,
+    "height": 9
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      2
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "sluice_clapper_key",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      14,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_warren": {
+      "name": "Goblin Entry Warren",
+      "rect": [
+        1,
+        1,
+        4,
+        7
+      ],
+      "description": "A cramped goblin approach lined with glowing mushrooms, waxed grates, wet rope, stolen crumbs, and ankle-deep dwarven runoff.",
+      "tags": [
+        "start",
+        "stealth",
+        "goblin"
+      ]
+    },
+    "mischief_lane": {
+      "name": "Mischief Lane",
+      "rect": [
+        4,
+        1,
+        10,
+        7
+      ],
+      "description": "The main coordination lane for crawl-space scouting, valve timing, wet-noise masking, and split-lane extraction.",
+      "tags": [
+        "coordination",
+        "sneak",
+        "craft"
+      ]
+    },
+    "objective_hold": {
+      "name": "Sluice Clapper Key Post",
+      "rect": [
+        11,
+        1,
+        15,
+        3
+      ],
+      "description": "Pinch the sluice clapper key before the dwarves can ring the tunnel alarm.",
+      "tags": [
+        "objective",
+        "dwarf",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "mushroom_shadow_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Mushroom Shadow Shelf",
+      "description": "Mushroom Shadow Shelf supports crawl-space scouting, valve timing, wet-noise masking, and split-lane extraction.",
+      "traits": [
+        "shadow",
+        "fungus",
+        "cover"
+      ],
+      "cover": 2,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The scout melts into a bruise-colored mushroom shadow.",
+            "trace_kind": "goblin_sneak"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Mushroom Shadow Shelf breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "sluice_valve_1",
+      "pos": [
+        6,
+        1
+      ],
+      "category": "mechanism",
+      "name": "Sluice Valve Wheel",
+      "description": "Sluice Valve Wheel supports crawl-space scouting, valve timing, wet-noise masking, and split-lane extraction.",
+      "traits": [
+        "valve",
+        "water",
+        "mechanism"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The kobold packs the valve teeth with wax and pebble grit.",
+            "trace_kind": "goblin_sabotage"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "sluice_valve_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Sluice Valve Wheel breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "drip_chain_1",
+      "pos": [
+        8,
+        2
+      ],
+      "category": "noise",
+      "name": "Drip Chain",
+      "description": "Drip Chain supports crawl-space scouting, valve timing, wet-noise masking, and split-lane extraction.",
+      "traits": [
+        "chain",
+        "noise",
+        "water"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The dripping chain is tied into a silent goblin knot.",
+            "trace_kind": "bell_sabotaged"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Drip Chain breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "bait_puddle_1",
+      "pos": [
+        1,
+        1
+      ],
+      "category": "decoy",
+      "name": "Bait Puddle",
+      "description": "Bait Puddle supports crawl-space scouting, valve timing, wet-noise masking, and split-lane extraction.",
+      "traits": [
+        "decoy",
+        "water",
+        "mischief"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The boggart makes the puddle giggle like a fleeing thief.",
+            "trace_kind": "goblin_distract"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Bait Puddle breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "grease_log_1",
+      "pos": [
+        2,
+        1
+      ],
+      "category": "hazard",
+      "name": "Grease Log",
+      "description": "Grease Log supports crawl-space scouting, valve timing, wet-noise masking, and split-lane extraction.",
+      "traits": [
+        "grease",
+        "barrier",
+        "trap"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The ogre rolls a greased log into the patrol cut.",
+            "trace_kind": "goblin_rig_trap"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "monster_status",
+            "role": "dwarf_sentry",
+            "status": "delayed"
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Grease Log breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "dwarf_coin_roll",
+    "chest_2": "healing_draught",
+    "chest_3": "coin_cache"
+  },
+  "scripts": {
+    "heist": "steal_sluice_clapper_key",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
+    "tier": "medium",
+    "coordination_contract": "two-front infiltration with a timed valve route and a noisy fallback route"
+  },
+  "achievements": [
+    {
+      "id": "mushroom_sluice_medium_quiet_toolwork",
+      "title": "Quiet Toolwork",
+      "description": "Resolve a mechanism or alarm feature in Mushroom Sluice medium without turning the run into a brawl.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_sabotage"
+      }
+    },
+    {
+      "id": "mushroom_sluice_medium_mischief_coordination",
+      "title": "Mischief Coordination",
+      "description": "Create a distraction or trap setup that opens the Mushroom Sluice route.",
+      "reward": 0.12,
+      "condition": {
+        "type": "any_trace_kind_happened",
+        "kinds": [
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "mushroom_sluice_medium_snack_tax",
+      "title": "Snack Tax With Interest",
+      "description": "Take optional loot while still completing the medium heist.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "optional_loot",
+        "count": 1
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_sentry_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_shieldbearer_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 6,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_runekeeper_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 5,
+        "patrol_role": "watch_lane"
+      }
+    }
+  },
+  "torch": 22
+}

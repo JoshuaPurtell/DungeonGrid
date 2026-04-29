@@ -1,0 +1,401 @@
+{
+  "id": "beardglass_lampworks",
+  "title": "Beardglass Lampworks",
+  "metadata": {
+    "campaign_group": "goblin",
+    "maturity_tier": "goblin_mode_second_wave_polished",
+    "validation_status": "content_catalog_json_validated",
+    "quest_role": "inverted_dungeon_coordination_heist",
+    "objective_type": "retrieve_and_escape",
+    "dominant_mechanics": [
+      "sneak",
+      "line_of_sight",
+      "rune_lamp",
+      "distract",
+      "sabotage",
+      "carrier_handoff"
+    ],
+    "marl_axis": "one agent must manipulate shadow cover while another moves the carrier through dwarf-lit kill lanes",
+    "coordination_type": "visibility puzzle with optional alarms that reward simultaneous lamp sabotage and distraction",
+    "information_structure": "decentralized_partial_observation",
+    "reward_structure": "heist_reward_with_alarm_optional_loot_and_nonlethal_attribution",
+    "goblin_aesthetic": "brass lanterns, soot-black mirrors, stolen wick wax, purple boggart shadows, and dwarf beardglass prisms"
+  },
+  "defaults": {
+    "difficulty": "second_wave",
+    "torch": 22,
+    "game_mode": {
+      "id": "goblin"
+    },
+    "recommended_heroes": [
+      "goblin_scout",
+      "ogre_bruiser",
+      "kobold_tinkerer",
+      "boggart_trickster"
+    ],
+    "recommended_heroes_by_party_size": {
+      "1": [
+        "goblin_scout"
+      ],
+      "2": [
+        "goblin_scout",
+        "kobold_tinkerer"
+      ],
+      "3": [
+        "goblin_scout",
+        "kobold_tinkerer",
+        "boggart_trickster"
+      ],
+      "4": [
+        "goblin_scout",
+        "ogre_bruiser",
+        "kobold_tinkerer",
+        "boggart_trickster"
+      ]
+    },
+    "hero_loadouts": {
+      "goblin_scout": {
+        "weapon": "sling",
+        "combat_role": "scout",
+        "items": [
+          "sling_stones",
+          "stolen_map"
+        ]
+      },
+      "ogre_bruiser": {
+        "weapon": "ogre_club",
+        "combat_role": "frontline",
+        "items": [
+          "ogre_ration"
+        ]
+      },
+      "kobold_tinkerer": {
+        "weapon": "wrench_spear",
+        "tool": "trap_kit",
+        "combat_role": "hazard_specialist",
+        "items": [
+          "spare_springs"
+        ]
+      },
+      "boggart_trickster": {
+        "weapon": "boggart_hook",
+        "combat_role": "controller",
+        "items": [
+          "curse_charm"
+        ]
+      }
+    },
+    "monster_activation": {
+      "default": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "decks": {
+      "treasure": [
+        {
+          "id": "beardglass_lampworks_dwarf_coin_roll",
+          "name": "Dwarf Coin Roll",
+          "type": "treasure",
+          "item": "coin_cache",
+          "treasure": 1,
+          "reward": 0.1,
+          "rarity": "common"
+        },
+        {
+          "id": "beardglass_lampworks_shiny_decoy",
+          "name": "Too-Shiny Decoy",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03,
+          "rarity": "danger"
+        }
+      ],
+      "supply": [
+        {
+          "id": "beardglass_lampworks_mushroom_biscuit",
+          "name": "Mushroom Biscuit",
+          "type": "healing",
+          "item": "healing_draught",
+          "reward": 0.08,
+          "rarity": "common"
+        },
+        {
+          "id": "beardglass_lampworks_spare_spring",
+          "name": "Spare Spring",
+          "type": "artifact",
+          "item": "spare_springs",
+          "reward": 0.1,
+          "rarity": "uncommon"
+        }
+      ],
+      "trick": [
+        {
+          "id": "beardglass_lampworks_false_footsteps",
+          "name": "False Footsteps",
+          "type": "event",
+          "reward": 0.05,
+          "rarity": "trick",
+          "effects": [
+            {
+              "type": "lower_alert",
+              "amount": 1
+            },
+            {
+              "type": "emit",
+              "message": "False footsteps wander away from the real goblins.",
+              "trace_kind": "goblin_distract"
+            }
+          ]
+        },
+        {
+          "id": "beardglass_lampworks_squeak",
+          "name": "Unplanned Squeak",
+          "type": "event",
+          "alert": 1,
+          "reward": -0.03,
+          "rarity": "danger"
+        }
+      ],
+      "event": [
+        {
+          "id": "beardglass_lampworks_patrol_whistle",
+          "name": "Patrol Whistle",
+          "type": "event",
+          "alert": 2,
+          "reward": -0.05,
+          "rarity": "danger"
+        },
+        {
+          "id": "beardglass_lampworks_wandering_sentry",
+          "name": "Wandering Sentry",
+          "type": "event",
+          "rarity": "danger",
+          "reward": -0.06,
+          "effects": [
+            {
+              "type": "alert",
+              "amount": 1,
+              "reward": -0.02
+            },
+            {
+              "type": "spawn_monster",
+              "id": "wandering_beardglass_lampworks_sentry_1",
+              "role": "dwarf_sentry"
+            }
+          ]
+        }
+      ]
+    },
+    "ruleset": {
+      "classic_dynamic": {
+        "warden_pressure": "dwarven_hold_response",
+        "dread_hooks": [
+          "objective_taken",
+          "noisy_break",
+          "split_party",
+          "alarm_unresolved"
+        ],
+        "safe_room_search_required": true,
+        "partial_extraction": false
+      }
+    },
+    "role_selection": {
+      "required_roles_by_party_size": {
+        "1": [
+          "goblin_scout"
+        ],
+        "2": [
+          "goblin_scout",
+          "kobold_tinkerer"
+        ],
+        "3": [
+          "goblin_scout",
+          "kobold_tinkerer",
+          "boggart_trickster"
+        ],
+        "4": [
+          "goblin_scout",
+          "ogre_bruiser",
+          "kobold_tinkerer",
+          "boggart_trickster"
+        ]
+      },
+      "mode": "recommended_in_classic_dynamic"
+    }
+  },
+  "catalog": {
+    "objectives": {
+      "ember_lens": {
+        "type": "objective",
+        "objective_kind": "recover_and_extract",
+        "public_hint": "Steal the ember lens from the lampwright dais without letting the rune lamps box in the carrier."
+      }
+    },
+    "monsters": {
+      "sentry": {
+        "type": "dwarf_sentry",
+        "pressure_role": "patrol_guard"
+      },
+      "shieldbearer": {
+        "type": "dwarf_shieldbearer",
+        "pressure_role": "line_blocker"
+      },
+      "crossbow": {
+        "type": "dwarf_crossbow",
+        "pressure_role": "sightline_pressure"
+      },
+      "runekeeper": {
+        "type": "dwarf_runekeeper",
+        "pressure_role": "alarm_support"
+      },
+      "warden": {
+        "type": "dwarf_warden",
+        "pressure_role": "objective_guard"
+      }
+    },
+    "objects": {
+      "blackout_curtain": {
+        "role": "shadow_alcove",
+        "traits": [
+          "shadow",
+          "cloth",
+          "cover"
+        ],
+        "trace_kind": "goblin_sneak"
+      },
+      "rune_lamp": {
+        "role": "shrine",
+        "traits": [
+          "lamp",
+          "rune",
+          "sight"
+        ],
+        "trace_kind": "goblin_sabotage"
+      },
+      "mirror_rack": {
+        "role": "mechanism",
+        "traits": [
+          "mirror",
+          "angle",
+          "mechanism"
+        ],
+        "trace_kind": "goblin_sabotage"
+      },
+      "wick_bucket": {
+        "role": "supply",
+        "traits": [
+          "wax",
+          "wick",
+          "loot"
+        ],
+        "trace_kind": "optional_loot_taken"
+      },
+      "spark_mote": {
+        "role": "decoy",
+        "traits": [
+          "decoy",
+          "magic",
+          "purple"
+        ],
+        "trace_kind": "goblin_distract"
+      },
+      "prism_tripwire": {
+        "role": "hazard",
+        "traits": [
+          "prism",
+          "wire",
+          "trap"
+        ],
+        "trace_kind": "goblin_rig_trap"
+      }
+    }
+  },
+  "shared_achievements": [
+    {
+      "id": "beardglass_lampworks_objective_pinched",
+      "title": "Prize Pinched",
+      "description": "Steal the Ember Lens.",
+      "reward": 0.24,
+      "condition": {
+        "type": "objective_taken"
+      }
+    },
+    {
+      "id": "beardglass_lampworks_clean_escape",
+      "title": "Back Into the Walls",
+      "description": "Escape Beardglass Lampworks with the objective.",
+      "reward": 0.45,
+      "condition": {
+        "type": "success"
+      }
+    },
+    {
+      "id": "beardglass_lampworks_quiet_alarm",
+      "title": "Nobody Heard the Important Bits",
+      "description": "Succeed before the hold reaches lockdown-level alert.",
+      "reward": 0.2,
+      "condition": {
+        "type": "alert_below_success",
+        "alert": 4
+      }
+    },
+    {
+      "id": "beardglass_lampworks_all_roles",
+      "title": "Every Little Menace Has a Job",
+      "description": "Use sneak, sabotage, distract, and trapcraft-style effects in one run.",
+      "reward": 0.22,
+      "condition": {
+        "type": "all_trace_kinds_happened",
+        "kinds": [
+          "goblin_sneak",
+          "goblin_sabotage",
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "beardglass_lampworks_no_knockouts",
+      "title": "Soft Paws, Soft Clubs",
+      "description": "Win without knocking out a dwarven defender.",
+      "reward": 0.18,
+      "condition": {
+        "type": "social_metric_at_most_success",
+        "metric": "nonlethal_knockouts",
+        "count": 0
+      }
+    }
+  ],
+  "warden_runbook": {
+    "axis_pressure": "visibility puzzle with optional alarms that reward simultaneous lamp sabotage and distraction",
+    "fairness_notes": [
+      "Dwarves are defenders and should be narrated as knocked out, never killed.",
+      "Pressure should preserve counterplay through visible doors, furniture effects, and reversible alarms.",
+      "Reward stealthy solutions at least as much as nonlethal combat solutions."
+    ]
+  },
+  "role_demand_vocabulary": {
+    "goblin_scout": [
+      "scouting",
+      "safe_route_marking",
+      "carrier_timing"
+    ],
+    "ogre_bruiser": [
+      "frontline",
+      "route_blocking",
+      "carrier_protection"
+    ],
+    "kobold_tinkerer": [
+      "trapcraft",
+      "mechanism_sabotage",
+      "hazard_specialist"
+    ],
+    "boggart_trickster": [
+      "misdirection",
+      "control",
+      "alarm_confusion"
+    ]
+  },
+  "scripts": {
+    "family": "beardglass_lampworks"
+  }
+}

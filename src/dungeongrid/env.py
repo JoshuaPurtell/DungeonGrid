@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import base64
 import copy
+import json
 import pickle
 import random
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from .achievements import AchievementEngine
 from .core.agent_engine import AgentEngine
@@ -42,10 +43,15 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
     reset, observe, step, act_plan, render_text, render_ascii, state_json, export_trace.
     """
 
-    def __init__(self, quest_dir: str | None = None) -> None:
+    def __init__(
+        self,
+        quest_dir: str | None = None,
+        expansion_paths: Iterable[str | Path] | None = None,
+    ) -> None:
         self.quest_dir = str(quest_dir) if quest_dir is not None else None
-        self.grid = GridEngine(quest_dir=quest_dir)
-        self.hooks = HookEngine(dungeon_dir=quest_dir)
+        self.expansion_paths = tuple(str(Path(path).expanduser()) for path in (expansion_paths or ()))
+        self.grid = GridEngine(quest_dir=quest_dir, expansion_paths=self.expansion_paths or None)
+        self.hooks = HookEngine(dungeon_dir=quest_dir, expansion_paths=self.expansion_paths or None)
         self.rng = random.Random()
         self.rules = RulesEngine(self.grid, self.rng)
         self.rules.hooks = self.hooks
@@ -97,6 +103,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         return {
             "version": CHECKPOINT_VERSION,
             "quest_dir": self.quest_dir,
+            "expansion_paths": list(self.expansion_paths),
             "observation_mode": self.observation_mode,
             "state": copy.deepcopy(state),
             "rng_state": self.rng.getstate(),
@@ -124,10 +131,18 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         checkpoint_quest_dir = (
             str(payload["quest_dir"]) if payload.get("quest_dir") is not None else None
         )
-        if self.quest_dir != checkpoint_quest_dir:
+        checkpoint_expansion_paths = tuple(str(path) for path in payload.get("expansion_paths", ()))
+        if self.quest_dir != checkpoint_quest_dir or self.expansion_paths != checkpoint_expansion_paths:
             self.quest_dir = checkpoint_quest_dir
-            self.grid = GridEngine(quest_dir=self.quest_dir)
-            self.hooks = HookEngine(dungeon_dir=self.quest_dir)
+            self.expansion_paths = checkpoint_expansion_paths
+            self.grid = GridEngine(
+                quest_dir=self.quest_dir,
+                expansion_paths=self.expansion_paths or None,
+            )
+            self.hooks = HookEngine(
+                dungeon_dir=self.quest_dir,
+                expansion_paths=self.expansion_paths or None,
+            )
             self.rules = RulesEngine(self.grid, self.rng)
             self.rules.hooks = self.hooks
             self.agent_engine = AgentEngine(self.grid, self.rules)
@@ -145,17 +160,23 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
 
     @classmethod
     def load_checkpoint(
-        cls, path: str | Path, quest_dir: str | None = None
+        cls,
+        path: str | Path,
+        quest_dir: str | None = None,
+        expansion_paths: Iterable[str | Path] | None = None,
     ) -> DungeonGridEnvironment:
-        env = cls(quest_dir=quest_dir)
+        env = cls(quest_dir=quest_dir, expansion_paths=expansion_paths)
         env.restore_checkpoint(Path(path).read_bytes())
         return env
 
     @classmethod
     def from_checkpoint(
-        cls, checkpoint: bytes | str | dict[str, Any], quest_dir: str | None = None
+        cls,
+        checkpoint: bytes | str | dict[str, Any],
+        quest_dir: str | None = None,
+        expansion_paths: Iterable[str | Path] | None = None,
     ) -> DungeonGridEnvironment:
-        env = cls(quest_dir=quest_dir)
+        env = cls(quest_dir=quest_dir, expansion_paths=expansion_paths)
         env.restore_checkpoint(checkpoint)
         return env
 
@@ -404,7 +425,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             lines.append("You are the Warden.")
         elif agent_id in state.heroes:
             role = state.heroes[agent_id].role
-            lines.append(f"You are the {role.title()}.")
+            lines.append(f"You are the {state.mode.display_role(role)}.")
         else:
             lines.append(f"Observer: {agent_id}.")
         lines.append(f"Round {state.round}. Phase: {state.phase}. Active agent: {active}.")
@@ -439,10 +460,10 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
         if roster:
             lines.append("\nParty roster:")
             for member in roster:
-                status = "alive" if member["alive"] else "down"
+                status = "alive" if member["alive"] else state.mode.defeat_status_for("heroes")
+                role_name = state.mode.display_role(member["role"])
                 lines.append(
-                    f"- {member['id']}: {member['role']} hp {member['hp']}/{member['max_hp']} "
-                    f"{status}"
+                    f"- {member['id']}: {role_name} hp {member['hp']}/{member['max_hp']} {status}"
                 )
         visible_teammates = self._visible_teammates(agent_id)
         if visible_teammates:
@@ -462,18 +483,18 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 lines.append(f"- {tile['direction']}: {tile['status']} at {tile['pos']}{detail}")
         lines.append("\nVisible map:")
         lines.append(self._coordinate_map(visible_map))
-        lines.append(
-            "\nLegend: B/W/E/D heroes, g/b/k/r/w/p/n/m/f/y/h monsters, D closed door, / open door, C chest, A/a/d/v/l/s/$/f furniture, T revealed trap, I objective, E exit."
-        )
+        lines.append(f"\nLegend: {state.mode.legend}")
         visible_rooms = self._visible_rooms(agent_id)
         if visible_rooms:
             lines.append("\nVisible rooms:")
             for room in visible_rooms:
                 lines.append(f"- {room['name']}: {room.get('description', '')}")
-        visible_entities = self._visible_entities(agent_id)
+        visible_entities = self._visible_opponents(agent_id)
         visible_objects = self._visible_objects(agent_id)
         if visible_entities:
-            lines.append("\nVisible entities:")
+            lines.append(
+                f"\nVisible {state.mode.opponent_label if agent_id in state.heroes else 'entities'}:"
+            )
             for ent in visible_entities:
                 if ent["id"] != agent_id:
                     distance = (
@@ -490,7 +511,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                         boss = f", boss={ent.get('boss_name', ent['role'])} phase={ent.get('boss_phase', 'base')}{hint}"
                     statuses = f", status={ent.get('status')}" if ent.get("status") else ""
                     lines.append(
-                        f"- {ent['id']} ({ent['role']}) at {ent['pos']} "
+                        f"- {ent['id']} ({state.mode.display_role(ent['role'])}) at {ent['pos']} "
                         f"hp {ent['hp']}/{ent['max_hp']}{distance}{combat}{boss}{statuses}"
                     )
                     if ent.get("boss_summary"):
@@ -506,6 +527,13 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 hint = f" Hint: {obj['action_hint']}" if obj.get("action_hint") else ""
                 lines.append(
                     f"- {obj['type']} {label} at {obj.get('pos')}{distance}{detail}.{hint}"
+                )
+        progress_hints = self._progress_hints(agent_id)
+        if progress_hints:
+            lines.append("\nProgress hints:")
+            for hint in progress_hints[:3]:
+                lines.append(
+                    f"- {hint['reason']}: prefer {json.dumps(hint['action'], sort_keys=True)}"
                 )
         carrier = state.objective.carrier or "not carried"
         lines.append(
@@ -865,7 +893,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
     def _symbolic_observation(self, agent_id: str, visible_map: str) -> dict[str, Any]:
         state = self._require_state()
         visible_tiles = self.grid.visible_tiles(state, agent_id)
-        visible_entities = self._visible_entities(agent_id)
+        visible_entities = self._visible_opponents(agent_id)
         visible_objects = self._visible_objects(agent_id)
         self_data = None
         if agent_id in state.all_entities():
@@ -884,6 +912,7 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             "party_roster": self._party_roster(),
             "visible_teammates": self._visible_teammates(agent_id),
             "adjacent_tiles": self._adjacent_tiles(agent_id),
+            "progress_hints": self._progress_hints(agent_id),
             "visible_map": visible_map,
             "visible_map_coordinates": self._coordinate_map(visible_map),
             "quest_title": state.title,
@@ -1043,6 +1072,18 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
             enriched.append(row)
         return enriched
 
+    def _visible_opponents(self, agent_id: str) -> list[dict[str, Any]]:
+        state = self._require_state()
+        entities = self._visible_entities(agent_id)
+        actor = state.all_entities().get(agent_id)
+        if actor is None or agent_id == "warden":
+            return [entity for entity in entities if entity.get("id") != agent_id]
+        return [
+            entity
+            for entity in entities
+            if entity.get("id") != agent_id and entity.get("team") != actor.team
+        ]
+
     def _object_affordance(self, obj: dict[str, Any], *, adjacent: bool) -> str:
         obj_type = str(obj.get("type") or "")
         if obj_type == "door":
@@ -1119,6 +1160,240 @@ class DungeonGridEnvironment(_OpenEnvEnvironment):
                 return f'Now legal: {{"type":"disarm","target":"{target}"}}.'
             return "Visible trap: avoid stepping on it; move adjacent before disarming."
         return ""
+
+    def _progress_hints(self, agent_id: str) -> list[dict[str, Any]]:
+        state = self._require_state()
+        hero = state.heroes.get(agent_id)
+        if hero is None:
+            return []
+        legal = self._legal_actions(agent_id)
+        moves = [action for action in legal if action.get("type") == "move"]
+        hints: list[dict[str, Any]] = []
+        if state.objective.carrier == agent_id:
+            for action in legal:
+                if action.get("type") == "interact" and action.get("target") == "escape":
+                    hints.append(
+                        {
+                            "reason": "objective carrier is on the escape tile",
+                            "action": action,
+                            "target": "escape",
+                            "distance": 0,
+                            "priority": -2,
+                        }
+                    )
+                    return hints
+            move = self._move_toward_position(state.escape_tile, moves)
+            if move is not None:
+                hints.append(
+                    {
+                        "reason": "objective carrier should return to escape",
+                        "action": move,
+                        "target": "escape",
+                        "distance": self.grid.manhattan(hero.pos, state.escape_tile),
+                        "priority": -1,
+                    }
+                )
+            else:
+                for action in legal:
+                    if action.get("type") in {"end_turn", "guard"}:
+                        hints.append(
+                            {
+                                "reason": "objective carrier escape route is blocked; wait for teammate to clear",
+                                "action": action,
+                                "target": "escape",
+                                "distance": self.grid.manhattan(hero.pos, state.escape_tile),
+                                "priority": -1,
+                            }
+                        )
+                        break
+        for obj in self._visible_objects(agent_id):
+            target = str(obj.get("id") or "")
+            obj_type = str(obj.get("type") or "")
+            if not target or not obj_type:
+                continue
+            if obj_type == "door" and obj.get("state") == "open":
+                continue
+            immediate = self._immediate_object_action(obj, legal)
+            if immediate is not None:
+                hints.append(
+                    {
+                        "reason": f"{obj_type} {target} is adjacent and actionable",
+                        "action": immediate,
+                        "target": target,
+                        "distance": 0,
+                        "priority": -1 if obj_type == "objective" else 1,
+                    }
+                )
+                continue
+            if obj.get("adjacent"):
+                continue
+            if obj_type in {"furniture", "chest"}:
+                continue
+            move = self._move_toward_object(hero.pos, obj, moves)
+            if move is not None:
+                hints.append(
+                    {
+                        "reason": f"move toward visible {obj_type} {target}",
+                        "action": move,
+                        "target": target,
+                        "distance": obj.get("distance"),
+                        "priority": 1 if obj_type == "objective" else 3,
+                    }
+                )
+        for entity in self._visible_opponents(agent_id):
+            target = entity.get("id")
+            if not target:
+                continue
+            hinted_combat = False
+            for action_type in ("attack_melee", "attack_ranged", "cast"):
+                for action in legal:
+                    if action.get("type") == action_type and action.get("target") == target:
+                        hints.append(
+                            {
+                                "reason": f"{entity.get('role')} is attackable",
+                                "action": action,
+                                "target": target,
+                                "distance": entity.get("distance"),
+                                "priority": 0,
+                            }
+                        )
+                        hinted_combat = True
+                        break
+                else:
+                    continue
+                break
+            if hinted_combat:
+                continue
+            move = self._move_toward_entity(entity, moves)
+            if move is not None:
+                hints.append(
+                    {
+                        "reason": f"move toward visible {entity.get('role')}",
+                        "action": move,
+                        "target": target,
+                        "distance": entity.get("distance"),
+                        "priority": 2,
+                    }
+                )
+        return sorted(
+            hints,
+            key=lambda hint: (
+                int(hint.get("priority", 9)),
+                int(hint.get("distance") or 999),
+                str(hint.get("target") or ""),
+            ),
+        )
+
+    def _immediate_object_action(
+        self, obj: dict[str, Any], legal: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        target = obj.get("id")
+        if obj.get("type") == "door" and obj.get("state") == "closed":
+            preferred = ("open_door",)
+        elif obj.get("type") == "objective":
+            preferred = ("interact",)
+        elif obj.get("type") == "chest":
+            preferred = ("search_treasure",)
+        elif obj.get("type") == "furniture":
+            preferred = ("interact", "search_furniture", "search_treasure", "attack_object")
+        elif obj.get("type") == "trap":
+            preferred = ("disarm",)
+        else:
+            preferred = ("interact",)
+        for action_type in preferred:
+            for action in legal:
+                if action.get("type") == action_type and action.get("target") == target:
+                    return action
+        return None
+
+    def _move_toward_object(
+        self, start: tuple[int, int], obj: dict[str, Any], moves: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        state = self._require_state()
+        pos_raw = obj.get("pos")
+        if not isinstance(pos_raw, (list, tuple)) or len(pos_raw) != 2:
+            return None
+        obj_pos = (int(pos_raw[0]), int(pos_raw[1]))
+        goals = [
+            pos
+            for pos in self.grid.adjacent_positions(obj_pos)
+            if self.grid.is_walkable(state, pos, ignore_entities=True)
+        ]
+        if obj.get("type") == "door" and obj.get("state") == "open":
+            goals.append(obj_pos)
+        best: tuple[int, dict[str, Any]] | None = None
+        for move in moves:
+            target = move.get("target")
+            if not isinstance(target, list) or len(target) != 2:
+                continue
+            move_pos = (int(target[0]), int(target[1]))
+            distances = [
+                len(self.grid.find_path(state, move_pos, goal, ignore_entities=True))
+                for goal in goals
+            ]
+            distances = [distance for distance in distances if distance > 0]
+            if not distances:
+                continue
+            score = min(distances)
+            if best is None or score < best[0]:
+                best = (score, move)
+        return best[1] if best is not None else None
+
+    def _move_toward_position(
+        self, goal: tuple[int, int], moves: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        state = self._require_state()
+        current_actor = state.heroes.get(state.active_agent())
+        current_score = None
+        if current_actor is not None:
+            current_path = self.grid.find_path(state, current_actor.pos, goal, ignore_entities=True)
+            current_score = len(current_path) if current_path else None
+        best: tuple[int, dict[str, Any]] | None = None
+        for move in moves:
+            target = move.get("target")
+            if not isinstance(target, list) or len(target) != 2:
+                continue
+            move_pos = (int(target[0]), int(target[1]))
+            path = self.grid.find_path(state, move_pos, goal, ignore_entities=True)
+            if not path:
+                continue
+            score = len(path)
+            if current_score is not None and score >= current_score:
+                continue
+            if best is None or score < best[0]:
+                best = (score, move)
+        return best[1] if best is not None else None
+
+    def _move_toward_entity(
+        self, entity: dict[str, Any], moves: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        state = self._require_state()
+        pos_raw = entity.get("pos")
+        if not isinstance(pos_raw, (list, tuple)) or len(pos_raw) != 2:
+            return None
+        entity_pos = (int(pos_raw[0]), int(pos_raw[1]))
+        goals = [
+            pos
+            for pos in self.grid.adjacent_positions(entity_pos)
+            if self.grid.is_walkable(state, pos, ignore_entities=True)
+        ]
+        best: tuple[int, dict[str, Any]] | None = None
+        for move in moves:
+            target = move.get("target")
+            if not isinstance(target, list) or len(target) != 2:
+                continue
+            move_pos = (int(target[0]), int(target[1]))
+            distances = [
+                len(self.grid.find_path(state, move_pos, goal, ignore_entities=True))
+                for goal in goals
+            ]
+            distances = [distance for distance in distances if distance > 0]
+            if not distances:
+                continue
+            score = min(distances)
+            if best is None or score < best[0]:
+                best = (score, move)
+        return best[1] if best is not None else None
 
     def _invalid_feedback_for_agent(self, agent_id: str) -> list[dict[str, Any]]:
         state = self._require_state()

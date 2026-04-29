@@ -108,6 +108,29 @@ base:<family>:heavy   # 4 heroes
 
 Legacy family IDs auto-select a tier by party size during `reset`, so `quest_id="lantern_crypt", num_heroes=1` runs `base:lantern_crypt:pico`, while `num_heroes=4` runs `base:lantern_crypt:heavy`. Legacy `_lite` IDs resolve to the `lite` tier.
 
+### External Expansions
+
+Private or local expansion packs can be mounted without adding their content to
+the public package. Set `DUNGEONGRID_EXPANSION_PATHS` to one or more
+`os.pathsep`-separated directories. Each path may be either an expansion root or
+a parent containing expansion roots:
+
+```text
+<namespace>/
+  manifest.json or expansion.json  # optional; id/namespace overrides folder name
+  dungeons/<family>/<tier>/quest.json
+```
+
+`missions/<mission>/<tier>/quest.json` is also supported. Mounted expansions use
+the same public ID shape as bundled tiers:
+
+```text
+<namespace>:<family>:pico|lite|medium|heavy
+<namespace>:<family>  # auto-selects tier by party size
+```
+
+For Python callers, pass `expansion_paths=[...]` to `DungeonGridEnvironment`.
+
 ## Benchmark Protocol
 
 DungeonGrid includes default AP-mode suites plus the opt-in `classic_dynamic` suite:

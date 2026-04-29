@@ -1,0 +1,555 @@
+{
+  "quest_id": "goblin:nine_nails_treasury:heavy",
+  "title": "Nine-Nails Treasury Heavy",
+  "min_heroes": 4,
+  "max_heroes": 4,
+  "metadata": {
+    "size_tier": "heavy",
+    "intended_num_heroes": 4,
+    "supported_hero_range": [
+      4,
+      4
+    ],
+    "room_count_target": "5+",
+    "heist_focus": "vault locks, pressure plates, decoy loot, exact extraction timing, and multi-role trap discipline",
+    "coordination_problem": "capstone stealth-heist with simultaneous switches, decoys, optional loot, and a dangerous extraction route",
+    "goblin_aesthetic": "brass nail crowns, tiny goblin lock picks, cursed purple coin smoke, mushroom wax seals, and too many shiny things"
+  },
+  "map": {
+    "ascii": "#####################\n#E.D..Z.....U....I..#\n#..#..Q..C....###D###\n#..#..X..###..#.....#\n#..D..U..#....#..V..#\n#..#.....#..C.D.....#\n#..#..C..D....#..U..#\n#..###D#######......#\n#.....Q.....X..Z....#\n#..C...............C#\n#####################",
+    "width": 21,
+    "height": 11
+  },
+  "hero_starts": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      2
+    ]
+  ],
+  "objective": {
+    "type": "retrieve_and_escape",
+    "item_id": "nail_crown_relic",
+    "escape_tile": [
+      1,
+      1
+    ],
+    "start_pos": [
+      17,
+      1
+    ]
+  },
+  "rooms": {
+    "entry_warren": {
+      "name": "Goblin Entry Warren",
+      "rect": [
+        1,
+        1,
+        4,
+        9
+      ],
+      "description": "A cramped goblin approach lined with brass nail crowns, tiny goblin lock picks, cursed purple coin smoke, mushroom wax seals, and too many shiny things.",
+      "tags": [
+        "start",
+        "stealth",
+        "goblin"
+      ]
+    },
+    "mischief_lane": {
+      "name": "Mischief Lane",
+      "rect": [
+        6,
+        1,
+        12,
+        9
+      ],
+      "description": "The main coordination lane for vault locks, pressure plates, decoy loot, exact extraction timing, and multi-role trap discipline.",
+      "tags": [
+        "coordination",
+        "sneak",
+        "craft"
+      ]
+    },
+    "objective_hold": {
+      "name": "Nail-Crown Relic Post",
+      "rect": [
+        14,
+        1,
+        19,
+        3
+      ],
+      "description": "Steal the nail-crown relic and resist the fatal urge to grab every shiny thing at once.",
+      "tags": [
+        "objective",
+        "dwarf",
+        "extraction"
+      ]
+    }
+  },
+  "furniture": [
+    {
+      "id": "coin_shadow_1",
+      "pos": [
+        2,
+        3
+      ],
+      "category": "shadow_alcove",
+      "name": "Coin-Pile Shadow",
+      "description": "Coin-Pile Shadow supports vault locks, pressure plates, decoy loot, exact extraction timing, and multi-role trap discipline.",
+      "traits": [
+        "shadow",
+        "coin",
+        "cover"
+      ],
+      "cover": 2,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The scout hides under an amount of money that feels emotionally correct.",
+            "trace_kind": "goblin_sneak"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Coin-Pile Shadow breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "nine_lock_1",
+      "pos": [
+        8,
+        1
+      ],
+      "category": "mechanism",
+      "name": "Nine-Nail Lock",
+      "description": "Nine-Nail Lock supports vault locks, pressure plates, decoy loot, exact extraction timing, and multi-role trap discipline.",
+      "traits": [
+        "lock",
+        "nail",
+        "mechanism"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The kobold convinces the ninth nail that it was never needed.",
+            "trace_kind": "goblin_sabotage"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "nine_lock_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Nine-Nail Lock breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "vault_bell_1",
+      "pos": [
+        10,
+        2
+      ],
+      "category": "signal",
+      "name": "Vault Bell Pin",
+      "description": "Vault Bell Pin supports vault locks, pressure plates, decoy loot, exact extraction timing, and multi-role trap discipline.",
+      "traits": [
+        "bell",
+        "pin",
+        "alarm"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The bell pin is replaced with a polite mushroom stem.",
+            "trace_kind": "bell_sabotaged"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "set_script",
+            "key": "vault_bell_resolved",
+            "value": true
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Vault Bell Pin breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "coin_ghost_1",
+      "pos": [
+        1,
+        1
+      ],
+      "category": "decoy",
+      "name": "Boggart Coin Ghost",
+      "description": "Boggart Coin Ghost supports vault locks, pressure plates, decoy loot, exact extraction timing, and multi-role trap discipline.",
+      "traits": [
+        "decoy",
+        "coin",
+        "magic"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "A cursed coin rolls away, giggling like a rich idiot.",
+            "trace_kind": "goblin_distract"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Boggart Coin Ghost breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "plate_snare_1",
+      "pos": [
+        9,
+        8
+      ],
+      "category": "hazard",
+      "name": "Pressure Plate Snare",
+      "description": "Pressure Plate Snare supports vault locks, pressure plates, decoy loot, exact extraction timing, and multi-role trap discipline.",
+      "traits": [
+        "plate",
+        "trap",
+        "vault"
+      ],
+      "cover": 0,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "emit",
+            "message": "The ogre pins a plate down with a perfectly excessive rock.",
+            "trace_kind": "goblin_rig_trap"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "monster_status",
+            "role": "dwarf_sentry",
+            "status": "delayed"
+          }
+        ],
+        "treasure": [
+          {
+            "type": "draw_deck",
+            "deck": "trick"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Pressure Plate Snare breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    },
+    {
+      "id": "gem_cubby_1",
+      "pos": [
+        2,
+        1
+      ],
+      "category": "treasure",
+      "name": "Gem Cubby",
+      "description": "Gem Cubby supports vault locks, pressure plates, decoy loot, exact extraction timing, and multi-role trap discipline.",
+      "traits": [
+        "gem",
+        "loot",
+        "searchable"
+      ],
+      "cover": 1,
+      "search_effects": {
+        "furniture": [
+          {
+            "type": "item",
+            "item": "coin_cache",
+            "reward": 0.08
+          },
+          {
+            "type": "emit",
+            "message": "The crew steals only the gems that looked at them first.",
+            "trace_kind": "optional_loot_taken"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "emit",
+            "message": "One more shiny thing joins the goblin retirement plan.",
+            "trace_kind": "optional_loot_taken"
+          }
+        ],
+        "treasure": [
+          {
+            "type": "item",
+            "item": "coin_cache",
+            "reward": 0.08
+          },
+          {
+            "type": "emit",
+            "message": "The crew steals only the gems that looked at them first.",
+            "trace_kind": "optional_loot_taken"
+          },
+          {
+            "type": "lower_alert",
+            "amount": 1,
+            "reward": 0.03
+          },
+          {
+            "type": "emit",
+            "message": "One more shiny thing joins the goblin retirement plan.",
+            "trace_kind": "optional_loot_taken"
+          }
+        ]
+      },
+      "break_effect": [
+        {
+          "type": "alert",
+          "amount": 1,
+          "reward": -0.04
+        },
+        {
+          "type": "emit",
+          "message": "Gem Cubby breaks loudly enough to make several beards twitch.",
+          "trace_kind": "noisy_break"
+        }
+      ]
+    }
+  ],
+  "chest_contents": {
+    "chest_1": "dwarf_coin_roll",
+    "chest_2": "healing_draught",
+    "chest_3": "coin_cache",
+    "chest_4": {
+      "type": "draw_deck",
+      "deck": "supply"
+    },
+    "chest_5": {
+      "type": "draw_deck",
+      "deck": "trick"
+    }
+  },
+  "scripts": {
+    "heist": "steal_nail_crown_relic",
+    "alarm_model": "quiet/suspicious/alarmed/lockdown",
+    "tier": "heavy",
+    "coordination_contract": "capstone stealth-heist with simultaneous switches, decoys, optional loot, and a dangerous extraction route"
+  },
+  "achievements": [
+    {
+      "id": "nine_nails_treasury_heavy_quiet_toolwork",
+      "title": "Quiet Toolwork",
+      "description": "Resolve a mechanism or alarm feature in Nine-Nails Treasury heavy without turning the run into a brawl.",
+      "reward": 0.12,
+      "condition": {
+        "type": "trace_kind_happened",
+        "kind": "goblin_sabotage"
+      }
+    },
+    {
+      "id": "nine_nails_treasury_heavy_mischief_coordination",
+      "title": "Mischief Coordination",
+      "description": "Create a distraction or trap setup that opens the Nine-Nails Treasury route.",
+      "reward": 0.12,
+      "condition": {
+        "type": "any_trace_kind_happened",
+        "kinds": [
+          "goblin_distract",
+          "goblin_rig_trap"
+        ]
+      }
+    },
+    {
+      "id": "nine_nails_treasury_heavy_snack_tax",
+      "title": "Snack Tax With Interest",
+      "description": "Take optional loot while still completing the heavy heist.",
+      "reward": 0.1,
+      "condition": {
+        "type": "social_metric_at_least",
+        "metric": "optional_loot",
+        "count": 1
+      }
+    }
+  ],
+  "monster_overrides": {
+    "dwarf_sentry_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_sentry_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_shieldbearer_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_shieldbearer_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed"
+    },
+    "dwarf_crossbow_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 6,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_crossbow_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 6,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_runekeeper_1": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 5,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_runekeeper_2": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 5,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_runekeeper_3": {
+      "activation": "dormant",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "attack_range": 5,
+        "patrol_role": "watch_lane"
+      }
+    },
+    "dwarf_warden_1": {
+      "activation": "alert",
+      "wake_on": "room_revealed",
+      "equipment": {
+        "boss": true,
+        "boss_name": "Holdfast Warden",
+        "public_summary": "A stubborn dwarf elite guards the objective route.",
+        "counterplay_hint": "Use stealth tools and blockers before making the carrier run."
+      }
+    }
+  },
+  "torch": 24
+}

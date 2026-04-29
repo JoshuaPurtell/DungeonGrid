@@ -754,7 +754,9 @@ class EffectResolver:
             "attack_dice": attack_dice,
             "ranged": effect.ranged,
         }
-        ctx.emit_text(f"{attacker.role} attacks {target.role}: {hits} hits, {blocks} blocks.")
+        attacker_name = ctx.state.mode.display_role(attacker.role)
+        target_name = ctx.state.mode.display_role(target.role)
+        ctx.emit_text(f"{attacker_name} attacks {target_name}: {hits} hits, {blocks} blocks.")
         return [
             Damage(
                 source_id=attacker.id,
@@ -799,7 +801,8 @@ class EffectResolver:
                     int(source_stats.get("damage_dealt", 0)) + amount
                 )
             ctx.add_reward(0.05 * amount)
-        ctx.emit_text(f"{target.role} takes {amount} damage.")
+        target_name = state.mode.display_role(target.role)
+        ctx.emit_text(f"{target_name} takes {amount} damage.")
         state.trace.append(
             {
                 "kind": "damage",
@@ -819,9 +822,19 @@ class EffectResolver:
                 and self._maybe_revive_hollow(ctx, target, source)
             ):
                 return followups
-            target.alive = False
-            target.hp = 0
-            ctx.emit_text(f"{target.role} is defeated.")
+            defeat_status = state.mark_defeated(target)
+            ctx.emit_text(state.defeat_message(target))
+            state.trace.append(
+                {
+                    "kind": "entity_defeated",
+                    "round": state.round,
+                    "entity_id": target.id,
+                    "role": target.role,
+                    "team": target.team,
+                    "status": defeat_status,
+                    "source_id": effect.source_id,
+                }
+            )
             if target.team == "dungeon":
                 ctx.add_reward(0.15)
                 if source and source.team == "heroes":
@@ -1177,11 +1190,11 @@ class EffectResolver:
     def _resolve_disarm(self, ctx: ResolverContext, effect: DisarmTrap) -> list[Effect]:
         hero = ctx.state.heroes[effect.actor_id]
         trap = ctx.state.traps[effect.trap_id]
-        roll = self.runtime.rng.randint(1, 6) + (2 if hero.role == "dwarf" else 0)
+        roll = self.runtime.rng.randint(1, 6) + self.runtime.trapcraft_bonus(hero)
         trap.revealed = True
         trap.armed = False
         if roll >= 4:
-            if "specialist" in str(hero.equipment.get("combat_role", "")) or hero.role == "dwarf":
+            if "specialist" in str(hero.equipment.get("combat_role", "")) or self.runtime.trapcraft_bonus(hero):
                 specialist_actions = ctx.state.social_metrics.setdefault("specialist_actions", {})
                 key = f"{hero.role}_disarm"
                 specialist_actions[key] = int(specialist_actions.get(key, 0)) + 1
@@ -1390,7 +1403,7 @@ class EffectResolver:
             if self.runtime.grid.manhattan(monster.pos, h.pos) <= monster.sight_range
             and self.runtime.grid.line_clear(state, monster.pos, h.pos)
         ]
-        if monster.role == "cinder_mage" and visible_targets:
+        if (monster.role == "cinder_mage" or monster.equipment.get("attack_range")) and visible_targets:
             attack_range = int(monster.equipment.get("attack_range", 5))
             ranged_targets = [
                 h
@@ -2476,6 +2489,12 @@ class EngineRuntime:
 
     def roll_successes(self, dice: int) -> int:
         return sum(1 for _ in range(max(0, dice)) if self.rng.randint(1, 6) >= 5)
+
+
+    def trapcraft_bonus(self, hero: Entity) -> int:
+        if hero.role == "dwarf" or hero.ability == "trapcraft" or hero.equipment.get("tool") == "trap_kit":
+            return 2
+        return 0
 
     def equipped_weapon(self, hero: Entity) -> dict[str, Any] | None:
         item_id = hero.equipment.get("weapon")
